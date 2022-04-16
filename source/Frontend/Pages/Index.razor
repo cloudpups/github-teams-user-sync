@@ -1,0 +1,24 @@
+﻿@page "/"
+
+@using Frontend.Data
+@inject NextSyncTimeService NextSyncTimeService
+@inject IConfiguration configuration;
+
+<PageTitle>GTTS Bot</PageTitle>
+
+<h1>Welcome to the Groups-to-Teams-Sync Bot!</h1>
+
+<p>Next teams and group sync will occur at <b>@nextSyncTime</b> (please refresh your page if sync time is out of date).</p>
+<p>For assistance and/or questions, please email the following: <a href= "mailto:@helpEmail">@helpEmail</a>.</p>
+
+@code {
+    private string helpEmail = "none :(";
+    private string nextSyncTime = "none :(";
+
+    protected override void OnInitialized()
+    {
+        nextSyncTime = NextSyncTimeService.GetNextTime(DateTime.Now).ToShortTimeString();
+        helpEmail = configuration["helpEmail"];
+        base.OnInitialized();
+    }
+}
