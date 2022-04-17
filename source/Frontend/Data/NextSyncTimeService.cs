@@ -2,12 +2,20 @@ using NCrontab;
 
 namespace Frontend.Data
 {
-    public sealed class NextSyncTimeService
+    internal sealed class NextSyncTimeService
     {
+        private readonly IConfiguration configuration;
+
+        public NextSyncTimeService(IConfiguration configuration)
+        {
+            this.configuration = configuration;
+        }
+
         public DateTime GetNextTime(DateTime now)
         {
             // https://crontabkit.com
-            var schedule = CrontabSchedule.Parse("*/5 * * * *");
+            var cronSchedule = configuration["syncSchedule"];
+            var schedule = CrontabSchedule.Parse(cronSchedule);
             return schedule.GetNextOccurrence(now);
         }
     }

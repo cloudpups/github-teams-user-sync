@@ -26,7 +26,23 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
-
+    
+    <script>
+        // https://stackoverflow.com/a/63611641/1542187
+        window.localDate = () => {
+            var ldCurrentDate = new Date();
+            return ldCurrentDate.getFullYear() +
+                "-" + String(ldCurrentDate.getMonth() + 1).padStart(2, '0') +
+                "-" + String(ldCurrentDate.getDate()).padStart(2, '0') +
+                "T" +
+                String(ldCurrentDate.getHours()).padStart(2, '0') +
+                ":" + String(ldCurrentDate.getMinutes()).padStart(2, '0') +
+                ":" + String(ldCurrentDate.getSeconds()).padStart(2, '0');
+        };
+        window.timeZoneOffset = () => {
+            return new Date().getTimezoneOffset() / 60;
+        };
+    </script>
     <script src="_framework/blazor.server.js"></script>
 </body>
 </html>

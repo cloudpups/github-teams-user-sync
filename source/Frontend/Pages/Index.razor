@@ -1,24 +1,116 @@
 ﻿@page "/"
 
 @using Frontend.Data
+@using Microsoft.Extensions.Logging
+@inject ILogger<string> Logger
 @inject NextSyncTimeService NextSyncTimeService
+@inject TeamQueryService teamQueryService;
 @inject IConfiguration configuration;
+@inject IJSRuntime JSRuntime;
 
 <PageTitle>GTTS Bot</PageTitle>
 
 <h1>Welcome to the Groups-to-Teams-Sync Bot!</h1>
 
-<p>Next teams and group sync will occur at <b>@nextSyncTime</b> (please refresh your page if sync time is out of date).</p>
+<div style="border:groove;margin-bottom:10px;">
+    <button type="button" @onclick="GetNextSyncTimeAsync">
+        Get Next Sync Time
+    </button>
+    <p>Next teams and group sync will occur at <b>@nextSyncTime</b> (your time).</p>
+</div>
+
+<div style="border:groove;padding:10px;margin-bottom:10px;">
+    <h2>Query Team Status</h2>
+    <EditForm Model="@teamQueryModel" OnValidSubmit="@HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+    
+        <p>
+            <label>
+                GitHub Organization Name:
+                <InputText id="organizationName" @bind-Value="teamQueryModel.OrganizationName" />            
+            </label>
+        </p>
+        <p>
+            <label>
+                GitHub Team Name:
+                <InputText id="teamName" @bind-Value="teamQueryModel.TeamName" />
+            </label>
+        </p>
+
+        <button type="submit">Submit</button>
+    </EditForm>
+</div>
+
+@{
+    if(hasSearched)
+    {
+        <p>Sync status for <b>@teamSlugToCheck</b>: <span style="color:@teamStatusColor">@teamStatusText</span>.</p>
+        <p style="color:gray;font-size:90%;margin-top:-20px;">
+            Please check your 
+            <a href="@syncConfigFilePath" target="_blank">sync config file</a> 
+            for the <b>@teamNameToCheck</b> team for additional troubleshooting. Check the 
+            <a href="https://github.com/JoshuaTheMiller/groups-to-teams-sync-bot/blob/main/README.md#troubleshooting" target="_blank">troubleshooting guide</a> 
+                if you continue to run into problems.
+        </p>
+    }
+}
+
 <p>For assistance and/or questions, please email the following: <a href= "mailto:@helpEmail">@helpEmail</a>.</p>
 
 @code {
     private string helpEmail = "none :(";
-    private string nextSyncTime = "none :(";
+    private string nextSyncTime = "NA";
+    private string teamNameToCheck = "NA";
+    private string teamSlugToCheck = "NA/NA";
+    private string syncConfigFilePath = "NA";
+    private bool hasSearched = false;
+
+    // HACK: do not take this for an example on how to do things...
+    private string teamStatusColor = "gray";
+    private string teamStatusText = "NA";
+
+    private TeamQueryModel teamQueryModel = new();
 
     protected override void OnInitialized()
     {
-        nextSyncTime = NextSyncTimeService.GetNextTime(DateTime.Now).ToShortTimeString();
-        helpEmail = configuration["helpEmail"];
+        helpEmail = configuration["helpEmail"];        
         base.OnInitialized();
+    }
+
+    private async Task GetNextSyncTimeAsync()
+    {
+        var userDate = await JSRuntime.InvokeAsync<DateTime>("localDate");
+        nextSyncTime = NextSyncTimeService.GetNextTime(userDate).ToShortTimeString();
+    }
+
+    private async void HandleValidSubmit()
+    {
+        var orgName = teamQueryModel.OrganizationName ?? "NA";
+        var teamName = teamQueryModel.TeamName ?? "NA";
+
+        Logger.LogDebug($"{orgName}/{teamName}");
+        teamSlugToCheck = $"{orgName}/{teamName}";
+        teamNameToCheck = teamName;
+        syncConfigFilePath = $"https://github.com/{orgName}/.github/blob/main/groups-to-teams-config.yml";
+        hasSearched = true;
+
+        var status = await teamQueryService.GetStatusAsync(teamQueryModel);       
+
+        switch(status)
+        {
+            case TeamSyncStatuses.Error:
+                {
+                    teamStatusColor = "red";
+                    teamStatusText = "error";
+                    break;
+                }
+            case TeamSyncStatuses.Success:
+                {
+                    teamStatusColor = "green";
+                    teamStatusText = "success";
+                    break;
+                }
+        }        
     }
 }
