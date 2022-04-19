@@ -45,7 +45,7 @@ outputs:
       'Any user accounts that had issues being syncronized.'
 runs:
   using: 'docker'
-  image: './source/GitHubAction/Dockerfile'
+  image: 'Dockerfile'
   args:
   - '--clientSecret'
   - ${{ inputs.clientSecret }}
