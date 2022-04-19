@@ -1,0 +1,57 @@
+name: 'Groups to Teams Sync'
+description: 'Sync Azure AD Groups and GH Teams in a very opinionated fashion!'
+branding:
+  icon: activity
+  color: orange
+inputs:
+  tenantId:
+    description:
+      'The ID of the Azure AD Tenant that will be queried for group information.'
+    required: true
+  clientId:
+    description:
+      'The ID of the Azure AD App Registration that will be used to query the Microsoft Graph.'
+    required: true
+  gitHubTeamName:
+    description:
+      'The name of the GitHub Team to syncronize with Azure AD'
+    required: true
+  emailPrepend:
+    description:
+      'Any text to prepend to Azure AD emails.'
+    required: false
+    default: ''
+  emailAppend:
+    description:
+      'Any text to append to Azure AD emails.'
+    required: false
+    default: ''
+  emailTextToReplace:
+    description:
+      'Any text to replace in Azure AD emails. Semi-colon deliminated pairs seperated by commas.'
+    required: false
+    default: ''  
+outputs:
+  usersNotSynced:
+    description:
+      'Any user accounts that had issues being syncronized.'
+runs:
+  using: 'docker'
+  image: './source/GitHubAction/Dockerfile'
+  args:
+  - '--clientSecret'
+  - ${{ secrets.clientSecret }}
+  - '--orgAdministerToken'
+  - ${{ secrets.orgAdministerToken }}
+  - '--tenantId'
+  - ${{ inputs.tenantId }}
+  - '--clientId'
+  - ${{ inputs.clientId }}
+  - '--gitHubTeamName'
+  - ${{ inputs.gitHubTeamName }}
+  - '--emailPrepend'
+  - ${{ inputs.emailPrepend }}
+  - '--emailAppend'
+  - ${{ inputs.emailAppend }}
+  - '--emailTextToReplace'
+  - ${{ inputs.emailTextToReplace }}
