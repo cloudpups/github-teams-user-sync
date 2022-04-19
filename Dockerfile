@@ -26,6 +26,5 @@ LABEL com.github.actions.icon="activity"
 LABEL com.github.actions.color="orange"
 
 FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "GitHubAction.dll"]
+COPY --from=publish /app/publish /
+ENTRYPOINT ["dotnet", "/GitHubAction.dll"]
