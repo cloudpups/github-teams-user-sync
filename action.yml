@@ -39,10 +39,6 @@ inputs:
     description:
         'DO NOT SET THIS VALUE DIRECTLY. This token will be used to invite members to the org and to add them to the appropriate team.'
     required: true
-outputs:
-  usersNotSynced:
-    description:
-      'Any user accounts that had issues being syncronized.'
 runs:
   using: 'docker'
   image: 'Dockerfile'
