@@ -31,22 +31,13 @@ inputs:
       'Any text to replace in Azure AD emails. Semi-colon deliminated pairs seperated by commas.'
     required: false
     default: ''  
-  clientSecret:
-    description:
-        'DO NOT SET THIS VALUE DIRECTLY. The Secret of the Azure AD App Registration that will be used to query the Microsoft Graph.'
-    required: true
-  orgAdministerToken:
-    description:
-        'DO NOT SET THIS VALUE DIRECTLY. This token will be used to invite members to the org and to add them to the appropriate team.'
-    required: true
+outputs:
+  users-with-sync-issues:
+    description: 'Users that this Action had issues syncronizing.'
 runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-  - '--clientSecret'
-  - ${{ inputs.clientSecret }}
-  - '--orgAdministerToken'
-  - ${{ inputs.orgAdministerToken }}
   - '--tenantId'
   - ${{ inputs.tenantId }}
   - '--clientId'
