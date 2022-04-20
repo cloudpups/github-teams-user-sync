@@ -126,7 +126,7 @@ static async Task StartTeamSyncAsync(ActionInputs inputs, IHost host)
 
 	var specificTeam = allTeams.First(t => t.Name == groupDisplayName);
 
-	var usersThatMayNotExist = new List<(string, string)>();
+	var usersThatMayNotExist = new List<SyncProblem>();
 	foreach (var user in users)
 	{
 		try
@@ -144,15 +144,33 @@ static async Task StartTeamSyncAsync(ActionInputs inputs, IHost host)
 		}
 		catch (NotFoundException)
 		{
-			usersThatMayNotExist.Add((user.GitHubId, user.Email));
+			usersThatMayNotExist.Add(new SyncProblem
+            (
+				Email: user.Email,
+				GitHubId: user.GitHubId
+            ));
 		}
+	}	
+	
+	if(usersThatMayNotExist.Any())
+    {
+		Console.WriteLine("################################################");
+		Console.WriteLine();
+		Console.WriteLine("This Action had issues with the following users:");
+		Console.WriteLine();
+		foreach (var user in usersThatMayNotExist)
+        {
+			Console.WriteLine($"{user.Email} ==> {user.GitHubId}");
+		}
+		Console.WriteLine();
+		Console.WriteLine("################################################");
 	}
 
-	var formattedUsersThatMayNotExist = JsonConvert.SerializeObject(usersThatMayNotExist);
-	Console.WriteLine(formattedUsersThatMayNotExist);
+	var formattedUsersThatMayNotExist = JsonConvert.SerializeObject(usersThatMayNotExist) ?? "";
+
 	Console.WriteLine($"::set-output name=users-with-sync-issues::{formattedUsersThatMayNotExist}");
 
-    await Task.CompletedTask;
+	await Task.CompletedTask;
 
     Environment.Exit(0);
 }

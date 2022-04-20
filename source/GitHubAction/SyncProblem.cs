@@ -1,0 +1,1 @@
+﻿internal sealed record SyncProblem(string GitHubId, string Email);
