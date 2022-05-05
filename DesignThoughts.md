@@ -18,10 +18,19 @@ For simplicity- no true persistent data.
     * 1 minute minimum
     * 5 minute default
 * config (email): support email to display
+* string list: list of teams to sync
+    * Ideally these teams would have no direct maintainers as they only exist to sync membership with AD groups
+    * Perhaps require that this bot creates the teams?
 
 ## Constraints 
 
 * AD Group and GH Team name must match 1:1
+* This bot WILL NOT designate owners.
+    * As of this point in time, the author is taking the stance that Ownership of the organization should be a fully human decision OR a decision left up to a different entity.
+    * At least as of this point in time, I do not want to risk a situation in which this bot could remove all owners of an org (besides itself, somehow).
+* This bot WILL be able to remove any member who is NOT an owner and is not part of a team it manages
+    * Allow this functionality to be toggled on and off
+    * Will NOT remove owners
 
 ## Cache
 
