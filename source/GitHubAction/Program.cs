@@ -9,6 +9,7 @@ using Octokit;
 using Azure.Identity;
 using Microsoft.Graph;
 using Newtonsoft.Json;
+using Gttsb.Core;
 
 using IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((_, services) => services.AddGitHubActionServices())
@@ -55,104 +56,32 @@ static async Task StartTeamSyncAsync(ActionInputs inputs, IHost host)
 	// app registration in Azure. An administrator must grant consent
 	// to those permissions beforehand.
 	var scopes = new[] { "https://graph.microsoft.com/.default" };
-
 	// using Azure.Identity;
 	var options = new TokenCredentialOptions
 	{
 		AuthorityHost = AzureAuthorityHosts.AzurePublicCloud
 	};
-
 	// https://docs.microsoft.com/dotnet/api/azure.identity.clientsecretcredential
 	var clientSecretCredential = new ClientSecretCredential(
 		tenantId, clientId, clientSecret, options);
-
 	var graphClient = new GraphServiceClient(clientSecretCredential);
-
-	var groups = await graphClient.Groups
-		.Request()
-		.Filter($"displayName eq '{groupDisplayName}'")
-		.Select("id,description")
-		.Top(2)
-		.GetAsync();
-
-	if (groups.Count != 1)
-	{
-		// throw error
-		return;
-	}
-
-	var groupInQuestion = groups[0];
-
-	// TODO: Make sure to page!!
-	var members = await graphClient.Groups[groupInQuestion.Id].Members
-		.Request()
-		.Select("id,mail,displayName")
-		.GetAsync();
-
-	var replaceFunctions = itemsToReplace.Split(";").Select(tr => tr.Split(",")).Select<string[], Func<string, string>>(tr => (string input) =>
-	{
-		return input.Replace(tr[0], tr[1]);
-	}).ToList();
-
-    string cloudIdConverter(string email)
-    {
-        var emailWithReplaceableItems = email;
-        foreach (var replaceFunction in replaceFunctions)
-        {
-            emailWithReplaceableItems = replaceFunction(emailWithReplaceableItems);
-        }
-
-        return $"{emailPrepend}{emailWithReplaceableItems}{emailAppend}";
-    }
-
-    var users = members.Select(m => {
-		var asUser = (Microsoft.Graph.User)m;
-		return new
-		{
-            asUser.Id,
-			Email = asUser.Mail,
-			GitHubId = cloudIdConverter(asUser.Mail),
-            asUser.DisplayName
-		};
-	}
-	);
+	var activeDirectoryFacade = new ActiveDirectoryFacade(graphClient);
 
     var client = new GitHubClient(new ProductHeaderValue("groups-to-teams-sync"))
     {
         Credentials = tokenAuth
     };
+	var gitHubFacade = new GitHubFacade(client);
 
-    var allTeams = await client.Organization.Team.GetAll(org);
+	var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(emailPrepend, emailAppend, itemsToReplace);
 
-	var specificTeam = allTeams.First(t => t.Name == groupDisplayName);
+	var groupSyncer = GroupSyncerBuilder.Build(activeDirectoryFacade, gitHubFacade, emailToCloudIdBuilder);
 
-	var usersThatMayNotExist = new List<SyncProblem>();
-	foreach (var user in users)
-	{
-		try
-		{
-			var userIsMember = await client.Organization.Member.CheckMember(org, user.GitHubId);
+	var groupSyncResult = await groupSyncer.SyncronizeGroupsAsync(org, new[] { new TeamDefinition("ActiveDirectory", groupDisplayName) });
 
-			if (!userIsMember)
-			{
-				var orgMembershipUpdate = new OrganizationMembershipUpdate();
-				var response = await client.Organization.Member.AddOrUpdateOrganizationMembership(org, user.GitHubId, orgMembershipUpdate);
-			}
+	var usersThatMayNotExist = groupSyncResult.UsersWithSyncIssues;
 
-			var updateMemberRequest = new UpdateTeamMembership(TeamRole.Member);
-			var addMemberResponse = await client.Organization.Team.AddOrEditMembership(specificTeam.Id, user.GitHubId, updateMemberRequest);
-		}
-		catch (NotFoundException)
-		{
-			usersThatMayNotExist.Add(new SyncProblem
-            (
-				Email: user.Email,
-				GitHubId: user.GitHubId
-            ));
-		}
-	}	
-	
-	if(usersThatMayNotExist.Any())
+	if (usersThatMayNotExist.Any())
     {
 		Console.WriteLine("################################################");
 		Console.WriteLine();
