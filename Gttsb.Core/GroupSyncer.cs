@@ -18,6 +18,8 @@
             var teamSyncFailures = new List<string>();
             var usersThatMayNotExist = new List<GitHubUser>();
 
+            var allTeams = await _gitHubFacade.GetAllTeamsAsync(gitHubOrg);
+
             foreach (var team in teams)
             {
                 var groupDisplayName = team.Name;
@@ -37,9 +39,7 @@
                     m.DisplayName,
                     m.Email,
                     GitHubId = _emailToGitHubIdConverter.ToId(m.Email)
-                });
-
-                var allTeams = await _gitHubFacade.GetAllTeamsAsync(gitHubOrg);
+                });                
 
                 var specificTeam = allTeams.First(t => t.Name == groupDisplayName);                
 
