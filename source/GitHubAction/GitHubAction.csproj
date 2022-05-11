@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Gttsb.Core\Gttsb.Core.csproj" />
+    <ProjectReference Include="..\Gttsb.Core\Gttsb.Core.csproj" />
   </ItemGroup>
 
 </Project>
