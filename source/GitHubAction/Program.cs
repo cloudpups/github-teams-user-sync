@@ -67,14 +67,21 @@ await host.RunAsync();
 
 static async Task StartTeamSyncAsync(RenderedInput inputs, IHost host)
 {
+	if(!inputs.GitHubTeamNames.Any())
+    {
+		Console.WriteLine("No teams found to syncronize!");
+		Environment.Exit(0);
+	}
+
+	// Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
+	var groupDisplayNames = inputs.GitHubTeamNames;
+
 	var tenantId = inputs.TenantId;
 	var clientId = inputs.ClientId;
 	var clientSecret = inputs.ClientSecret;
 
 	var tokenAuth = new Credentials(inputs.OrgAdministerToken);
-
-	// Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
-	var groupDisplayNames = inputs.GitHubTeamNames;
+	
 	var org = inputs.GitHubRepositoryOwner;
 
 	var emailPrepend = inputs.EmailPrepend;
