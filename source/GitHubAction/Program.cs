@@ -36,9 +36,16 @@ await parser.WithParsedAsync(async options =>
 {
 	var configurationFromFile = await LoadConfigurationFromFileAsync(options.ConfigPath);
 
-    var mergedConfiguration = (ActionInputs)TypeMerger.TypeMerger.Merge(options, configurationFromFile);
+	// HACK: seems weird to read and abuse of TypeMerger to overcome what I view as a lacking feature:
+	// conditional override.
+    var preRenderedInput = (RenderedInput)TypeMerger.TypeMerger.Merge(options, new { });
 
-	await StartTeamSyncAsync(mergedConfiguration, host);
+	var trueRenderedInput = preRenderedInput with
+	{
+		GitHubTeamNames = preRenderedInput.GitHubTeamNames.Any() ? preRenderedInput.GitHubTeamNames : configurationFromFile.GitHubTeamNames
+	};
+
+	await StartTeamSyncAsync(trueRenderedInput, host);
 });
 
 static async Task<InputsFromFile> LoadConfigurationFromFileAsync(string configPath)
@@ -54,10 +61,8 @@ static async Task<InputsFromFile> LoadConfigurationFromFileAsync(string configPa
 
 await host.RunAsync();
 
-static async Task StartTeamSyncAsync(ActionInputs inputs, IHost host)
+static async Task StartTeamSyncAsync(RenderedInput inputs, IHost host)
 {
-
-
 	var tenantId = inputs.TenantId;
 	var clientId = inputs.ClientId;
 	var clientSecret = inputs.ClientSecret;
