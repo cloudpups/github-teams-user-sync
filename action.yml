@@ -12,7 +12,7 @@ inputs:
     description:
       'The ID of the Azure AD App Registration that will be used to query the Microsoft Graph.'
     required: true
-  gitHubTeamName:
+  gitHubTeamNames:
     description:
       'The name of the GitHub Team to syncronize with Azure AD'
     required: true
@@ -42,8 +42,8 @@ runs:
   - ${{ inputs.tenantId }}
   - '--clientId'
   - ${{ inputs.clientId }}
-  - '--gitHubTeamName'
-  - ${{ inputs.gitHubTeamName }}
+  - '--gitHubTeamNames'
+  - ${{ inputs.gitHubTeamNames }}
   - '--emailPrepend'
   - ${{ inputs.emailPrepend }}
   - '--emailAppend'
