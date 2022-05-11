@@ -45,10 +45,11 @@ namespace GitHubAction
         public string ClientId { get; init; } = "";
 
         // TODO: replace with gitHubTeamNames (plural)
-        [Option("gitHubTeamName",
+        [Option("gitHubTeamNames",
             Required = true,
-            HelpText = "The name of the GitHub Team to syncronize with Azure AD.")]
-        public string GitHubTeamName { get; init; } = "";
+            HelpText = "The name of the GitHub Team to syncronize with Azure AD.",
+            Separator = ';')]
+        public IEnumerable<string> GitHubTeamNames { get; init; } = Enumerable.Empty<string>();
 
         [Option("emailPrepend",
             Required = false,
@@ -62,8 +63,9 @@ namespace GitHubAction
 
         [Option("emailTextToReplace",
             Required = false,
-            HelpText = "Any text to replace in Azure AD emails. Semi-colon deliminated pairs seperated by commas.")]
-        public string EmailTextToReplace { get; init; } = "";
+            HelpText = "Any text to replace in Azure AD emails. Semi-colon deliminated pairs seperated by commas.",
+            Separator = ';')]
+        public IReadOnlyList<string> EmailTextToReplace { get; init; } = new List<string>();
 
         public string ClientSecret { get; init; } = "";
         public string OrgAdministerToken { get; init; } = "";

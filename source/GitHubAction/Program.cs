@@ -44,7 +44,7 @@ static async Task StartTeamSyncAsync(ActionInputs inputs, IHost host)
 	var tokenAuth = new Credentials(inputs.OrgAdministerToken);
 
 	// Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
-	var groupDisplayNames = inputs.GitHubTeamName.Split(";");
+	var groupDisplayNames = inputs.GitHubTeamNames;
 	var org = inputs.GitHubRepositoryOwner;
 
 	var emailPrepend = inputs.EmailPrepend;

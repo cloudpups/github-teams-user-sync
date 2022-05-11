@@ -3,10 +3,10 @@
     internal sealed class EmailToCloudIdConverter : IEmailToCloudIdConverter
     {
         private readonly string emailPrepend;
-        private readonly string itemsToReplace;
+        private readonly IReadOnlyList<string> itemsToReplace;
         private readonly string emailAppend;
 
-        public EmailToCloudIdConverter(string emailPrepend, string itemsToReplace, string emailAppend)
+        public EmailToCloudIdConverter(string emailPrepend, IReadOnlyList<string> itemsToReplace, string emailAppend)
         {
             this.emailPrepend = emailPrepend;
             this.itemsToReplace = itemsToReplace;
@@ -15,7 +15,7 @@
 
         public string ToId(string email)
         {
-            var replaceFunctions = itemsToReplace.Split(";").Select(tr => tr.Split(",")).Select<string[], Func<string, string>>(tr => (string input) =>
+            var replaceFunctions = itemsToReplace.Select(tr => tr.Split(",")).Select<string[], Func<string, string>>(tr => (string input) =>
             {
                 return input.Replace(tr[0], tr[1]);
             }).ToList();
