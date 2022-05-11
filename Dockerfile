@@ -14,6 +14,7 @@ RUN dotnet build "GitHubAction.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "GitHubAction.csproj" -c Release -o /app/publish --no-self-contained
 
+FROM base AS final
 LABEL maintainer="Joshua Miller <joshdan65@gmail.com>"
 LABEL repository="https://github.com/JoshuaTheMiller/groups-to-teams-sync-bot"
 LABEL homepage="https://github.com/JoshuaTheMiller/groups-to-teams-sync-bot"
@@ -24,7 +25,5 @@ LABEL com.github.actions.description="Sync Azure AD Groups and GH Teams in a ver
 # https://docs.github.com/actions/creating-actions/metadata-syntax-for-github-actions#branding
 LABEL com.github.actions.icon="activity"
 LABEL com.github.actions.color="orange"
-
-FROM base AS final
 COPY --from=publish /app/publish /
 ENTRYPOINT ["dotnet", "/GitHubAction.dll"]
