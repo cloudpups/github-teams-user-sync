@@ -39,7 +39,7 @@ await parser.WithParsedAsync(async options =>
 	var renderedInput = new RenderedInput(
 		TenantId: options.TenantId,
 		ClientId: options.ClientId,		
-		GitHubTeamNames: options.GitHubTeamNames.Any() ? options.GitHubTeamNames : configurationFromFile.GitHubTeamNames,
+		GitHubTeamNames: options.GitHubTeamNames.IsEmptyOrContainsOneBlankString() ? configurationFromFile.GitHubTeamNames : options.GitHubTeamNames,
 		EmailPrepend: options.EmailPrepend,
 		EmailAppend: options.EmailAppend,
 		EmailTextToReplace: options.EmailTextToReplace,
