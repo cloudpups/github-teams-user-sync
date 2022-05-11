@@ -43,8 +43,8 @@ static async Task StartTeamSyncAsync(ActionInputs inputs, IHost host)
 
 	var tokenAuth = new Credentials(inputs.OrgAdministerToken);
 
-	// Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)
-	var groupDisplayName = inputs.GitHubTeamName;
+	// Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
+	var groupDisplayNames = inputs.GitHubTeamName.Split(";");
 	var org = inputs.GitHubRepositoryOwner;
 
 	var emailPrepend = inputs.EmailPrepend;
@@ -77,7 +77,8 @@ static async Task StartTeamSyncAsync(ActionInputs inputs, IHost host)
 
 	var groupSyncer = GroupSyncerBuilder.Build(activeDirectoryFacade, gitHubFacade, emailToCloudIdBuilder);
 
-	var groupSyncResult = await groupSyncer.SyncronizeGroupsAsync(org, new[] { new TeamDefinition("ActiveDirectory", groupDisplayName) });
+	var groupsToSyncronize = groupDisplayNames.Select(g => new TeamDefinition("ActiveDirectory", g)).ToList();
+	var groupSyncResult = await groupSyncer.SyncronizeGroupsAsync(org, groupsToSyncronize);
 
 	var usersThatMayNotExist = groupSyncResult.UsersWithSyncIssues;
 
