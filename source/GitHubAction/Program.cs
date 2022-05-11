@@ -32,11 +32,32 @@ parser.WithNotParsed(
         Environment.Exit(2);
     });
 
-await parser.WithParsedAsync(options => StartTeamSyncAsync(options, host));
+await parser.WithParsedAsync(async options => 
+{
+	var configurationFromFile = await LoadConfigurationFromFileAsync(options.ConfigPath);
+
+    var mergedConfiguration = (ActionInputs)TypeMerger.TypeMerger.Merge(options, configurationFromFile);
+
+	await StartTeamSyncAsync(mergedConfiguration, host);
+});
+
+static async Task<InputsFromFile> LoadConfigurationFromFileAsync(string configPath)
+{
+	if(configPath.EndsWith(".json"))
+    {
+		var text = await System.IO.File.ReadAllTextAsync(configPath) ?? "";
+		return JsonConvert.DeserializeObject<InputsFromFile>(text) ?? new InputsFromFile();
+	}
+
+	return new InputsFromFile();
+}
+
 await host.RunAsync();
 
 static async Task StartTeamSyncAsync(ActionInputs inputs, IHost host)
 {
+
+
 	var tenantId = inputs.TenantId;
 	var clientId = inputs.ClientId;
 	var clientSecret = inputs.ClientSecret;
