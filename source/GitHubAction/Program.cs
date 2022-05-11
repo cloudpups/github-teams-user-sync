@@ -78,6 +78,13 @@ static async Task StartTeamSyncAsync(ActionInputs inputs, IHost host)
 	var groupSyncer = GroupSyncerBuilder.Build(activeDirectoryFacade, gitHubFacade, emailToCloudIdBuilder);
 
 	var groupsToSyncronize = groupDisplayNames.Select(g => new TeamDefinition("ActiveDirectory", g)).ToList();
+
+	Console.WriteLine("This Action will attempt to syncronize the following groups:");
+	foreach (var group in groupsToSyncronize)
+    {
+		Console.WriteLine($"* {group.Name}");
+	}
+
 	var groupSyncResult = await groupSyncer.SyncronizeGroupsAsync(org, groupsToSyncronize);
 
 	var usersThatMayNotExist = groupSyncResult.UsersWithSyncIssues;
@@ -97,6 +104,8 @@ static async Task StartTeamSyncAsync(ActionInputs inputs, IHost host)
 	}
 
 	var formattedUsersThatMayNotExist = JsonConvert.SerializeObject(usersThatMayNotExist) ?? "";
+
+	Console.WriteLine("Complete!");
 
 	Console.WriteLine($"::set-output name=users-with-sync-issues::{formattedUsersThatMayNotExist}");
 
