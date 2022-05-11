@@ -31,6 +31,11 @@ inputs:
       'Any text to replace in Azure AD emails. Semi-colon deliminated pairs seperated by commas.'
     required: false
     default: ''  
+  configPath:
+    description:
+      'The location to look for a configuration file. Values set via command line will take precedence.'
+    required: false
+    default: ''
 outputs:
   users-with-sync-issues:
     description: 'Users that this Action had issues syncronizing.'

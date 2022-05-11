@@ -67,6 +67,11 @@ namespace GitHubAction
             Separator = ';')]
         public IReadOnlyList<string> EmailTextToReplace { get; init; } = new List<string>();
 
+        [Option("configPath",
+            Required = false,
+            HelpText = "The location to look for a configuration file. Values set via command line will take precedence.")]
+        public string ConfigPath { get; init; } = "";
+
         public string ClientSecret { get; init; } = "";
         public string OrgAdministerToken { get; init; } = "";
         public string GitHubRepositoryOwner { get; init; } = "";
