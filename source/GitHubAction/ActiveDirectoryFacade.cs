@@ -27,28 +27,35 @@ namespace GitHubAction
                 return new MembersResponse(Success: false, Enumerable.Empty<Member>());
             }
 
-            var groupInQuestion = groups[0];
+            var groupInQuestion = groups[0];      
 
-            // TODO: Make sure to page!!
-            // Not paging will make this not truly work...
             var members = await _graphServiceClient.Groups[groupInQuestion.Id].Members
                 .Request()
                 .Select("id,mail,displayName")
                 .GetAsync();
 
-            var users = members.Select(m =>
-            {
+            Func<User, Member> memberToUser = (User m) => {
                 // TODO: handle exception case?
-                var asUser = (User)m;
+                var asUser = m;
                 return new Member
                 (
                     DisplayName: asUser.DisplayName,
                     Email: asUser.Mail,
                     Id: asUser.Id
                 );
-            });
+            };
 
-            return new MembersResponse(Success: true, users); ;
+            var users = members.Select(m => memberToUser((User)m)).ToList();
+
+            var nextMembersPage = members.NextPageRequest;
+            while(nextMembersPage != null)
+            {
+                var moreMembers = await nextMembersPage.GetAsync();
+                users.AddRange(moreMembers.Select(m => memberToUser((User)m)).ToList());
+                nextMembersPage = moreMembers.NextPageRequest;
+            }                                                    
+
+            return new MembersResponse(Success: true, users);
         }
     }
 }

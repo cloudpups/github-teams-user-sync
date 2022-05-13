@@ -43,8 +43,7 @@ namespace GitHubAction
             Required = true,
             HelpText = "The ID of the Azure AD App Registration that will be used to query the Microsoft Graph.")]
         public string ClientId { get; init; } = "";
-
-        // TODO: replace with gitHubTeamNames (plural)
+        
         [Option("gitHubTeamNames",
             Required = true,
             HelpText = "The name of the GitHub Team to syncronize with Azure AD.",
