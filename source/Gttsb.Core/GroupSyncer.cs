@@ -18,6 +18,10 @@
             var teamSyncFailures = new List<string>();
             var usersThatMayNotExist = new List<GitHubUser>();
 
+            // TODO: would be better to have a _gitHubTeamService expose a method of GetTeamDetailsAsync
+            // where if would retrieve or create a team and return the details of that instead of exposing
+            // GetAllTeams and having this GroupSyncer have the responsibility of filtering the teams
+            // and using them here.
             var allTeams = await _gitHubFacade.GetAllTeamsAsync(gitHubOrg);
 
             foreach (var team in teams)
