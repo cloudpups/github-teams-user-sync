@@ -25,8 +25,13 @@
             var allTeams = await _gitHubFacade.GetAllTeamsAsync(gitHubOrg);
 
             foreach (var team in teams)
-            {
-                var groupDisplayName = team.Name;
+            {                
+                var specificTeam = allTeams.FirstOrDefault(t => t.Name == team.Name);
+
+                if(specificTeam == null)
+                {
+                    specificTeam = _gitHubFacade.CreateTeamAsync(gitHubOrg, team.Name);
+                }
 
                 var membersResponse = await _activeDirectoryFacade.FetchMembersAsync(team.Name);
 
@@ -43,9 +48,7 @@
                     m.DisplayName,
                     m.Email,
                     GitHubId = _emailToGitHubIdConverter.ToId(m.Email)
-                });                
-
-                var specificTeam = allTeams.First(t => t.Name == groupDisplayName);                
+                });                                          
 
                 foreach (var user in groupMembersWithGitHubIds)
                 {

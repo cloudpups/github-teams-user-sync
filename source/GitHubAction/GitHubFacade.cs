@@ -44,5 +44,12 @@ namespace GitHubAction
             var updateMemberRequest = new UpdateTeamMembership(TeamRole.Member);
             await gitHubClient.Organization.Team.AddOrEditMembership(teamId, userGitHubId, updateMemberRequest);
         }
+
+        public async Task<GitHubTeam> CreateTeamAsync(string gitHubOrg, string name)
+        {
+            var newTeam = await gitHubClient.Organization.Team.Create(gitHubOrg, new NewTeam(name));
+
+            return new GitHubTeam(newTeam.Id, newTeam.Name);
+        }
     }
 }
