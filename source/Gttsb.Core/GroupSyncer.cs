@@ -30,7 +30,7 @@
 
                 if(specificTeam == null)
                 {
-                    specificTeam = _gitHubFacade.CreateTeamAsync(gitHubOrg, team.Name);
+                    specificTeam = await _gitHubFacade.CreateTeamAsync(gitHubOrg, team.Name);
                 }
 
                 var membersResponse = await _activeDirectoryFacade.FetchMembersAsync(team.Name);
