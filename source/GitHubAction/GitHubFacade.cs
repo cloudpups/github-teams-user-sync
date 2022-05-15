@@ -34,7 +34,11 @@ namespace GitHubAction
         public async Task<IEnumerable<GitHubTeam>> GetAllTeamsAsync(string org)
         {
             // TODO: page!!
-            var teams = await gitHubClient.Organization.Team.GetAll(org);
+            var teams = await gitHubClient.Organization.Team.GetAll(org, new ApiOptions
+            {
+                // 100 is max page size via the API
+                PageSize = 100
+            });
 
             return teams.Select(t => new GitHubTeam(t.Id, t.Name));
         }
