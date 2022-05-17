@@ -10,6 +10,8 @@ using Azure.Identity;
 using Microsoft.Graph;
 using Newtonsoft.Json;
 using Gttsb.Core;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 using IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((_, services) => services.AddGitHubActionServices())
@@ -54,10 +56,18 @@ await parser.WithParsedAsync(async options =>
 
 static async Task<InputsFromFile> LoadConfigurationFromFileAsync(string configPath)
 {
-	if(configPath.EndsWith(".json"))
-    {
-		var text = await System.IO.File.ReadAllTextAsync(configPath) ?? "";
+	var text = await System.IO.File.ReadAllTextAsync(configPath) ?? "";
+
+	if (configPath.EndsWith(".json"))
+    {		
 		return JsonConvert.DeserializeObject<InputsFromFile>(text) ?? new InputsFromFile();
+	}
+
+	if(configPath.EndsWith(".yml") || configPath.EndsWith(".yaml"))
+    {
+		var deserializer = new DeserializerBuilder().Build();
+
+		return deserializer.Deserialize<InputsFromFile>(text) ?? new InputsFromFile();
 	}
 
 	return new InputsFromFile();
