@@ -12,11 +12,20 @@ namespace GitHubAction
             this.gitHubClient = gitHubClient;
         }
 
-        public async Task AddOrgMemberAsync(string gitHubOrg, string gitHubId)
+        public async Task<OperationResponse> AddOrgMemberAsync(string gitHubOrg, string gitHubId)
         {
             var orgMembershipUpdate = new OrganizationMembershipUpdate();
-            // TODO: do something with response
-            await gitHubClient.Organization.Member.AddOrUpdateOrganizationMembership(gitHubOrg, gitHubId, orgMembershipUpdate);
+            try
+            {
+                // TODO: do something with response
+                await gitHubClient.Organization.Member.AddOrUpdateOrganizationMembership(gitHubOrg, gitHubId, orgMembershipUpdate);
+            }            
+            catch(Exception ex)
+            {
+                return OperationResponse.Failed($"Failed to add org member: ${ex.Message}");
+            }
+
+            return OperationResponse.Succeeded();
         }
 
         public async Task<MemberCheckResult> IsUserMemberAsync(string gitHubOrg, string gitHubId)

@@ -16,7 +16,7 @@
         public async Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teams)
         {
             var teamSyncFailures = new List<string>();
-            var usersThatMayNotExist = new List<GitHubUser>();
+            var usersWithSyncIssues = new List<GitHubUser>();
 
             // TODO: would be better to have a _gitHubTeamService expose a method of GetTeamDetailsAsync
             // where if would retrieve or create a team and return the details of that instead of exposing
@@ -56,13 +56,19 @@
 
                     if (result == MemberCheckResult.IsNotOrgMember)
                     {
-                        await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, user.GitHubId);
+                        var status = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, user.GitHubId);
+
+                        if(status.Status == OperationStatus.Failed)
+                        {
+                            usersWithSyncIssues.Add(new GitHubUser(user.Email, user.GitHubId);
+                        }
+
                         continue;
                     }
 
                     if (result == MemberCheckResult.UserIdDoesNotExist)
                     {
-                        usersThatMayNotExist.Add(new GitHubUser
+                        usersWithSyncIssues.Add(new GitHubUser
                         (
                             Email: user.Email,
                             GitHubId: user.GitHubId
@@ -74,7 +80,7 @@
                 }
             }
 
-            return new GroupSyncResult(usersThatMayNotExist);
+            return new GroupSyncResult(usersWithSyncIssues);
         }
     }
 }
