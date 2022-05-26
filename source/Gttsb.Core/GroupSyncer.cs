@@ -60,7 +60,7 @@
 
                         if(status.Status == OperationStatus.Failed)
                         {
-                            usersWithSyncIssues.Add(new GitHubUser(user.Email, user.GitHubId);
+                            usersWithSyncIssues.Add(new GitHubUser(user.Email, user.GitHubId));
                         }
 
                         continue;
