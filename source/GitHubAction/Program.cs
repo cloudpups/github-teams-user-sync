@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using Gttsb.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using Microsoft.Extensions.Caching.Memory;
 
 using IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((_, services) => services.AddGitHubActionServices())
@@ -118,7 +119,8 @@ static async Task StartTeamSyncAsync(RenderedInput inputs, IHost host)
     {
         Credentials = tokenAuth
     };
-	var gitHubFacade = new GitHubFacade(client);
+
+	var gitHubFacade = new GitHubFacadeCacheDecorator(new GitHubFacade(client), new MemoryCache(new MemoryCacheOptions()));
 
 	var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(emailPrepend, emailAppend, itemsToReplace);
 
