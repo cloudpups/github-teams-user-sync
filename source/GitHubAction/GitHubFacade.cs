@@ -30,6 +30,8 @@ namespace GitHubAction
 
         public async Task<MemberCheckResult> IsUserMemberAsync(string gitHubOrg, string gitHubId)
         {
+            // TODO: fix this try catch, additional error handling was added elsewhere that should have also been caught by this 
+            // (though it is better to be safe than sorry I suppose).
             try
             {
                 return await gitHubClient.Organization.Member.CheckMember(gitHubOrg, gitHubId) ? MemberCheckResult.IsMember : MemberCheckResult.IsNotOrgMember;
