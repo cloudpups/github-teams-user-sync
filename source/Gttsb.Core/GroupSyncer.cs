@@ -13,7 +13,12 @@
             _emailToGitHubIdConverter = emailToCloudIdConverter;
         }
 
-        public async Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teams)
+        public Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teams) => SyncronizeGroupsAsync(gitHubOrg, teams, false);
+
+        public Task<GroupSyncResult> SyncronizeMembersAsync(string gitHubOrg, TeamDefinition team) => SyncronizeGroupsAsync(gitHubOrg, new[] { team }, true);
+
+        // TODO: clean this up... This method could be doing too much.
+        private async Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teams, bool addMembers = false)
         {
             var teamSyncFailures = new List<string>();
             var usersWithSyncIssues = new List<GitHubUser>();
@@ -25,10 +30,10 @@
             var allTeams = await _gitHubFacade.GetAllTeamsAsync(gitHubOrg);
 
             foreach (var team in teams)
-            {                
+            {
                 var specificTeam = allTeams.FirstOrDefault(t => t.Name == team.Name);
 
-                if(specificTeam == null)
+                if (specificTeam == null)
                 {
                     specificTeam = await _gitHubFacade.CreateTeamAsync(gitHubOrg, team.Name);
                 }
@@ -48,17 +53,17 @@
                     m.DisplayName,
                     m.Email,
                     GitHubId = _emailToGitHubIdConverter.ToId(m.Email)
-                });                                          
+                });
 
                 foreach (var user in groupMembersWithGitHubIds)
                 {
                     var result = await _gitHubFacade.IsUserMemberAsync(gitHubOrg, user.GitHubId);
 
-                    if (result == MemberCheckResult.IsNotOrgMember)
+                    if (result == MemberCheckResult.IsNotOrgMember && addMembers)
                     {
                         var status = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, user.GitHubId);
 
-                        if(status.Status == OperationStatus.Failed)
+                        if (status.Status == OperationStatus.Failed)
                         {
                             usersWithSyncIssues.Add(new GitHubUser(user.Email, user.GitHubId));
                         }

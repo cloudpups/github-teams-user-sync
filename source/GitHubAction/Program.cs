@@ -49,7 +49,8 @@ await parser.WithParsedAsync(async options =>
 		ConfigPath: options.ConfigPath,
 		ClientSecret: options.ClientSecret,
 		OrgAdministerToken: options.OrgAdministerToken,
-		GitHubRepositoryOwner: options.GitHubRepositoryOwner
+		GitHubRepositoryOwner: options.GitHubRepositoryOwner,
+		OrganizationMembersGroup: options.OrganizationMembersGroup.IsEmptyOrWhitespace() ? configurationFromFile.OrganizationMembersGroup : options.OrganizationMembersGroup
 	);
 
 	await StartTeamSyncAsync(renderedInput, host);
@@ -85,7 +86,7 @@ static async Task StartTeamSyncAsync(RenderedInput inputs, IHost host)
 	}
 
 	// Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
-	var groupDisplayNames = inputs.GitHubTeamNames;
+	var groupDisplayNames = inputs.GitHubTeamNames.Concat(new[] { inputs.OrganizationMembersGroup }).Distinct().ToDictionary(t => t);
 
 	var tenantId = inputs.TenantId;
 	var clientId = inputs.ClientId;
@@ -126,17 +127,29 @@ static async Task StartTeamSyncAsync(RenderedInput inputs, IHost host)
 
 	var groupSyncer = GroupSyncerBuilder.Build(activeDirectoryFacade, gitHubFacade, emailToCloudIdBuilder);
 
-	var groupsToSyncronize = groupDisplayNames.Select(g => new TeamDefinition("ActiveDirectory", g)).ToList();
+	var groupsToSyncronize = groupDisplayNames.Select(g => new
+    {
+		Key = g.Key,
+		Value = new TeamDefinition("ActiveDirectory", g.Key)
+	}).ToDictionary(o => o.Key, o => o.Value);
 
 	Console.WriteLine("This Action will attempt to syncronize the following groups:");
 	foreach (var group in groupsToSyncronize)
     {
-		Console.WriteLine($"* {group.Name}");
+		Console.WriteLine($"* {group.Key}");
 	}
 
-	var groupSyncResult = await groupSyncer.SyncronizeGroupsAsync(org, groupsToSyncronize);
+	var usersThatMayNotExist = new List<GitHubUser>();
 
-	var usersThatMayNotExist = groupSyncResult.UsersWithSyncIssues;
+	if (!inputs.OrganizationMembersGroup.IsEmptyOrWhitespace())
+    {
+		var memberSyncResult = await groupSyncer.SyncronizeMembersAsync(org, groupsToSyncronize[inputs.OrganizationMembersGroup]);
+		usersThatMayNotExist.AddRange(memberSyncResult.UsersWithSyncIssues);
+	}	
+
+	var groupSyncResult = await groupSyncer.SyncronizeGroupsAsync(org, groupsToSyncronize.Values);
+
+	usersThatMayNotExist.AddRange(groupSyncResult.UsersWithSyncIssues);
 
 	if (usersThatMayNotExist.Any())
     {

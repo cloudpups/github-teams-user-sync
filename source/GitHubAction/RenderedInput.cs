@@ -11,6 +11,7 @@
         string ConfigPath,
         string ClientSecret,
         string OrgAdministerToken,
-        string GitHubRepositoryOwner
+        string GitHubRepositoryOwner,
+        string OrganizationMembersGroup
     );
 }

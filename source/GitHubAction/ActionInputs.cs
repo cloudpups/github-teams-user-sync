@@ -70,6 +70,10 @@ namespace GitHubAction
             Required = false,
             HelpText = "The location to look for a configuration file. Values set via command line will take precedence.")]
         public string ConfigPath { get; init; } = "";
+        [Option("organizationMembersGroup",
+            Required = false,
+            HelpText = "The group and GitHub Team that will be added as Members to the GitHub Organization.")]
+        public string OrganizationMembersGroup { get; init; } = "";        
 
         public string ClientSecret { get; init; } = "";
         public string OrgAdministerToken { get; init; } = "";
