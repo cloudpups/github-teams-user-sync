@@ -35,7 +35,7 @@ namespace Gttsb.Core
         public async Task<MemberCheckResult> IsUserMemberAsync(string gitHubOrg, ValidGitHubId gitHubId)
         {
             // TODO: look up best practices when using a Delegate and Async
-            return await memoryCache.GetOrCreateAsync(gitHubId, async cacheEntry =>
+            return await memoryCache.GetOrCreateAsync($"IsUserMemberAsync-${gitHubOrg}-${gitHubId.Id}", async cacheEntry =>
             {
                 cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(10);
 
