@@ -57,9 +57,9 @@
 
                 foreach (var user in groupMembersWithGitHubIds)
                 {
-                    var result = await _gitHubFacade.IsUserMemberAsync(gitHubOrg, user.GitHubId);
+                    var result = await _gitHubFacade.GitHubUserCheckAsync(gitHubOrg, user.GitHubId);
 
-                    if (result == MemberCheckResult.UserIdDoesNotExist)
+                    if (result.Status == MemberCheckResult.UserIdDoesNotExist || result.UserIfFound == null)
                     {
                         usersWithSyncIssues.Add(new GitHubUser
                         (
@@ -69,16 +69,11 @@
                         continue;
                     }
 
-                    await _gitHubFacade.AddTeamMemberAsync(specificTeam.Id, user.GitHubId);
+                    await _gitHubFacade.AddTeamMemberAsync(specificTeam.Id, result.UserIfFound);
 
-                    if (result == MemberCheckResult.IsNotOrgMember && addMembers)
+                    if (result.Status == MemberCheckResult.IsNotOrgMember && addMembers)
                     {
-                        var status = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, user.GitHubId);
-
-                        if (status.Status == OperationStatus.Failed)
-                        {
-                            usersWithSyncIssues.Add(new GitHubUser(user.Email, user.GitHubId));
-                        }                        
+                        var status = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, result.UserIfFound);                 
                     }                                        
                 }
             }

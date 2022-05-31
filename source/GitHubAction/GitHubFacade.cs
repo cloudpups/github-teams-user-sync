@@ -12,13 +12,13 @@ namespace GitHubAction
             this.gitHubClient = gitHubClient;
         }
 
-        public async Task<OperationResponse> AddOrgMemberAsync(string gitHubOrg, string gitHubId)
+        public async Task<OperationResponse> AddOrgMemberAsync(string gitHubOrg, ValidGitHubId gitHubId)
         {
             var orgMembershipUpdate = new OrganizationMembershipUpdate();
             try
             {
                 // TODO: do something with response
-                await gitHubClient.Organization.Member.AddOrUpdateOrganizationMembership(gitHubOrg, gitHubId, orgMembershipUpdate);
+                await gitHubClient.Organization.Member.AddOrUpdateOrganizationMembership(gitHubOrg, gitHubId.Id, orgMembershipUpdate);
             }            
             catch(Exception ex)
             {
@@ -28,17 +28,19 @@ namespace GitHubAction
             return OperationResponse.Succeeded();
         }
 
-        public async Task<MemberCheckResult> IsUserMemberAsync(string gitHubOrg, string gitHubId)
+        public async Task<GitHubUserCheckResult> GitHubUserCheckAsync(string gitHubOrg, string gitHubId)
         {
             // TODO: fix this try catch, additional error handling was added elsewhere that should have also been caught by this 
             // (though it is better to be safe than sorry I suppose).
             try
-            {
-                return await gitHubClient.Organization.Member.CheckMember(gitHubOrg, gitHubId) ? MemberCheckResult.IsMember : MemberCheckResult.IsNotOrgMember;
+            {                
+                var result = await gitHubClient.Organization.Member.CheckMember(gitHubOrg, gitHubId) ? MemberCheckResult.IsMember : MemberCheckResult.IsNotOrgMember;
+
+                return new GitHubUserCheckResult(result, new ValidGitHubId(gitHubId));
             }     
             catch(NotFoundException)
             {
-                return MemberCheckResult.UserIdDoesNotExist;
+                return new GitHubUserCheckResult(MemberCheckResult.UserIdDoesNotExist, null);  
             }
         }
 
@@ -54,10 +56,10 @@ namespace GitHubAction
             return teams.Select(t => new GitHubTeam(t.Id, t.Name));
         }
 
-        public async Task AddTeamMemberAsync(int teamId, string userGitHubId)
+        public async Task AddTeamMemberAsync(int teamId, ValidGitHubId userGitHubId)
         {
             var updateMemberRequest = new UpdateTeamMembership(TeamRole.Member);
-            await gitHubClient.Organization.Team.AddOrEditMembership(teamId, userGitHubId, updateMemberRequest);
+            await gitHubClient.Organization.Team.AddOrEditMembership(teamId, userGitHubId.Id, updateMemberRequest);
         }
 
         public async Task<GitHubTeam> CreateTeamAsync(string gitHubOrg, string name)
