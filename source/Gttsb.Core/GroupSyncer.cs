@@ -59,18 +59,6 @@
                 {
                     var result = await _gitHubFacade.IsUserMemberAsync(gitHubOrg, user.GitHubId);
 
-                    if (result == MemberCheckResult.IsNotOrgMember && addMembers)
-                    {
-                        var status = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, user.GitHubId);
-
-                        if (status.Status == OperationStatus.Failed)
-                        {
-                            usersWithSyncIssues.Add(new GitHubUser(user.Email, user.GitHubId));
-                        }
-
-                        continue;
-                    }
-
                     if (result == MemberCheckResult.UserIdDoesNotExist)
                     {
                         usersWithSyncIssues.Add(new GitHubUser
@@ -82,6 +70,16 @@
                     }
 
                     await _gitHubFacade.AddTeamMemberAsync(specificTeam.Id, user.GitHubId);
+
+                    if (result == MemberCheckResult.IsNotOrgMember && addMembers)
+                    {
+                        var status = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, user.GitHubId);
+
+                        if (status.Status == OperationStatus.Failed)
+                        {
+                            usersWithSyncIssues.Add(new GitHubUser(user.Email, user.GitHubId));
+                        }                        
+                    }                                        
                 }
             }
 
