@@ -19,16 +19,27 @@ namespace Gttsb.Core
 
         public Task<GitHubTeam> CreateTeamAsync(string gitHubOrg, string name) => gitHubFacade.CreateTeamAsync(gitHubOrg, name);
 
+        public async Task<ValidGitHubId?> DoesUserExistAsync(string gitHubId)
+        {
+            // TODO: look up best practices when using a Delegate and Async
+            return await memoryCache.GetOrCreateAsync($"DoesUserExistAsync-{gitHubId}", async cacheEntry =>
+            {
+                cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(10);
+
+                return await gitHubFacade.DoesUserExistAsync(gitHubId);
+            });
+        }
+
         public Task<IEnumerable<GitHubTeam>> GetAllTeamsAsync(string org) => gitHubFacade.GetAllTeamsAsync(org);
 
-        public async Task<GitHubUserCheckResult> GitHubUserCheckAsync(string gitHubOrg, string gitHubId)
+        public async Task<MemberCheckResult> IsUserMemberAsync(string gitHubOrg, ValidGitHubId gitHubId)
         {
             // TODO: look up best practices when using a Delegate and Async
             return await memoryCache.GetOrCreateAsync(gitHubId, async cacheEntry =>
             {
                 cacheEntry.SlidingExpiration = TimeSpan.FromMinutes(10);
 
-                return await gitHubFacade.GitHubUserCheckAsync(gitHubOrg, gitHubId);
+                return await gitHubFacade.IsUserMemberAsync(gitHubOrg, gitHubId);
             });
         }
     }
