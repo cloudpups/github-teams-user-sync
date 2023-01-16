@@ -1,4 +1,5 @@
 ﻿using Gttsb.Core;
+using Microsoft.Graph;
 using Octokit;
 using System.Linq;
 
@@ -34,7 +35,7 @@ namespace GitHubAction
             return await gitHubClient.Organization.Member.CheckMember(gitHubOrg, gitHubId.Id) ? MemberCheckResult.IsMember : MemberCheckResult.IsNotOrgMember;            
         }
 
-        public async Task<IEnumerable<GitHubTeam>> GetAllTeamsAsync(string org)
+        public async Task<IReadOnlyDictionary<string, GitHubTeam>> GetAllTeamsAsync(string org)
         {
             // TODO: page!!
             var teams = await gitHubClient.Organization.Team.GetAll(org, new ApiOptions
@@ -43,7 +44,7 @@ namespace GitHubAction
                 PageSize = 100
             });
 
-            return teams.Select(t => new GitHubTeam(t.Id, t.Name));
+            return teams.ToDictionary(t=> t.Name, t => new GitHubTeam(t.Id, t.Name));
         }
 
         public async Task AddTeamMemberAsync(GitHubTeam team, ValidGitHubId userGitHubId)
@@ -56,7 +57,8 @@ namespace GitHubAction
         {
             var newTeam = await gitHubClient.Organization.Team.Create(gitHubOrg, new NewTeam(name)
             {
-                Privacy = TeamPrivacy.Closed
+                Privacy = TeamPrivacy.Closed,
+                Description = Statics.TeamDescription
             });
 
             return new GitHubTeam(newTeam.Id, newTeam.Name);
@@ -86,5 +88,16 @@ namespace GitHubAction
         {
             await gitHubClient.Organization.Team.RemoveMembership(team.Id, validUser.Id);
         }
+
+        public async Task UpdateTeamDetailsAsync(string gitHubOrg, GitHubTeam specificTeam, string description)
+        {
+            Console.WriteLine($"Updating {specificTeam.Id}:{specificTeam.Name}");
+
+            await gitHubClient.Organization.Team.Update(specificTeam.Id, new UpdateTeam(specificTeam.Name)
+            {
+                Description = description,
+                Privacy = TeamPrivacy.Closed
+            });       
+        }    
     }
 }

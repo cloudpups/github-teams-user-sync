@@ -30,7 +30,7 @@ namespace Gttsb.Core
             });
         }
 
-        public Task<IEnumerable<GitHubTeam>> GetAllTeamsAsync(string org) => gitHubFacade.GetAllTeamsAsync(org);
+        public Task<IReadOnlyDictionary<string, GitHubTeam>> GetAllTeamsAsync(string org) => gitHubFacade.GetAllTeamsAsync(org);
 
         public async Task<MemberCheckResult> IsUserMemberAsync(string gitHubOrg, ValidGitHubId gitHubId)
         {
@@ -46,5 +46,7 @@ namespace Gttsb.Core
         public Task<ICollection<ValidGitHubId>> ListCurrentMembersOfGitHubTeamAsync(GitHubTeam team) => gitHubFacade.ListCurrentMembersOfGitHubTeamAsync(team);
 
         public Task RemoveTeamMemberAsync(GitHubTeam team, ValidGitHubId validUser) => gitHubFacade.RemoveTeamMemberAsync(team, validUser);
+
+        public Task UpdateTeamDetailsAsync(string org, GitHubTeam specificTeam, string description) => gitHubFacade.UpdateTeamDetailsAsync(org, specificTeam, description);
     }
 }

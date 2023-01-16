@@ -18,7 +18,7 @@
         public Task<GroupSyncResult> SyncronizeMembersAsync(string gitHubOrg, TeamDefinition team) => SyncronizeGroupsAsync(gitHubOrg, new[] { team }, true);
 
         // TODO: clean this up... This method could be doing too much.
-        private async Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teams, bool addMembers = false)
+        private async Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teamsControlledBySyncer, bool addMembers = false)
         {
             var teamSyncFailures = new List<string>();
             var usersWithSyncIssues = new List<GitHubUser>();
@@ -29,15 +29,33 @@
             // and using them here.
             var allTeams = await _gitHubFacade.GetAllTeamsAsync(gitHubOrg);
 
-            foreach (var team in teams)
+            Console.WriteLine("Existing Teams in GitHub:");
+            foreach(var team in allTeams)
             {
-                var specificTeam = allTeams.FirstOrDefault(t => t.Name == team.Name);
+                Console.WriteLine($"* {team.Key}");
+            }
 
-                if (specificTeam == null)
+            if(allTeams == null)
+            {
+                return new GroupSyncResult(Enumerable.Empty<GitHubUser>());
+            }
+
+            foreach (var team in teamsControlledBySyncer)
+            {
+                if(!allTeams.TryGetValue(team.Name, out var specificTeam))
                 {
+                    Console.WriteLine($"Creating team {team.Name}");
                     specificTeam = await _gitHubFacade.CreateTeamAsync(gitHubOrg, team.Name);
                 }
 
+                if(specificTeam == null)
+                {
+                    // TODO: return failure here as the Team MUST exist
+                    continue;
+                }
+
+                await _gitHubFacade.UpdateTeamDetailsAsync(gitHubOrg, specificTeam, Statics.TeamDescription);
+                
                 var membersResponse = await _activeDirectoryFacade.FetchMembersAsync(team.Name);
 
                 if (!membersResponse.Success)
