@@ -55,9 +55,10 @@
                     GitHubId = _emailToGitHubIdConverter.ToId(m.Email)
                 });
 
-                foreach (var user in groupMembersWithGitHubIds)
+                // Check if user is valid
+                var validUsersForTeam = new List<ValidGitHubId>();
+                foreach(var user in groupMembersWithGitHubIds)
                 {
-
                     var validUser = await _gitHubFacade.DoesUserExistAsync(user.GitHubId);
 
                     if (validUser == null)
@@ -69,22 +70,26 @@
                         ));
                         continue;
                     }
+                    validUsersForTeam.Add(validUser);
+                }
 
-                    await _gitHubFacade.AddTeamMemberAsync(specificTeam.Id, validUser);
-
-                    if(!addMembers)
-                    {
-                        // If addMembers is not set to true, we do 
-                        // not want to add the User as a Member to the Organization
-                        continue;
-                    }
-
-                    var result = await _gitHubFacade.IsUserMemberAsync(gitHubOrg, validUser);                    
+                // Add user to org if necessary
+                foreach(var validUser in validUsersForTeam)
+                {
+                    var result = await _gitHubFacade.IsUserMemberAsync(gitHubOrg, validUser);
 
                     if (result == MemberCheckResult.IsNotOrgMember)
                     {
-                        var status = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, validUser);                 
-                    }                                        
+                        var status = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, validUser);
+                    }                    
+                }
+                
+                // TODO: get list of members of GH Team           
+
+                // Add user to Team
+                foreach (var validUser in validUsersForTeam)
+                {                    
+                    await _gitHubFacade.AddTeamMemberAsync(specificTeam.Id, validUser);                                                          
                 }
             }
 
