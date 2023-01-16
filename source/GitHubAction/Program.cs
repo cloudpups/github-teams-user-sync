@@ -50,7 +50,8 @@ await parser.WithParsedAsync(async options =>
 		ClientSecret: options.ClientSecret,
 		OrgAdministerToken: options.OrgAdministerToken,
 		GitHubRepositoryOwner: options.GitHubRepositoryOwner,
-		OrganizationMembersGroup: options.OrganizationMembersGroup.IsEmptyOrWhitespace() ? configurationFromFile.OrganizationMembersGroup : options.OrganizationMembersGroup
+		OrganizationMembersGroup: options.OrganizationMembersGroup.IsEmptyOrWhitespace() ? configurationFromFile.OrganizationMembersGroup : options.OrganizationMembersGroup,
+        CreateDeployment: options.CreateDeployment
 	);
 
 	await StartTeamSyncAsync(renderedInput, host);
@@ -147,7 +148,7 @@ static async Task StartTeamSyncAsync(RenderedInput inputs, IHost host)
         usersWithSyncIssues.AddRange(memberSyncResult.UsersWithSyncIssues);
     }
 
-    var groupSyncResult = await groupSyncer.SyncronizeGroupsAsync(org, groupsToSyncronize.Values);
+    var groupSyncResult = await groupSyncer.SyncronizeGroupsAsync(org, groupsToSyncronize.Values, inputs.CreateDeployment);
 
     usersWithSyncIssues.AddRange(groupSyncResult.UsersWithSyncIssues);
 

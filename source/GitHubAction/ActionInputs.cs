@@ -73,7 +73,11 @@ namespace GitHubAction
         [Option("organizationMembersGroup",
             Required = false,
             HelpText = "The group and GitHub Team that will be added as Members to the GitHub Organization.")]
-        public string OrganizationMembersGroup { get; init; } = "";        
+        public string OrganizationMembersGroup { get; init; } = "";
+        [Option("createDeployment",
+            Required = false,
+            HelpText = "Whether or not to create a Deployment record on the .github repository.")]
+        public bool CreateDeployment { get; init; } = false;
 
         public string ClientSecret { get; init; } = "";
         public string OrgAdministerToken { get; init; } = "";

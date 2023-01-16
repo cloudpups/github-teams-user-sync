@@ -1,11 +1,9 @@
 ﻿using Gttsb.Core;
-using Microsoft.Graph;
 using Octokit;
-using System.Linq;
 
 namespace GitHubAction
 {
-    internal sealed class GitHubFacade : IGitHubFacade
+    internal sealed partial class GitHubFacade : IGitHubFacade
     {
         private readonly GitHubClient gitHubClient;
 
@@ -112,5 +110,28 @@ namespace GitHubAction
                 Privacy = TeamPrivacy.Closed
             });       
         }    
+
+        public async Task<GhDeployment> CreateDeploymentAsync(string gitHubOrg)
+        {
+            var repo = ".github";
+
+            // TODO: update NewDeployment to use the actual commit sha that was used in this sync
+            var deployment = await gitHubClient.Repository.Deployment.Create(gitHubOrg, repo, new NewDeployment("main")
+            {
+                Environment = "GitHub Teams Sync"
+            });
+
+            return new GhDeployment(deployment.Id, gitHubOrg, repo);
+        }      
+        
+        public async Task UpdateDeploymentAsync(GhDeployment deployment, GhDeployment.Status status)
+        {
+            var mappedStatus = status == GhDeployment.Status.Succeeded ? DeploymentState.Success : DeploymentState.Failure;
+
+            await gitHubClient.Repository.Deployment.Status.Create(deployment.Org, deployment.Repo, deployment.Id, new NewDeploymentStatus(mappedStatus)
+            {
+                Description = "Teams have been synced!"
+            });
+        }
     }
 }

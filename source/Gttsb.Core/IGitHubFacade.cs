@@ -11,5 +11,7 @@
         Task<ICollection<ValidGitHubId>> ListCurrentMembersOfGitHubTeamAsync(GitHubTeam team);
         Task RemoveTeamMemberAsync(GitHubTeam team, ValidGitHubId validUser);
         Task UpdateTeamDetailsAsync(string org, GitHubTeam specificTeam, string description);
+        Task<GhDeployment> CreateDeploymentAsync(string gitHubOrg);
+        Task UpdateDeploymentAsync(GhDeployment deployment, GhDeployment.Status status);
     }
 }

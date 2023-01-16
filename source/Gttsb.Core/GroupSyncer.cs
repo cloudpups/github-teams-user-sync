@@ -13,13 +13,19 @@
             _emailToGitHubIdConverter = emailToCloudIdConverter;
         }
 
-        public Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teams) => SyncronizeGroupsAsync(gitHubOrg, teams, false);
+        public Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teams, bool createDeployment) => SyncronizeGroupsAsync(gitHubOrg, teams, true, createDeployment);
 
         public Task<GroupSyncResult> SyncronizeMembersAsync(string gitHubOrg, TeamDefinition team) => SyncronizeGroupsAsync(gitHubOrg, new[] { team }, true);
 
         // TODO: clean this up... This method could be doing too much.
-        private async Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teamsControlledBySyncer, bool addMembers = false)
+        private async Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teamsControlledBySyncer, bool addMembers = false, bool createDeployment = false)
         {
+            GhDeployment? deployment = null;
+            if(createDeployment)
+            {
+                deployment = await _gitHubFacade.CreateDeploymentAsync(gitHubOrg);
+            }
+                       
             var teamSyncFailures = new List<string>();
             var usersWithSyncIssues = new List<GitHubUser>();
 
@@ -117,6 +123,11 @@
                     await _gitHubFacade.RemoveTeamMemberAsync(specificTeam, validUser);
                 }
             }
+
+            if(deployment != null)
+            {
+                await _gitHubFacade.UpdateDeploymentAsync(deployment, GhDeployment.Status.Succeeded);
+            }            
 
             return new GroupSyncResult(usersWithSyncIssues);
         }

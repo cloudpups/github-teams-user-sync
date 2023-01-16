@@ -17,6 +17,8 @@ namespace Gttsb.Core
 
         public Task AddTeamMemberAsync(GitHubTeam team, ValidGitHubId userGitHubId) => gitHubFacade.AddTeamMemberAsync(team, userGitHubId);
 
+        public Task<GhDeployment> CreateDeploymentAsync(string gitHubOrg) => gitHubFacade.CreateDeploymentAsync(gitHubOrg);
+
         public Task<GitHubTeam> CreateTeamAsync(string gitHubOrg, string name) => gitHubFacade.CreateTeamAsync(gitHubOrg, name);
 
         public async Task<ValidGitHubId?> DoesUserExistAsync(string gitHubId)
@@ -46,6 +48,8 @@ namespace Gttsb.Core
         public Task<ICollection<ValidGitHubId>> ListCurrentMembersOfGitHubTeamAsync(GitHubTeam team) => gitHubFacade.ListCurrentMembersOfGitHubTeamAsync(team);
 
         public Task RemoveTeamMemberAsync(GitHubTeam team, ValidGitHubId validUser) => gitHubFacade.RemoveTeamMemberAsync(team, validUser);
+
+        public Task UpdateDeploymentAsync(GhDeployment deployment, GhDeployment.Status status) => gitHubFacade.UpdateDeploymentAsync(deployment, status);
 
         public Task UpdateTeamDetailsAsync(string org, GitHubTeam specificTeam, string description) => gitHubFacade.UpdateTeamDetailsAsync(org, specificTeam, description);
     }

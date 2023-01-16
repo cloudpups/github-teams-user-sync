@@ -12,6 +12,7 @@
         string ClientSecret,
         string OrgAdministerToken,
         string GitHubRepositoryOwner,
-        string OrganizationMembersGroup
+        string OrganizationMembersGroup,
+        bool CreateDeployment
     );
 }
