@@ -15,7 +15,7 @@ namespace Gttsb.Core
 
         public Task<OperationResponse> AddOrgMemberAsync(string gitHubOrg, ValidGitHubId gitHubId) => gitHubFacade.AddOrgMemberAsync(gitHubOrg, gitHubId);
 
-        public Task AddTeamMemberAsync(int teamId, ValidGitHubId userGitHubId) => gitHubFacade.AddTeamMemberAsync(teamId, userGitHubId);
+        public Task AddTeamMemberAsync(GitHubTeam team, ValidGitHubId userGitHubId) => gitHubFacade.AddTeamMemberAsync(team, userGitHubId);
 
         public Task<GitHubTeam> CreateTeamAsync(string gitHubOrg, string name) => gitHubFacade.CreateTeamAsync(gitHubOrg, name);
 
@@ -42,5 +42,9 @@ namespace Gttsb.Core
                 return await gitHubFacade.IsUserMemberAsync(gitHubOrg, gitHubId);
             });
         }
+
+        public Task<ICollection<ValidGitHubId>> ListCurrentMembersOfGitHubTeamAsync(GitHubTeam team) => gitHubFacade.ListCurrentMembersOfGitHubTeamAsync(team);
+
+        public Task RemoveTeamMemberAsync(GitHubTeam team, ValidGitHubId validUser) => gitHubFacade.RemoveTeamMemberAsync(team, validUser);
     }
 }

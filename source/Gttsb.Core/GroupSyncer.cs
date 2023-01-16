@@ -84,12 +84,20 @@
                     }                    
                 }
                 
-                // TODO: get list of members of GH Team           
+                // TODO: get list of members of GH Team
+                var existingMembers = await _gitHubFacade.ListCurrentMembersOfGitHubTeamAsync(specificTeam);
+                var membersToRemove = existingMembers.Except(validUsersForTeam).ToList();
+                var membersToAdd = validUsersForTeam.Except(existingMembers).ToList();
 
                 // Add user to Team
-                foreach (var validUser in validUsersForTeam)
+                foreach (var validUser in membersToAdd)
                 {                    
-                    await _gitHubFacade.AddTeamMemberAsync(specificTeam.Id, validUser);                                                          
+                    await _gitHubFacade.AddTeamMemberAsync(specificTeam, validUser);                                                          
+                }
+
+                foreach (var validUser in membersToRemove)
+                {
+                    await _gitHubFacade.RemoveTeamMemberAsync(specificTeam, validUser);
                 }
             }
 

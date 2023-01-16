@@ -1,5 +1,6 @@
 ﻿using Gttsb.Core;
 using Octokit;
+using System.Linq;
 
 namespace GitHubAction
 {
@@ -45,10 +46,10 @@ namespace GitHubAction
             return teams.Select(t => new GitHubTeam(t.Id, t.Name));
         }
 
-        public async Task AddTeamMemberAsync(int teamId, ValidGitHubId userGitHubId)
+        public async Task AddTeamMemberAsync(GitHubTeam team, ValidGitHubId userGitHubId)
         {
             var updateMemberRequest = new UpdateTeamMembership(TeamRole.Member);
-            await gitHubClient.Organization.Team.AddOrEditMembership(teamId, userGitHubId.Id, updateMemberRequest);
+            await gitHubClient.Organization.Team.AddOrEditMembership(team.Id, userGitHubId.Id, updateMemberRequest);
         }
 
         public async Task<GitHubTeam> CreateTeamAsync(string gitHubOrg, string name)
@@ -72,6 +73,18 @@ namespace GitHubAction
             {
                 return null;
             }
+        }
+
+        public async Task<ICollection<ValidGitHubId>> ListCurrentMembersOfGitHubTeamAsync(GitHubTeam team)
+        {
+            var members = await gitHubClient.Organization.Team.GetAllMembers(team.Id);
+
+            return members.Select(m => new ValidGitHubId(m.Login)).ToList();
+        }
+
+        public async Task RemoveTeamMemberAsync(GitHubTeam team, ValidGitHubId validUser)
+        {
+            await gitHubClient.Organization.Team.RemoveMembership(team.Id, validUser.Id);
         }
     }
 }
