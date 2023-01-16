@@ -53,7 +53,10 @@ namespace GitHubAction
 
         public async Task<GitHubTeam> CreateTeamAsync(string gitHubOrg, string name)
         {
-            var newTeam = await gitHubClient.Organization.Team.Create(gitHubOrg, new NewTeam(name));
+            var newTeam = await gitHubClient.Organization.Team.Create(gitHubOrg, new NewTeam(name)
+            {
+                Privacy = TeamPrivacy.Closed
+            });
 
             return new GitHubTeam(newTeam.Id, newTeam.Name);
         }
