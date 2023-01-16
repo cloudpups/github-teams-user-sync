@@ -37,14 +37,27 @@ namespace GitHubAction
 
         public async Task<IReadOnlyDictionary<string, GitHubTeam>> GetAllTeamsAsync(string org)
         {
-            // TODO: page!!
-            var teams = await gitHubClient.Organization.Team.GetAll(org, new ApiOptions
-            {
-                // 100 is max page size via the API
-                PageSize = 100
-            });
+            // 100 is max page size via the API
+            var pageSize = 100;            
+            var currentPage = 0;
 
-            return teams.ToDictionary(t=> t.Name, t => new GitHubTeam(t.Id, t.Name));
+            var allTeams = new List<Octokit.Team>();
+            IReadOnlyList<Octokit.Team> teams = new List<Octokit.Team>();
+
+            // Wow a valid use of a 'Do While' loop
+            do
+            {                
+                teams = await gitHubClient.Organization.Team.GetAll(org, new ApiOptions
+                {
+                    PageSize = pageSize,
+                    StartPage = currentPage
+                });
+                currentPage++;
+                allTeams.AddRange(teams);
+            }
+            while (teams.Count == 100);
+
+            return allTeams.ToDictionary(t=> t.Name, t => new GitHubTeam(t.Id, t.Name));
         }
 
         public async Task AddTeamMemberAsync(GitHubTeam team, ValidGitHubId userGitHubId)

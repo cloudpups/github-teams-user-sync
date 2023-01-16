@@ -29,7 +29,7 @@
             // and using them here.
             var allTeams = await _gitHubFacade.GetAllTeamsAsync(gitHubOrg);
 
-            Console.WriteLine("Existing Teams in GitHub:");
+            Console.WriteLine($"{allTeams.Count} teams already exist in the {gitHubOrg} organization:");
             foreach(var team in allTeams)
             {
                 Console.WriteLine($"* {team.Key}");
