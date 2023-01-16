@@ -83,8 +83,7 @@
                         var status = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, validUser);
                     }                    
                 }
-                
-                // TODO: get list of members of GH Team
+                                
                 var existingMembers = await _gitHubFacade.ListCurrentMembersOfGitHubTeamAsync(specificTeam);
                 var membersToRemove = existingMembers.Except(validUsersForTeam).ToList();
                 var membersToAdd = validUsersForTeam.Except(existingMembers).ToList();
