@@ -1,9 +1,9 @@
 ﻿using Gttsb.Core;
 using Octokit;
 
-namespace GitHubAction
+namespace Gttsb.Gh
 {
-    internal sealed partial class GitHubFacade : IGitHubFacade
+    public sealed partial class GitHubFacade : IGitHubFacade
     {
         private readonly GitHubClient gitHubClient;
 

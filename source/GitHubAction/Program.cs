@@ -13,6 +13,7 @@ using Gttsb.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using Microsoft.Extensions.Caching.Memory;
+using Gttsb.Gh;
 
 using IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((_, services) => services.AddGitHubActionServices())
@@ -119,7 +120,7 @@ static async Task StartTeamSyncAsync(RenderedInput inputs, IHost host)
 
     var client = new GitHubClient(new ProductHeaderValue("groups-to-teams-sync"))
     {
-        Credentials = tokenAuth
+        Credentials = tokenAuth        
     };
 
     var gitHubFacade = new GitHubFacadeCacheDecorator(new GitHubFacade(client), new MemoryCache(new MemoryCacheOptions()));

@@ -1,9 +1,9 @@
 ﻿using Gttsb.Core;
 using Microsoft.Graph;
 
-namespace GitHubAction
+namespace Gttsb.Gh
 {
-    internal sealed class ActiveDirectoryFacade : IActiveDirectoryFacade
+    public sealed class ActiveDirectoryFacade : IActiveDirectoryFacade
     {
         private readonly GraphServiceClient _graphServiceClient;
 
