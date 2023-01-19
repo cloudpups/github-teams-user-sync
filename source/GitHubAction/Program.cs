@@ -38,7 +38,9 @@ parser.WithNotParsed(
 
 await parser.WithParsedAsync(async options => 
 {
-	var configurationFromFile = await LoadConfigurationFromFileAsync(options.ConfigPath);
+    InputsFromFile configurationFromFile = null;
+    if(!string.IsNullOrEmpty(options.ConfigPath))
+	    configurationFromFile = await LoadConfigurationFromFileAsync(options.ConfigPath);
 
 	var renderedInput = new RenderedInput(
 		TenantId: options.TenantId,

@@ -15,12 +15,15 @@
 
         public string ToId(string email)
         {
+            if(string.IsNullOrEmpty(email))
+                return null;
+
             var replaceFunctions = itemsToReplace.Select(tr => tr.Split(",")).Select<string[], Func<string, string>>(tr => (string input) =>
             {
                 return input.Replace(tr[0], tr[1]);
             }).ToList();
 
-            var emailWithReplaceableItems = email;
+            var emailWithReplaceableItems = email.Substring(0, email.IndexOf("@"));
             foreach (var replaceFunction in replaceFunctions)
             {
                 emailWithReplaceableItems = replaceFunction(emailWithReplaceableItems);

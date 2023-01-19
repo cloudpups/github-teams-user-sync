@@ -71,12 +71,14 @@
                     continue;
                 }
 
-                var groupMembersWithGitHubIds = membersResponse.Members.Select(m => new
-                {
-                    m.Id,
-                    m.DisplayName,
-                    m.Email,
-                    GitHubId = _emailToGitHubIdConverter.ToId(m.Email)
+                var groupMembersWithGitHubIds = membersResponse.Members.Select(m => {
+                    return new
+                    {
+                        m.Id,
+                        m.DisplayName,
+                        m.Email,
+                        GitHubId = _emailToGitHubIdConverter.ToId(m.Email)
+                    };
                 });
 
                 // Check if user is valid
