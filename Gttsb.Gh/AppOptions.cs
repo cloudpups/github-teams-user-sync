@@ -1,4 +1,8 @@
 ﻿namespace Gttsb.Gh
 {
-    public sealed record AppOptions(string PrivateKey, string AppId);
+    public sealed class AppOptions
+    {
+        public string PrivateKey { get; set; }
+        public string AppId { get; set; }
+    }
 }

@@ -14,12 +14,16 @@ namespace GitHubApp.Controllers
             this.gitHubFacadeFactory = gitHubFacadeFactory;
         }
 
-        // TODO: expose proper model instead of returning internal model
-        public async Task<IEnumerable<Installation>> GetInstalledOrgs()
+        [HttpGet(Name = "Get Installed Orgs")]        
+        public async Task<IEnumerable<Models.Installation>> GetInstalledOrgs()
         {
             var installedGitHubOrgs = await gitHubFacadeFactory.GetInstallationsAsync();
 
-            return installedGitHubOrgs.Select(i => new Installation(i.Id, i.OrgName)).ToList();
+            return installedGitHubOrgs.Select(i => new Models.Installation
+            {
+                Id = i.Id,
+                OrgName = i.OrgName
+            }).ToList();
         }
     }
 }

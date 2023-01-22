@@ -51,7 +51,7 @@ namespace Gttsb.Gh
             // TODO: implement paging!!
             var installations = await gitHubClient.GitHubApps.GetAllInstallationsForCurrent();
 
-            return installations.Select(i => new Core.Installation(i.Id, i.Account.Name)).ToList();
+            return installations.Select(i => new Core.Installation(i.Id, i.Account.Login)).ToList();
         }
 
         private static string GetJwt(string privateKey, string appId)

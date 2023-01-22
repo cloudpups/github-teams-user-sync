@@ -1,4 +1,8 @@
 ﻿namespace GitHubApp.Models
 {
-    public record Installation(long Id);
+    public sealed class Installation
+    {
+        public long Id { get; set; }
+        public string OrgName { get; set; }
+    }
 }
