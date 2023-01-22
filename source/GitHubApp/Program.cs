@@ -6,8 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("GitHubApp"));
 builder.Services.Configure<AzureOptions>(builder.Configuration.GetSection("Azure"));
-builder.Services.AddSingleton<IGitHubFacadeFactory, GitHubFacadeFactory>();
 
+builder.Services.AddSingleton<IGitHubFacadeFactory, GitHubFacadeFactory>();
 builder.Services.AddSingleton<IActiveDirectoryFacadeFactory, ActiveDirectoryFacadeFactory>();
 builder.Services.AddSingleton<IActiveDirectoryFacade>(p => p.GetRequiredService<IActiveDirectoryFacadeFactory>().GetActiveDirectoryClient());
 
@@ -25,11 +25,11 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+//}
 
 app.UseHttpsRedirection();
 

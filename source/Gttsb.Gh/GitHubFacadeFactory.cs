@@ -19,10 +19,13 @@ namespace Gttsb.Gh
 
         private IGitHubClient GetInitialClient(AppOptions options)
         {
+            var privateKey = options.PrivateKey ?? Environment.GetEnvironmentVariable("GITHUBAPP_PRIVATEKEY");
+            var appId = options.AppId ?? Environment.GetEnvironmentVariable("GITHUBAPP_APPID");
+
             // TODO: make this threadsafe and singleton so that a new client isn't created per request...
             // Logic must also be added so that if in the middle of processing, a new client could be generated in
             // case a call fails due to expiration of token. Though, short requests should be preferred anyways.
-            var jwt = GetJwt(options.PrivateKey, options.AppId);
+            var jwt = GetJwt(privateKey, appId);
 
             return new GitHubClient(new ProductHeaderValue(Statics.AppName))
             {

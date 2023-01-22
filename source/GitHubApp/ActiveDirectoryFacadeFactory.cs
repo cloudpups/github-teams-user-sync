@@ -15,9 +15,9 @@ internal class ActiveDirectoryFacadeFactory : IActiveDirectoryFacadeFactory
 
     public IActiveDirectoryFacade GetActiveDirectoryClient()
     {
-        var tenantId = azureOptions.Value.TenantId;
-        var clientId = azureOptions.Value.ClientId;
-        var clientSecret = azureOptions.Value.ClientSecret;      
+        var tenantId = azureOptions.Value.TenantId ?? Environment.GetEnvironmentVariable("AZURE_TENANTID");
+        var clientId = azureOptions.Value.ClientId ?? Environment.GetEnvironmentVariable("AZURE_CLIENTID"); ;
+        var clientSecret = azureOptions.Value.ClientSecret ?? Environment.GetEnvironmentVariable("AZURE_CLIENTSECRET"); ;      
 
         // The client credentials flow requires that you request the
         // /.default scope, and preconfigure your permissions on the
