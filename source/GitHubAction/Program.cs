@@ -45,21 +45,21 @@ await parser.WithParsedAsync(async options =>
     }
 
 	var renderedInput = new RenderedInput(
-		TenantId: options.TenantId,
-		ClientId: options.ClientId,		
+		AzureTenantId: options.TenantId,
+		AzureClientId: options.ClientId,		
 		GitHubTeamNames: options.GitHubTeamNames.IsEmptyOrContainsOneBlankString() ? configurationFromFile.GitHubTeamNames : options.GitHubTeamNames,
 		EmailPrepend: options.EmailPrepend,
 		EmailAppend: options.EmailAppend,
 		EmailTextToReplace: options.EmailTextToReplace,
 		ConfigPath: options.ConfigPath,
-		ClientSecret: options.ClientSecret,
+		AzureClientSecret: options.ClientSecret,
 		OrgAdministerToken: options.OrgAdministerToken,
 		GitHubRepositoryOwner: options.GitHubRepositoryOwner,
 		OrganizationMembersGroup: options.OrganizationMembersGroup.IsEmptyOrWhitespace() ? configurationFromFile.OrganizationMembersGroup : options.OrganizationMembersGroup,
         CreateDeployment: options.CreateDeployment
-	);
+	);	
 
-	await Bootstrap.StartTeamSyncAsync(renderedInput);
+	await Bootstrap.StartTeamSyncAsync(renderedInput, Bootstrap.BuildFacade(renderedInput));
 });
 
 static async Task<InputsFromFile> LoadConfigurationFromFileAsync(string configPath)

@@ -4,17 +4,26 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Graph;
 using Newtonsoft.Json;
 using Octokit;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Gttsb.Gh
 {
     public static class Bootstrap
     {
-        public static async Task StartTeamSyncAsync(RenderedInput inputs)
+        public static IGitHubFacade BuildFacade(RenderedInput inputs)
+        {
+            var tokenAuth = new Credentials(inputs.OrgAdministerToken);
+
+            var client = new GitHubClient(new ProductHeaderValue("groups-to-teams-sync"))
+            {
+                Credentials = tokenAuth
+            };
+
+            var gitHubFacade = new GitHubFacadeCacheDecorator(new GitHubFacade(client), new MemoryCache(new MemoryCacheOptions()));
+
+            return gitHubFacade;
+        }
+
+        public static async Task StartTeamSyncAsync(RenderedInput inputs, IGitHubFacade gitHubFacade)
         {
             if (!inputs.GitHubTeamNames.Any())
             {
@@ -25,12 +34,10 @@ namespace Gttsb.Gh
             // Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
             var groupDisplayNames = inputs.GitHubTeamNames.Concat(new[] { inputs.OrganizationMembersGroup }).Distinct().ToDictionary(t => t);
 
-            var tenantId = inputs.TenantId;
-            var clientId = inputs.ClientId;
-            var clientSecret = inputs.ClientSecret;
-
-            var tokenAuth = new Credentials(inputs.OrgAdministerToken);
-
+            var tenantId = inputs.AzureTenantId;
+            var clientId = inputs.AzureClientId;
+            var clientSecret = inputs.AzureClientSecret;
+           
             var org = inputs.GitHubRepositoryOwner;
 
             var emailPrepend = inputs.EmailPrepend;
@@ -51,14 +58,7 @@ namespace Gttsb.Gh
             var clientSecretCredential = new ClientSecretCredential(
                 tenantId, clientId, clientSecret, options);
             var graphClient = new GraphServiceClient(clientSecretCredential);
-            var activeDirectoryFacade = new ActiveDirectoryFacade(graphClient);
-
-            var client = new GitHubClient(new ProductHeaderValue("groups-to-teams-sync"))
-            {
-                Credentials = tokenAuth
-            };
-
-            var gitHubFacade = new GitHubFacadeCacheDecorator(new GitHubFacade(client), new MemoryCache(new MemoryCacheOptions()));
+            var activeDirectoryFacade = new ActiveDirectoryFacade(graphClient);           
 
             var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(emailPrepend, emailAppend, itemsToReplace);
 

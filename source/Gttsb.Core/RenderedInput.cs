@@ -2,14 +2,14 @@
 {
     public sealed record RenderedInput
     (
-        string TenantId,
-        string ClientId,
+        string AzureTenantId,
+        string AzureClientId,
         IEnumerable<string> GitHubTeamNames,
         string EmailPrepend,
         string EmailAppend,
         IReadOnlyList<string> EmailTextToReplace,
         string ConfigPath,
-        string ClientSecret,
+        string AzureClientSecret,
         string OrgAdministerToken,
         string GitHubRepositoryOwner,
         string OrganizationMembersGroup,

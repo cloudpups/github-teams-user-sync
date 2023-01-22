@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Gttsb.Gh\Gttsb.Gh.csproj" />
     <ProjectReference Include="..\source\Gttsb.Core\Gttsb.Core.csproj" />
   </ItemGroup>
 
