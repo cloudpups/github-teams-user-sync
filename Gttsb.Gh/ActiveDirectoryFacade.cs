@@ -31,42 +31,21 @@ namespace Gttsb.Gh
 
             var members = await _graphServiceClient.Groups[groupInQuestion.Id].Members
                 .Request()
-                .Select("id,displayName,employeeId")
+                .Select("id,mail,displayName")
                 .GetAsync();
 
             Func<User, Member> memberToUser = (User m) => {
-
-                if(string.IsNullOrEmpty(m.EmployeeId))
-                {
-                    Console.WriteLine(string.Format("{0} has an empty employeeId field! Omitting...", m.UserPrincipalName));
-                    return null;
-                }
-
-                // get the user's MS account which contains the email
-                // TODO change to async
-                User msUser;
-                try
-                {
-                    msUser = _graphServiceClient.Users.Request().Filter(string.Format("employeeId eq '{0}' and DisplayName eq '{1}'",m.EmployeeId, m.DisplayName)).Select("id,mail,displayName,employeeId,userPrincipalName").GetAsync().Result.FirstOrDefault();
-                }
-                catch(Exception ex)
-                {
-                    Console.WriteLine(string.Format("{0} graph query failed. Omitting...", m.UserPrincipalName), ex);
-                    return null;
-                }
-                
                 // TODO: handle exception case?
                 var asUser = m;
                 return new Member
                 (
                     DisplayName: asUser.DisplayName,
-                    Email: msUser?.Mail,
+                    Email: asUser.Mail,
                     Id: asUser.Id
                 );
             };
 
             var users = members.Select(m => memberToUser((User)m)).ToList();
-            users.RemoveAll(u => u == null);
 
             var nextMembersPage = members.NextPageRequest;
             while(nextMembersPage != null)

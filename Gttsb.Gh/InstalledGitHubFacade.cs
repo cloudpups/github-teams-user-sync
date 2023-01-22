@@ -84,15 +84,11 @@ namespace Gttsb.Gh
         {
             try
             {
-                if(string.IsNullOrEmpty(gitHubId))
-                    return null;
-
                 var user = await gitHubClient.User.Get(gitHubId);
                 return new ValidGitHubId(gitHubId);
             }
             catch (NotFoundException)
             {
-                Console.WriteLine(string.Format("User {0} was not found", gitHubId));
                 return null;
             }
         }
