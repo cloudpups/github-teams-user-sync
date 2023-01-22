@@ -3,11 +3,11 @@ using Octokit;
 
 namespace Gttsb.Gh
 {
-    public sealed partial class GitHubFacade : IGitHubFacade
+    public sealed partial class InstalledGitHubFacade : IInstalledGitHubFacade
     {
         private readonly GitHubClient gitHubClient;
 
-        public GitHubFacade(GitHubClient gitHubClient)
+        public InstalledGitHubFacade(GitHubClient gitHubClient)
         {
             this.gitHubClient = gitHubClient;
         }
@@ -136,14 +136,6 @@ namespace Gttsb.Gh
             {
                 Description = "Teams have been synced!"
             });
-        }
-
-        public async Task<IEnumerable<Core.Installation>> GetInstallationsAsync()
-        {
-            // TODO: implement paging!!
-            var installations = await gitHubClient.GitHubApps.GetAllInstallationsForCurrent();
-
-            return installations.Select(i => new Core.Installation(i.Id)).ToList();
         }
     }
 }

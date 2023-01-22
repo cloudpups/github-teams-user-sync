@@ -3,10 +3,10 @@
     internal sealed class GroupSyncer : IGroupSyncer
     {
         private readonly IActiveDirectoryFacade _activeDirectoryFacade;
-        private readonly IGitHubFacade _gitHubFacade;
+        private readonly IInstalledGitHubFacade _gitHubFacade;
         private readonly IEmailToCloudIdConverter _emailToGitHubIdConverter;
 
-        public GroupSyncer(IActiveDirectoryFacade activeDirectoryFacade, IGitHubFacade gitHubFacade, IEmailToCloudIdConverter emailToCloudIdConverter)
+        public GroupSyncer(IActiveDirectoryFacade activeDirectoryFacade, IInstalledGitHubFacade gitHubFacade, IEmailToCloudIdConverter emailToCloudIdConverter)
         {
             _activeDirectoryFacade = activeDirectoryFacade;
             _gitHubFacade = gitHubFacade;

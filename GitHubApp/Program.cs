@@ -13,7 +13,7 @@ builder.Services.AddSwaggerGen();
 
 RenderedInput renderedInputs = null;
 
-builder.Services.AddSingleton<IGitHubFacade>(Bootstrap.BuildFacade(renderedInputs));
+builder.Services.AddSingleton<IInstalledGitHubFacade>(Bootstrap.BuildInstalledFacade(renderedInputs));
 
 var app = builder.Build();
 

@@ -1,4 +1,4 @@
 ﻿namespace Gttsb.Core
 {
-    public record Installation(long Id);        
+    public record Installation(long Id, string OrgName);        
 }

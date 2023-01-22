@@ -7,18 +7,19 @@ namespace GitHubApp.Controllers
     [ApiController]
     public sealed class SyncController : ControllerBase
     {
-        private readonly IGitHubFacade gitHubFacade;
+        private readonly IGitHubFacadeFactory gitHubFacadeFactory;
 
-        public SyncController(IGitHubFacade gitHubFacade)
+        public SyncController(IGitHubFacadeFactory gitHubFacadeFactory)
         {
-            this.gitHubFacade = gitHubFacade;
+            this.gitHubFacadeFactory = gitHubFacadeFactory;
         }
 
+        // TODO: expose proper model instead of returning internal model
         public async Task<IEnumerable<Installation>> GetInstalledOrgs()
         {
-            var installedGitHubOrgs = await gitHubFacade.GetInstallationsAsync();
+            var installedGitHubOrgs = await gitHubFacadeFactory.GetInstallationsAsync();
 
-            return installedGitHubOrgs.Select(i => new Installation(i.Id)).ToList();
+            return installedGitHubOrgs.Select(i => new Installation(i.Id, i.OrgName)).ToList();
         }
     }
 }

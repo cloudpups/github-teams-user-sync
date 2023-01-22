@@ -9,7 +9,7 @@ namespace Gttsb.Gh
 {
     public static class Bootstrap
     {
-        public static IGitHubFacade BuildFacade(RenderedInput inputs)
+        public static IInstalledGitHubFacade BuildInstalledFacade(RenderedInput inputs)
         {
             var tokenAuth = new Credentials(inputs.OrgAdministerToken);
 
@@ -18,12 +18,12 @@ namespace Gttsb.Gh
                 Credentials = tokenAuth
             };
 
-            var gitHubFacade = new GitHubFacadeCacheDecorator(new GitHubFacade(client), new MemoryCache(new MemoryCacheOptions()));
+            var gitHubFacade = new GitHubFacadeCacheDecorator(new InstalledGitHubFacade(client), new MemoryCache(new MemoryCacheOptions()));
 
             return gitHubFacade;
         }
 
-        public static async Task StartTeamSyncAsync(RenderedInput inputs, IGitHubFacade gitHubFacade)
+        public static async Task StartTeamSyncAsync(RenderedInput inputs, IInstalledGitHubFacade gitHubFacade)
         {
             if (!inputs.GitHubTeamNames.Any())
             {

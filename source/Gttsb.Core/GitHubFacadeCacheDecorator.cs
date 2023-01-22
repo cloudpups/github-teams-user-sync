@@ -2,12 +2,12 @@
 
 namespace Gttsb.Core
 {
-    public sealed class GitHubFacadeCacheDecorator : IGitHubFacade
+    public sealed class GitHubFacadeCacheDecorator : IInstalledGitHubFacade
     {
-        private readonly IGitHubFacade gitHubFacade;
+        private readonly IInstalledGitHubFacade gitHubFacade;
         private readonly IMemoryCache memoryCache;
 
-        public GitHubFacadeCacheDecorator(IGitHubFacade gitHubFacade, IMemoryCache memoryCache)
+        public GitHubFacadeCacheDecorator(IInstalledGitHubFacade gitHubFacade, IMemoryCache memoryCache)
         {
             this.gitHubFacade = gitHubFacade;
             this.memoryCache = memoryCache;
@@ -32,9 +32,7 @@ namespace Gttsb.Core
             });
         }
 
-        public Task<IReadOnlyDictionary<string, GitHubTeam>> GetAllTeamsAsync(string org) => gitHubFacade.GetAllTeamsAsync(org);
-
-        public Task<IEnumerable<Installation>> GetInstallationsAsync() => gitHubFacade.GetInstallationsAsync();
+        public Task<IReadOnlyDictionary<string, GitHubTeam>> GetAllTeamsAsync(string org) => gitHubFacade.GetAllTeamsAsync(org);        
 
         public async Task<MemberCheckResult> IsUserMemberAsync(string gitHubOrg, ValidGitHubId gitHubId)
         {
