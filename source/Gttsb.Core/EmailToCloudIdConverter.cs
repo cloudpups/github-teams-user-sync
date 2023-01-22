@@ -15,7 +15,7 @@
 
         public string ToId(string email)
         {
-            var replaceFunctions = itemsToReplace.Select(tr => tr.Split(",")).Select<string[], Func<string, string>>(tr => (string input) =>
+            var replaceFunctions = itemsToReplace.SelectMany(s => s.Split(";")).Select(tr => tr.Split(",")).Select<string[], Func<string, string>>(tr => (string input) =>
             {
                 return input.Replace(tr[0], tr[1]);
             }).ToList();

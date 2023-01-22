@@ -112,7 +112,7 @@ namespace Gttsb.Gh
             
             var itemsToReplace = inputs.EmailTextToReplaceRules;            
 
-            var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(string.Empty, string.Empty, itemsToReplace);
+            var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(string.Empty, inputs.EmailAppend, itemsToReplace);
 
             var groupSyncer = GroupSyncerBuilder.Build(activeDirectoryFacade, gitHubFacade, emailToCloudIdBuilder);
 
