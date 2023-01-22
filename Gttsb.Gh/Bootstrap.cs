@@ -23,7 +23,7 @@ namespace Gttsb.Gh
             return gitHubFacade;
         }
 
-        public static async Task StartTeamSyncAsync(RenderedInput inputs, IInstalledGitHubFacade gitHubFacade)
+        public static async Task<bool> StartTeamSyncAsync(RenderedInput inputs, IInstalledGitHubFacade gitHubFacade)
         {
             if (!inputs.GitHubTeamNames.Any())
             {
@@ -92,10 +92,10 @@ namespace Gttsb.Gh
 
             await Task.CompletedTask;
 
-            Environment.Exit(0);
+            return true;
         }
 
-        public static async Task StartTeamSyncAsync(IActiveDirectoryFacade activeDirectoryFacade, IInstalledGitHubFacade gitHubFacade)
+        public static async Task<bool> StartTeamSyncAsync(IActiveDirectoryFacade activeDirectoryFacade, IInstalledGitHubFacade gitHubFacade)
         {
             var inputs = await gitHubFacade.GetConfigurationForInstallationAsync();
 
@@ -144,7 +144,7 @@ namespace Gttsb.Gh
 
             await Task.CompletedTask;
 
-            Environment.Exit(0);
+            return true;
         }
 
         static void WriteConsoleOutput(ISet<GitHubUser> usersWithSyncIssues)

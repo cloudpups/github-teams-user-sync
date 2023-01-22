@@ -59,7 +59,14 @@ await parser.WithParsedAsync(async options =>
         CreateDeployment: options.CreateDeployment
 	);	
 
-	await Bootstrap.StartTeamSyncAsync(renderedInput, Bootstrap.BuildInstalledFacade(renderedInput));
+	var result = await Bootstrap.StartTeamSyncAsync(renderedInput, Bootstrap.BuildInstalledFacade(renderedInput));
+
+	if(result)
+    {
+		Environment.Exit(0);
+	}
+
+	Environment.Exit(-1);
 });
 
 static async Task<InputsFromFile> LoadConfigurationFromFileAsync(string configPath)
