@@ -54,6 +54,15 @@ namespace Gttsb.Gh
             return installations.Select(i => new Core.Installation(i.Id, i.Account.Login)).ToList();
         }
 
+        public async Task<Core.Installation> GetInstallationAsync(long installationId)
+        {
+            var gitHubClient = GetInitialClient(options.Value);
+            
+            var i = await gitHubClient.GitHubApps.GetInstallationForCurrent(installationId);
+
+            return new Core.Installation(i.Id, i.Account.Login);
+        }
+
         private static string GetJwt(string privateKey, string appId)
         {
             // https://docs.hidglobal.com/auth-service/docs/buildingapps/csharp/create-and-sign-a-json-web-token--jwt--with-c--and--net.htm			

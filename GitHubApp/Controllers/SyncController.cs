@@ -1,9 +1,10 @@
 ﻿using Gttsb.Core;
+using Gttsb.Gh;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GitHubApp.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public sealed class SyncController : ControllerBase
     {
@@ -14,16 +15,13 @@ namespace GitHubApp.Controllers
             this.gitHubFacadeFactory = gitHubFacadeFactory;
         }
 
-        [HttpGet(Name = "Get Installed Orgs")]        
-        public async Task<IEnumerable<Models.Installation>> GetInstalledOrgs()
+        [HttpGet(Name = "Syncronize Org")]        
+        public async Task SynconrizeOrg(long installationId)
         {
-            var installedGitHubOrgs = await gitHubFacadeFactory.GetInstallationsAsync();
+            var installation = await gitHubFacadeFactory.GetInstallationAsync(installationId);
+            var client = await gitHubFacadeFactory.CreateClientForOrgAsync(installation);
 
-            return installedGitHubOrgs.Select(i => new Models.Installation
-            {
-                Id = i.Id,
-                OrgName = i.OrgName
-            }).ToList();
+            await Bootstrap.StartTeamSyncAsync(null, client);
         }
     }
 }
