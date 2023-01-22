@@ -3,10 +3,10 @@
     internal sealed class EmailToCloudIdConverter : IEmailToCloudIdConverter
     {
         private readonly string emailPrepend;
-        private readonly IReadOnlyList<string> itemsToReplace;
+        private readonly IEnumerable<string> itemsToReplace;
         private readonly string emailAppend;
 
-        public EmailToCloudIdConverter(string emailPrepend, IReadOnlyList<string> itemsToReplace, string emailAppend)
+        public EmailToCloudIdConverter(string emailPrepend, IEnumerable<string> itemsToReplace, string emailAppend)
         {
             this.emailPrepend = emailPrepend;
             this.itemsToReplace = itemsToReplace;

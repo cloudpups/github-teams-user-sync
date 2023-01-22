@@ -1,5 +1,7 @@
 ﻿using Gttsb.Core;
+using Newtonsoft.Json;
 using Octokit;
+using YamlDotNet.Serialization;
 
 namespace Gttsb.Gh
 {
@@ -7,9 +9,12 @@ namespace Gttsb.Gh
     {
         private readonly GitHubClient gitHubClient;
 
-        public InstalledGitHubFacade(GitHubClient gitHubClient)
+        public string OrgName { get; }
+
+        public InstalledGitHubFacade(GitHubClient gitHubClient, string orgName)
         {
             this.gitHubClient = gitHubClient;
+            OrgName = orgName;
         }
 
         public async Task<OperationResponse> AddOrgMemberAsync(string gitHubOrg, ValidGitHubId gitHubId)
@@ -136,6 +141,24 @@ namespace Gttsb.Gh
             {
                 Description = "Teams have been synced!"
             });
+        }
+
+        public async Task<SyncInput> GetConfigurationForInstallationAsync()
+        {
+            var files = await gitHubClient.Repository.Content.GetAllContents(this.OrgName, ".github");
+
+            // TODO: allow for multiple configurations based on folders. Will require status checks to help with configuration
+            // files though.
+            var configurationFile = files.First(f => f.Path == "team-sync-options.yml" || f.Path ==  "team-sync-options.yaml");
+
+            var configurationContent = await gitHubClient.Repository.Content.GetRawContent(this.OrgName, ".github", configurationFile.Path);
+
+            var configurationAsString = System.Text.Encoding.Default.GetString(configurationContent);
+
+            var deserializer = new DeserializerBuilder().Build();
+            var yamlObject = deserializer.Deserialize<SyncInput>(configurationAsString);            
+
+            return yamlObject;
         }
     }
 }

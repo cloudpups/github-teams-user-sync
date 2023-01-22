@@ -1,5 +1,6 @@
 ﻿namespace Gttsb.Core
 {
+    [Obsolete("Use SyncInput instead")]
     public sealed record RenderedInput
     (
         string AzureTenantId,

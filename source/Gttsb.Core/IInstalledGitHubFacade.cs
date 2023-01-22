@@ -2,6 +2,7 @@
 {
     public interface IInstalledGitHubFacade
     {
+        string OrgName { get; }
         Task<IReadOnlyDictionary<string, GitHubTeam>> GetAllTeamsAsync(string org);
         Task<ValidGitHubId?> DoesUserExistAsync(string gitHubId);
         Task<MemberCheckResult> IsUserMemberAsync(string gitHubOrg, ValidGitHubId gitHubId);
@@ -13,5 +14,6 @@
         Task UpdateTeamDetailsAsync(string org, GitHubTeam specificTeam, string description);
         Task<GhDeployment> CreateDeploymentAsync(string gitHubOrg);
         Task UpdateDeploymentAsync(GhDeployment deployment, GhDeployment.Status status);
+        Task<SyncInput> GetConfigurationForInstallationAsync();
     }
 }

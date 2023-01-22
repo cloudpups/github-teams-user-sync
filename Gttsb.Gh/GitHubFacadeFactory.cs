@@ -41,7 +41,7 @@ namespace Gttsb.Gh
                 Credentials = new Credentials(response.Token)
             };
 
-            return new InstalledGitHubFacade(installationClient);
+            return new InstalledGitHubFacade(installationClient, installation.OrgName);
         }
 
         public async Task<IEnumerable<Core.Installation>> GetInstallationsAsync()

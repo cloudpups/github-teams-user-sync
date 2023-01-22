@@ -4,8 +4,12 @@ using Gttsb.Gh;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("App"));
+builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("GitHubApp"));
+builder.Services.Configure<AzureOptions>(builder.Configuration.GetSection("Azure"));
 builder.Services.AddSingleton<IGitHubFacadeFactory, GitHubFacadeFactory>();
+
+builder.Services.AddSingleton<IActiveDirectoryFacadeFactory, ActiveDirectoryFacadeFactory>();
+builder.Services.AddSingleton<IActiveDirectoryFacade>(p => p.GetRequiredService<IActiveDirectoryFacadeFactory>().GetActiveDirectoryClient());
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

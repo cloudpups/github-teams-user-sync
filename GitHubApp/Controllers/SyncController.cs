@@ -9,10 +9,12 @@ namespace GitHubApp.Controllers
     public sealed class SyncController : ControllerBase
     {
         private readonly IGitHubFacadeFactory gitHubFacadeFactory;
+        private readonly IActiveDirectoryFacade activeDirectoryFacade;
 
-        public SyncController(IGitHubFacadeFactory gitHubFacadeFactory)
+        public SyncController(IGitHubFacadeFactory gitHubFacadeFactory, IActiveDirectoryFacade activeDirectoryFacade)
         {
             this.gitHubFacadeFactory = gitHubFacadeFactory;
+            this.activeDirectoryFacade = activeDirectoryFacade;
         }
 
         [HttpGet(Name = "Syncronize Org")]        
@@ -21,7 +23,7 @@ namespace GitHubApp.Controllers
             var installation = await gitHubFacadeFactory.GetInstallationAsync(installationId);
             var client = await gitHubFacadeFactory.CreateClientForOrgAsync(installation);
 
-            await Bootstrap.StartTeamSyncAsync(null, client);
+            await Bootstrap.StartTeamSyncAsync(activeDirectoryFacade, client);
         }
     }
 }

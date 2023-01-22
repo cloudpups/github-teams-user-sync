@@ -13,6 +13,8 @@ namespace Gttsb.Core
             this.memoryCache = memoryCache;
         }
 
+        public string OrgName => gitHubFacade.OrgName;
+
         public Task<OperationResponse> AddOrgMemberAsync(string gitHubOrg, ValidGitHubId gitHubId) => gitHubFacade.AddOrgMemberAsync(gitHubOrg, gitHubId);
 
         public Task AddTeamMemberAsync(GitHubTeam team, ValidGitHubId userGitHubId) => gitHubFacade.AddTeamMemberAsync(team, userGitHubId);
@@ -32,7 +34,9 @@ namespace Gttsb.Core
             });
         }
 
-        public Task<IReadOnlyDictionary<string, GitHubTeam>> GetAllTeamsAsync(string org) => gitHubFacade.GetAllTeamsAsync(org);        
+        public Task<IReadOnlyDictionary<string, GitHubTeam>> GetAllTeamsAsync(string org) => gitHubFacade.GetAllTeamsAsync(org);
+
+        public Task<SyncInput> GetConfigurationForInstallationAsync() => gitHubFacade.GetConfigurationForInstallationAsync();
 
         public async Task<MemberCheckResult> IsUserMemberAsync(string gitHubOrg, ValidGitHubId gitHubId)
         {

@@ -18,7 +18,7 @@ namespace Gttsb.Gh
                 Credentials = tokenAuth
             };
 
-            var gitHubFacade = new GitHubFacadeCacheDecorator(new InstalledGitHubFacade(client), new MemoryCache(new MemoryCacheOptions()));
+            var gitHubFacade = new GitHubFacadeCacheDecorator(new InstalledGitHubFacade(client, inputs.GitHubRepositoryOwner), new MemoryCache(new MemoryCacheOptions()));
 
             return gitHubFacade;
         }
@@ -61,6 +61,58 @@ namespace Gttsb.Gh
             var activeDirectoryFacade = new ActiveDirectoryFacade(graphClient);           
 
             var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(emailPrepend, emailAppend, itemsToReplace);
+
+            var groupSyncer = GroupSyncerBuilder.Build(activeDirectoryFacade, gitHubFacade, emailToCloudIdBuilder);
+
+            var groupsToSyncronize = groupDisplayNames.Select(g => new
+            {
+                Key = g.Key,
+                Value = new TeamDefinition("ActiveDirectory", g.Key)
+            }).ToDictionary(o => o.Key, o => o.Value);
+
+            Console.WriteLine("This Action will attempt to syncronize the following groups:");
+            foreach (var group in groupsToSyncronize)
+            {
+                Console.WriteLine($"* {group.Key}");
+            }
+
+            var usersWithSyncIssues = new List<GitHubUser>();
+
+            if (!inputs.OrganizationMembersGroup.IsEmptyOrWhitespace())
+            {
+                var memberSyncResult = await groupSyncer.SyncronizeMembersAsync(org, groupsToSyncronize[inputs.OrganizationMembersGroup]);
+                usersWithSyncIssues.AddRange(memberSyncResult.UsersWithSyncIssues);
+            }
+
+            var groupSyncResult = await groupSyncer.SyncronizeGroupsAsync(org, groupsToSyncronize.Values, inputs.CreateDeployment);
+
+            usersWithSyncIssues.AddRange(groupSyncResult.UsersWithSyncIssues);
+
+            WriteConsoleOutput(usersWithSyncIssues.DistinctBy(g => g.Email).ToHashSet());
+
+            await Task.CompletedTask;
+
+            Environment.Exit(0);
+        }
+
+        public static async Task StartTeamSyncAsync(IActiveDirectoryFacade activeDirectoryFacade, IInstalledGitHubFacade gitHubFacade)
+        {
+            var inputs = await gitHubFacade.GetConfigurationForInstallationAsync();
+
+            if (!inputs.GitHubTeamNames.Any())
+            {
+                Console.WriteLine("No teams found to syncronize!");
+                Environment.Exit(0);
+            }
+
+            // Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
+            var groupDisplayNames = inputs.GitHubTeamNames.Concat(new[] { inputs.OrganizationMembersGroup }).Distinct().ToDictionary(t => t);
+
+            var org = gitHubFacade.OrgName;
+            
+            var itemsToReplace = inputs.EmailTextToReplaceRules;            
+
+            var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(string.Empty, string.Empty, itemsToReplace);
 
             var groupSyncer = GroupSyncerBuilder.Build(activeDirectoryFacade, gitHubFacade, emailToCloudIdBuilder);
 
