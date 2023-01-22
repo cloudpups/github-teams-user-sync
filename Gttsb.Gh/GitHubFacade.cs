@@ -137,5 +137,13 @@ namespace Gttsb.Gh
                 Description = "Teams have been synced!"
             });
         }
+
+        public async Task<IEnumerable<Core.Installation>> GetInstallationsAsync()
+        {
+            // TODO: implement paging!!
+            var installations = await gitHubClient.GitHubApps.GetAllInstallationsForCurrent();
+
+            return installations.Select(i => new Core.Installation(i.Id)).ToList();
+        }
     }
 }

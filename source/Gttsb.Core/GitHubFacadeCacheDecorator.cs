@@ -34,6 +34,8 @@ namespace Gttsb.Core
 
         public Task<IReadOnlyDictionary<string, GitHubTeam>> GetAllTeamsAsync(string org) => gitHubFacade.GetAllTeamsAsync(org);
 
+        public Task<IEnumerable<Installation>> GetInstallationsAsync() => gitHubFacade.GetInstallationsAsync();
+
         public async Task<MemberCheckResult> IsUserMemberAsync(string gitHubOrg, ValidGitHubId gitHubId)
         {
             // TODO: look up best practices when using a Delegate and Async

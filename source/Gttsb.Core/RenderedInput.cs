@@ -1,6 +1,6 @@
-﻿namespace GitHubAction
+﻿namespace Gttsb.Core
 {
-    internal record RenderedInput
+    public sealed record RenderedInput
     (
         string TenantId,
         string ClientId,

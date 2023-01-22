@@ -1,8 +1,8 @@
-﻿namespace GitHubAction
+﻿namespace Gttsb.Gh
 {
-    internal static class EnumerableExtensions
+    public static class EnumerableExtensions
     {
-        internal static bool IsEmptyOrContainsOneBlankString(this IEnumerable<string> e)
+        public static bool IsEmptyOrContainsOneBlankString(this IEnumerable<string> e)
         {
             if(!e.Any())
             {

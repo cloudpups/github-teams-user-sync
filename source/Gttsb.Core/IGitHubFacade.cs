@@ -8,6 +8,7 @@
         Task<OperationResponse> AddOrgMemberAsync(string gitHubOrg, ValidGitHubId gitHubId);
         Task AddTeamMemberAsync(GitHubTeam team, ValidGitHubId userGitHubId);        
         Task<GitHubTeam> CreateTeamAsync(string gitHubOrg, string name);
+        Task<IEnumerable<Installation>> GetInstallationsAsync();
         Task<ICollection<ValidGitHubId>> ListCurrentMembersOfGitHubTeamAsync(GitHubTeam team);
         Task RemoveTeamMemberAsync(GitHubTeam team, ValidGitHubId validUser);
         Task UpdateTeamDetailsAsync(string org, GitHubTeam specificTeam, string description);
