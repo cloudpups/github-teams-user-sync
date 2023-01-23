@@ -28,7 +28,7 @@ namespace Gttsb.Gh
             if (!inputs.GitHubTeamNames.Any())
             {
                 Console.WriteLine("No teams found to syncronize!");
-                Environment.Exit(0);
+                return false;
             }
 
             // Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
@@ -102,7 +102,7 @@ namespace Gttsb.Gh
             if (!inputs.GitHubTeamNames.Any())
             {
                 Console.WriteLine("No teams found to syncronize!");
-                Environment.Exit(0);
+                return false;
             }
 
             // Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
