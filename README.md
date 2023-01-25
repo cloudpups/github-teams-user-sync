@@ -2,6 +2,8 @@
 
 Groups (currently Azure Active Directory Only) to GitHub Teams sync
 
+[![Publish Docker image](https://github.com/cloudpups/github-teams-user-sync/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/cloudpups/github-teams-user-sync/actions/workflows/docker-image.yml) [![Docker Pulls](https://img.shields.io/docker/pulls/trfc/github-teams-user-sync)](https://hub.docker.com/r/trfc/github-teams-user-sync)
+
 ## Some Sparse Documentation (to be updated)
 
 ## Configuration of this tool
