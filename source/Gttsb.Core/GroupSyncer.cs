@@ -24,6 +24,8 @@
             if(createDeployment)
             {
                 deployment = await _gitHubFacade.CreateDeploymentAsync(gitHubOrg);
+
+                await _gitHubFacade.UpdateDeploymentAsync(deployment, GhDeployment.Status.InProgress);
             }
                        
             var teamSyncFailures = new List<string>();

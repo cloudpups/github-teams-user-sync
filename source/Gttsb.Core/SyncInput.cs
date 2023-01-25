@@ -2,10 +2,11 @@
 {
     public sealed class SyncInput
     {
-        public IEnumerable<string> GitHubTeamNames { get; set; }        
-        public string EmailAppend { get; set; } = String.Empty;
-        public IEnumerable<string> EmailTextToReplaceRules { get; set; }
-        public string OrganizationMembersGroup { get; set; }
-        public bool CreateDeployment { get; set; } = true;
+        public IEnumerable<string> GitHubTeamNames { get; init; } = Enumerable.Empty<string>();
+        public string EmailAppend { get; init; } = String.Empty;
+        public IEnumerable<string> EmailTextToReplaceRules { get; init; } = Enumerable.Empty<string>();
+        public string OrganizationMembersGroup { get; init; } = String.Empty;
+        public bool CreateDeployment { get; init; } = true;
+        public IReadOnlyDictionary<string, string> EmailReplaceRules { get; init; } = new Dictionary<string, string>();
     };
 }

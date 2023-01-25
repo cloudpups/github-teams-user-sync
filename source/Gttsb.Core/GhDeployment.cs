@@ -5,7 +5,8 @@
         public enum Status
         {
             Succeeded,
-            Failed
+            Failed,
+            InProgress
         }
     }
 }

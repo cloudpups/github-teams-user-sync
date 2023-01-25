@@ -9,12 +9,12 @@ namespace Gttsb.Gh
     {
         private readonly GitHubClient gitHubClient;
 
-        public string OrgName { get; }
+        public string OrgName { get; }        
 
         public InstalledGitHubFacade(GitHubClient gitHubClient, string orgName)
         {
             this.gitHubClient = gitHubClient;
-            OrgName = orgName;
+            OrgName = orgName;            
         }
 
         public async Task<OperationResponse> AddOrgMemberAsync(string gitHubOrg, ValidGitHubId gitHubId)
@@ -123,7 +123,7 @@ namespace Gttsb.Gh
             // TODO: update NewDeployment to use the actual commit sha that was used in this sync
             var deployment = await gitHubClient.Repository.Deployment.Create(gitHubOrg, repo, new NewDeployment("main")
             {
-                Environment = "GitHub Teams Sync"
+                Environment = "GitHub Teams Sync"                
             });
 
             return new GhDeployment(deployment.Id, gitHubOrg, repo);
@@ -131,12 +131,28 @@ namespace Gttsb.Gh
         
         public async Task UpdateDeploymentAsync(GhDeployment deployment, GhDeployment.Status status)
         {
-            var mappedStatus = status == GhDeployment.Status.Succeeded ? DeploymentState.Success : DeploymentState.Failure;
+            DeploymentState mappedStatus = MapStatus(status);
 
             await gitHubClient.Repository.Deployment.Status.Create(deployment.Org, deployment.Repo, deployment.Id, new NewDeploymentStatus(mappedStatus)
             {
-                Description = "Teams have been synced!"
+                Description = "Teams have been synced! Please see the logs for more details.",
+                LogUrl = "https://example.com"
             });
+        }
+
+        private static DeploymentState MapStatus(GhDeployment.Status status)
+        {
+            switch (status)
+            {
+                case GhDeployment.Status.Succeeded:
+                    return DeploymentState.Success;
+                case GhDeployment.Status.Failed:
+                    return DeploymentState.Failure;
+                case GhDeployment.Status.InProgress:
+                    return DeploymentState.InProgress;
+            }
+
+            throw new Exception("Invalid status");
         }
 
         public async Task<SyncInput> GetConfigurationForInstallationAsync()
@@ -152,7 +168,7 @@ namespace Gttsb.Gh
             var configurationAsString = System.Text.Encoding.Default.GetString(configurationContent);
 
             var deserializer = new DeserializerBuilder().Build();
-            var yamlObject = deserializer.Deserialize<SyncInput>(configurationAsString);            
+            var yamlObject = deserializer.Deserialize<SyncInput>(configurationAsString);
 
             return yamlObject;
         }

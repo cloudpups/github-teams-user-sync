@@ -14,6 +14,7 @@
         string OrgAdministerToken,
         string GitHubRepositoryOwner,
         string OrganizationMembersGroup,
-        bool CreateDeployment
+        bool CreateDeployment,
+        IReadOnlyDictionary<string, string> EmailReplaceRules
     );
 }

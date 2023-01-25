@@ -56,7 +56,8 @@ await parser.WithParsedAsync(async options =>
 		OrgAdministerToken: options.OrgAdministerToken,
 		GitHubRepositoryOwner: options.GitHubRepositoryOwner,
 		OrganizationMembersGroup: options.OrganizationMembersGroup.IsEmptyOrWhitespace() ? configurationFromFile.OrganizationMembersGroup : options.OrganizationMembersGroup,
-        CreateDeployment: options.CreateDeployment
+        CreateDeployment: options.CreateDeployment,
+		EmailReplaceRules: new Dictionary<string,string>()
 	);	
 
 	var result = await Bootstrap.StartTeamSyncAsync(renderedInput, Bootstrap.BuildInstalledFacade(renderedInput));

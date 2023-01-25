@@ -58,9 +58,12 @@ namespace Gttsb.Gh
             var clientSecretCredential = new ClientSecretCredential(
                 tenantId, clientId, clientSecret, options);
             var graphClient = new GraphServiceClient(clientSecretCredential);
-            var activeDirectoryFacade = new ActiveDirectoryFacade(graphClient);           
+            var activeDirectoryFacade = new ActiveDirectoryFacade(graphClient);
 
-            var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(emailPrepend, emailAppend, itemsToReplace);
+            var emailReplaceRules = GetEmailReplaceRules(inputs.EmailReplaceRules);
+            var itemsToReplaceRules = GetItemsToReplaceRules(Enumerable.Empty<string>());
+
+            var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(string.Empty, inputs.EmailAppend, itemsToReplaceRules, emailReplaceRules);
 
             var groupSyncer = GroupSyncerBuilder.Build(activeDirectoryFacade, gitHubFacade, emailToCloudIdBuilder);
 
@@ -108,11 +111,12 @@ namespace Gttsb.Gh
             // Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
             var groupDisplayNames = inputs.GitHubTeamNames.Concat(new[] { inputs.OrganizationMembersGroup }).Distinct().ToDictionary(t => t);
 
-            var org = gitHubFacade.OrgName;
-            
-            var itemsToReplace = inputs.EmailTextToReplaceRules;            
+            var org = gitHubFacade.OrgName;            
 
-            var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(string.Empty, inputs.EmailAppend, itemsToReplace);
+            var emailReplaceRules = GetEmailReplaceRules(inputs.EmailReplaceRules);
+            var itemsToReplaceRules = GetItemsToReplaceRules(inputs.EmailTextToReplaceRules);
+
+            var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(string.Empty, inputs.EmailAppend, itemsToReplaceRules, emailReplaceRules);
 
             var groupSyncer = GroupSyncerBuilder.Build(activeDirectoryFacade, gitHubFacade, emailToCloudIdBuilder);
 
@@ -145,6 +149,26 @@ namespace Gttsb.Gh
             await Task.CompletedTask;
 
             return true;
+        }
+
+        private static IEnumerable<string> GetItemsToReplaceRules(IEnumerable<string> emailTextToReplaceRules)
+        {
+            // TODO: use proper config fetching here...
+            var fromEnvAsString = Environment.GetEnvironmentVariable("EmailTextToReplaceRules") ?? "{}";
+
+            var fromEnv = JsonConvert.DeserializeObject<IEnumerable<string>>(fromEnvAsString) ?? Enumerable.Empty<string>();
+
+            return emailTextToReplaceRules.Any() ? emailTextToReplaceRules : fromEnv;
+        }
+
+        private static IReadOnlyDictionary<string, string> GetEmailReplaceRules(IReadOnlyDictionary<string, string> emailReplaceRules)
+        {
+            // TODO: use proper config fetching here...
+            var fromEnvAsString = Environment.GetEnvironmentVariable("EmailReplaceRules") ?? "{}";
+
+            var fromEnv = JsonConvert.DeserializeObject<IReadOnlyDictionary<string, string>>(fromEnvAsString) ?? new Dictionary<string,string>();
+
+            return emailReplaceRules.Any() ? emailReplaceRules : fromEnv;
         }
 
         static void WriteConsoleOutput(ISet<GitHubUser> usersWithSyncIssues)
