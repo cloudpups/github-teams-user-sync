@@ -1,11 +1,13 @@
 using Gttsb.Core;
 using Gttsb.Gh;
+using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("GitHubApp"));
 builder.Services.Configure<AzureOptions>(builder.Configuration.GetSection("Azure"));
+builder.Services.AddSingleton<IMemoryCache>(new MemoryCache(new MemoryCacheOptions()));
 
 builder.Services.AddSingleton<IGitHubFacadeFactory, GitHubFacadeFactory>();
 builder.Services.AddSingleton<IActiveDirectoryFacadeFactory, ActiveDirectoryFacadeFactory>();

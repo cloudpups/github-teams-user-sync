@@ -1,4 +1,5 @@
 ﻿using Gttsb.Core;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Octokit;
@@ -11,10 +12,12 @@ namespace Gttsb.Gh
     public sealed class GitHubFacadeFactory : IGitHubFacadeFactory
     {
         private readonly IOptions<AppOptions> options;
+        private IMemoryCache cache;
 
-        public GitHubFacadeFactory(IOptions<AppOptions> options)
+        public GitHubFacadeFactory(IOptions<AppOptions> options, IMemoryCache cache)
         {
             this.options = options;
+            this.cache = cache;
         }
 
         private IGitHubClient GetInitialClient(AppOptions options)
@@ -48,7 +51,11 @@ namespace Gttsb.Gh
 
             var connection = new Octokit.GraphQL.Connection(new Octokit.GraphQL.ProductHeaderValue(productHeaderName), response.Token);
 
-            return new InstalledGitHubFacade(installationClient, connection, installation.OrgName);
+            var installedClient = new InstalledGitHubFacade(installationClient, connection, installation.OrgName);
+
+            var withCacheDecorator = new GitHubFacadeCacheDecorator(installedClient, cache);
+
+            return withCacheDecorator;
         }
 
         public async Task<IEnumerable<Core.Installation>> GetInstallationsAsync()
