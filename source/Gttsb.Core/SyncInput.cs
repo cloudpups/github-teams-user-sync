@@ -1,6 +1,6 @@
 ﻿namespace Gttsb.Core
 {
-    public sealed class SyncInput
+    public sealed record SyncInput
     {
         public IEnumerable<string> GitHubTeamNames { get; init; } = Enumerable.Empty<string>();
         public string EmailAppend { get; init; } = String.Empty;

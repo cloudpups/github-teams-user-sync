@@ -1,4 +1,5 @@
 ﻿using Gttsb.Core;
+using Newtonsoft.Json;
 using Octokit;
 using Octokit.GraphQL;
 using YamlDotNet.Serialization;
@@ -163,9 +164,27 @@ namespace Gttsb.Gh
             var configurationAsString = System.Text.Encoding.Default.GetString(configurationContent);
 
             var deserializer = new DeserializerBuilder().Build();
-            var yamlObject = deserializer.Deserialize<SyncInput>(configurationAsString);
 
-            return yamlObject;
+            // TODO: fix this nonsense
+            // https://github.com/aaubry/YamlDotNet/issues/571
+            var rawYamlObject = deserializer.Deserialize<object>(configurationAsString);
+            var syncInput = JsonConvert.DeserializeObject<SyncInput>(JsonConvert.SerializeObject(rawYamlObject));
+            
+            if(syncInput == null)
+            {
+                // TODO: throw proper custom exception
+                throw new Exception("Configuration appears to be null");
+            }
+
+            // One could argue that such logic is too many responsibilities for this method. I pose this is a fine tradeoff though...
+            // Once we get around to implementing config file status checks, I will most likely change my mind.
+            // This could also be turned into a Set.
+            syncInput = syncInput with
+            {
+                GitHubTeamNames = syncInput.GitHubTeamNames.Distinct().ToList()
+            };
+
+            return syncInput;
         }
     }
 }
