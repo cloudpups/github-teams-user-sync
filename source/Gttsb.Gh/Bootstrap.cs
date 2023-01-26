@@ -13,12 +13,16 @@ namespace Gttsb.Gh
         {
             var tokenAuth = new Credentials(inputs.OrgAdministerToken);
 
-            var client = new GitHubClient(new ProductHeaderValue("groups-to-teams-sync"))
+            var productHeaderName = "groups-to-teams-sync";
+
+            var client = new GitHubClient(new ProductHeaderValue(productHeaderName))
             {
                 Credentials = tokenAuth
-            };
+            };            
 
-            var gitHubFacade = new GitHubFacadeCacheDecorator(new InstalledGitHubFacade(client, inputs.GitHubRepositoryOwner), new MemoryCache(new MemoryCacheOptions()));
+            var connection = new Octokit.GraphQL.Connection(new Octokit.GraphQL.ProductHeaderValue(productHeaderName), inputs.OrgAdministerToken);
+
+            var gitHubFacade = new GitHubFacadeCacheDecorator(new InstalledGitHubFacade(client, connection, inputs.GitHubRepositoryOwner), new MemoryCache(new MemoryCacheOptions()));
 
             return gitHubFacade;
         }

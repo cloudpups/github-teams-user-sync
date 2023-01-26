@@ -1,4 +1,4 @@
 ﻿namespace Gttsb.Core
 {
-    public record GitHubUser(string Email, string GitHubId);
+    public record GitHubUser(string Email, ValidGitHubId GitHubId);
 }

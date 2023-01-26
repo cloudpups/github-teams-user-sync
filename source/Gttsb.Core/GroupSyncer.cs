@@ -92,7 +92,7 @@
                         usersWithSyncIssues.Add(new GitHubUser
                         (
                             Email: user.Email,
-                            GitHubId: user.GitHubId
+                            GitHubId: new ValidGitHubId(user.GitHubId)
                         ));
                         continue;
                     }
@@ -109,8 +109,8 @@
                         var status = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, validUser);
                     }                    
                 }
-                                
-                var existingMembers = await _gitHubFacade.ListCurrentMembersOfGitHubTeamAsync(specificTeam);
+
+                var existingMembers = specificTeam.Members.Select(m => m.GitHubId).ToList();
                 var membersToRemove = existingMembers.Except(validUsersForTeam).ToList();
                 var membersToAdd = validUsersForTeam.Except(existingMembers).ToList();
 

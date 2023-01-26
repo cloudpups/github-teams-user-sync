@@ -38,13 +38,17 @@ namespace Gttsb.Gh
             var gitHubClient = GetInitialClient(options.Value);
             var response = await gitHubClient.GitHubApps.CreateInstallationToken(installation.Id);
 
-            // Create a new GitHubClient using the installation token as authentication
-            var installationClient = new GitHubClient(new ProductHeaderValue($"{installation.OrgName}-{installation.Id}"))
+            var productHeaderName = $"{installation.OrgName}-{installation.Id}";
+
+            // Create a new GitHubClient using the installation token as authentication            
+            var installationClient = new GitHubClient(new ProductHeaderValue(productHeaderName))
             {
                 Credentials = new Credentials(response.Token)
             };
 
-            return new InstalledGitHubFacade(installationClient, installation.OrgName);
+            var connection = new Octokit.GraphQL.Connection(new Octokit.GraphQL.ProductHeaderValue(productHeaderName), response.Token);
+
+            return new InstalledGitHubFacade(installationClient, connection, installation.OrgName);
         }
 
         public async Task<IEnumerable<Core.Installation>> GetInstallationsAsync()

@@ -49,6 +49,7 @@ namespace Gttsb.Core
             });
         }
 
+        [Obsolete("GetAllTeamsAsync now returns member information as well.")]
         public Task<ICollection<ValidGitHubId>> ListCurrentMembersOfGitHubTeamAsync(GitHubTeam team) => gitHubFacade.ListCurrentMembersOfGitHubTeamAsync(team);
 
         public Task RemoveTeamMemberAsync(GitHubTeam team, ValidGitHubId validUser) => gitHubFacade.RemoveTeamMemberAsync(team, validUser);

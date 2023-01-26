@@ -1,20 +1,23 @@
 ﻿using Gttsb.Core;
-using Newtonsoft.Json;
 using Octokit;
+using Octokit.GraphQL;
 using YamlDotNet.Serialization;
+using IGraphQlClient = Octokit.GraphQL.IConnection;
 
 namespace Gttsb.Gh
 {
     public sealed partial class InstalledGitHubFacade : IInstalledGitHubFacade
     {
         private readonly GitHubClient gitHubClient;
+        private readonly IGraphQlClient graphQlClient;
 
         public string OrgName { get; }        
 
-        public InstalledGitHubFacade(GitHubClient gitHubClient, string orgName)
+        public InstalledGitHubFacade(GitHubClient gitHubClient, IGraphQlClient graphQlClient, string orgName)
         {
             this.gitHubClient = gitHubClient;
-            OrgName = orgName;            
+            OrgName = orgName;
+            this.graphQlClient = graphQlClient;
         }
 
         public async Task<OperationResponse> AddOrgMemberAsync(string gitHubOrg, ValidGitHubId gitHubId)
@@ -39,28 +42,19 @@ namespace Gttsb.Gh
         }
 
         public async Task<IReadOnlyDictionary<string, GitHubTeam>> GetAllTeamsAsync(string org)
-        {
-            // 100 is max page size via the API
-            var pageSize = 100;            
-            var currentPage = 0;
+        {                  
+            var query = new Query().Organization(org).Teams().AllPages().Select(team => new {
+                DatabaseId = team.DatabaseId ?? -1,
+                team.Name,
+                Members = team.Members(null, null, null, null, null, null, null, null).AllPages().Select(m => new {
+                    m.Login,
+                    m.Email
+                }).ToList()
+            }).Compile();
 
-            var allTeams = new List<Octokit.Team>();
-            IReadOnlyList<Octokit.Team> teams = new List<Octokit.Team>();
+            var result = await graphQlClient.Run(query);
 
-            // Wow a valid use of a 'Do While' loop
-            do
-            {                
-                teams = await gitHubClient.Organization.Team.GetAll(org, new ApiOptions
-                {
-                    PageSize = pageSize,
-                    StartPage = currentPage
-                });
-                currentPage++;
-                allTeams.AddRange(teams);
-            }
-            while (teams.Count == 100);
-
-            return allTeams.ToDictionary(t=> t.Name, t => new GitHubTeam(t.Id, t.Name));
+            return result.ToDictionary(t=> t.Name, t => new GitHubTeam(t.DatabaseId, t.Name, t.Members.Select(m => new GitHubUser(m.Email, new ValidGitHubId(m.Login))).ToList()));
         }
 
         public async Task AddTeamMemberAsync(GitHubTeam team, ValidGitHubId userGitHubId)
@@ -77,7 +71,8 @@ namespace Gttsb.Gh
                 Description = Statics.TeamDescription
             });
 
-            return new GitHubTeam(newTeam.Id, newTeam.Name);
+            // TODO: leaky- should not have to pass an empty array here. Could be improper shape for object
+            return new GitHubTeam(newTeam.Id, newTeam.Name, Enumerable.Empty<GitHubUser>().ToList());
         }
 
         public async Task<ValidGitHubId?> DoesUserExistAsync(string gitHubId)
@@ -92,7 +87,7 @@ namespace Gttsb.Gh
                 return null;
             }
         }
-
+        
         public async Task<ICollection<ValidGitHubId>> ListCurrentMembersOfGitHubTeamAsync(GitHubTeam team)
         {
             var members = await gitHubClient.Organization.Team.GetAllMembers(team.Id);
