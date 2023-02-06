@@ -22,7 +22,7 @@ GitHubTeamNames:
 
 As of this writing, this sync tool can be ran as a standalone app, or as a GitHub Action.
 
-### As a Standalon App
+### As a Standalone App
 
 An Azure AD App registration must be created with the following permissions:
 
@@ -36,16 +36,8 @@ A GitHub App registration must be created with the following permissions (this i
 * Repository- Contents: Read (only necessary for the `.github` repository)
 * Repository- Deployments: Read and Write (only necessary for the `.github` repository)
 * Organization- Members: Read and Write
+* Organization- Administration: Read and Write
+    * This is needed for managing [Security Managers](https://docs.github.com/en/enterprise-cloud@latest/rest/orgs/security-managers?apiVersion=2022-11-28), though as Security Managers is in beta, this permission may also change.
+    * ❗ **If you do not intend to use this functionality**, feel free to exclude this permission from your GitHub App Registration
 
 The AppId and Private Key must be provided as environment variables to the application.
-
-### As a GitHub Action
-
-An Azure AD App Registration must still be created (as documented above), and the client ID and secret must be passed to the Action.
-
-An org administrator PAT with the following permissions must be provided:
-
-* write:org
-* read:org
-* public_repo
-* repo_deployment
