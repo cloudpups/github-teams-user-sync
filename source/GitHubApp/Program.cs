@@ -5,7 +5,8 @@ using Microsoft.Extensions.Caching.Memory;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("GitHubApp"));
+builder.Services.Configure<GhAppClientOptions>(builder.Configuration.GetSection("GitHubApp"));
+builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("AppOptions"));
 builder.Services.Configure<AzureOptions>(builder.Configuration.GetSection("Azure"));
 builder.Services.AddSingleton<IMemoryCache>(new MemoryCache(new MemoryCacheOptions()));
 

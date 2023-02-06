@@ -11,19 +11,19 @@ namespace Gttsb.Gh
 {
     public sealed class GitHubFacadeFactory : IGitHubFacadeFactory
     {
-        private readonly IOptions<AppOptions> options;
+        private readonly IOptions<GhAppClientOptions> options;
         private IMemoryCache cache;
 
-        public GitHubFacadeFactory(IOptions<AppOptions> options, IMemoryCache cache)
+        public GitHubFacadeFactory(IOptions<GhAppClientOptions> options, IMemoryCache cache)
         {
             this.options = options;
             this.cache = cache;
         }
 
-        private IGitHubClient GetInitialClient(AppOptions options)
+        private IGitHubClient GetInitialClient(GhAppClientOptions options)
         {
-            var privateKey = options.PrivateKey ?? Environment.GetEnvironmentVariable("GITHUBAPP_PRIVATEKEY");
-            var appId = options.AppId ?? Environment.GetEnvironmentVariable("GITHUBAPP_APPID");
+            var privateKey = options.PrivateKey;
+            var appId = options.AppId;
 
             // TODO: make this threadsafe and singleton so that a new client isn't created per request...
             // Logic must also be added so that if in the middle of processing, a new client could be generated in
