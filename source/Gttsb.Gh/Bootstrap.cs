@@ -27,7 +27,7 @@ namespace Gttsb.Gh
             return gitHubFacade;
         }
 
-        public static async Task<bool> StartTeamSyncAsync(IActiveDirectoryFacade activeDirectoryFacade, IInstalledGitHubFacade gitHubFacade)
+        public static async Task<bool> StartTeamSyncAsync(IActiveDirectoryFacade activeDirectoryFacade, IInstalledGitHubFacade gitHubFacade, AppOptions appOptions)
         {
             var inputs = await gitHubFacade.GetConfigurationForInstallationAsync();
 
@@ -40,10 +40,14 @@ namespace Gttsb.Gh
             // Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
             var groupDisplayNames = inputs.GitHubTeamNames.Concat(new[] { inputs.OrganizationMembersGroup }).Distinct().ToDictionary(t => t);
 
-            var org = gitHubFacade.OrgName;            
+            var org = gitHubFacade.OrgName;
 
-            var emailReplaceRules = GetEmailReplaceRules(inputs.EmailReplaceRules);
-            var itemsToReplaceRules = GetItemsToReplaceRules(inputs.EmailTextToReplaceRules);
+            var emailReplaceRuleDictionaries = new[] { inputs.EmailReplaceRules, appOptions.EmailReplaceRules };
+            var emailReplaceRules = emailReplaceRuleDictionaries
+                .SelectMany(d => d)
+                .ToLookup(p => p.Key, p => p.Value)
+                .ToDictionary(g => g.Key, g => g.First());
+            var itemsToReplaceRules = inputs.EmailTextToReplaceRules.Concat(appOptions.EmailTextToReplaceRules);
 
             var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(string.Empty, inputs.EmailAppend, itemsToReplaceRules, emailReplaceRules);
 
@@ -78,26 +82,6 @@ namespace Gttsb.Gh
             await Task.CompletedTask;
 
             return true;
-        }
-
-        private static IEnumerable<string> GetItemsToReplaceRules(IEnumerable<string> emailTextToReplaceRules)
-        {
-            // TODO: use proper config fetching here...
-            var fromEnvAsString = Environment.GetEnvironmentVariable("EmailTextToReplaceRules") ?? "{}";
-
-            var fromEnv = JsonConvert.DeserializeObject<IEnumerable<string>>(fromEnvAsString) ?? Enumerable.Empty<string>();
-
-            return emailTextToReplaceRules.Any() ? emailTextToReplaceRules : fromEnv;
-        }
-
-        private static IReadOnlyDictionary<string, string> GetEmailReplaceRules(IReadOnlyDictionary<string, string> emailReplaceRules)
-        {
-            // TODO: use proper config fetching here...
-            var fromEnvAsString = Environment.GetEnvironmentVariable("EmailReplaceRules") ?? "{}";
-
-            var fromEnv = JsonConvert.DeserializeObject<IReadOnlyDictionary<string, string>>(fromEnvAsString) ?? new Dictionary<string,string>();
-
-            return emailReplaceRules.Any() ? emailReplaceRules : fromEnv;
         }
 
         static void WriteConsoleOutput(ISet<GitHubUser> usersWithSyncIssues)

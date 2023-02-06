@@ -3,6 +3,7 @@ using Gttsb.Core;
 using Gttsb.Gh;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace GitHubApp.Controllers
 {
@@ -12,11 +13,13 @@ namespace GitHubApp.Controllers
     {        
         private readonly IGitHubFacadeFactory gitHubFacadeFactory;
         private readonly IActiveDirectoryFacade activeDirectoryFacade;
+        private readonly AppOptions appOptions;
 
-        public OrchestratorController(IGitHubFacadeFactory gitHubFacadeFactory, IActiveDirectoryFacade activeDirectoryFacade)
+        public OrchestratorController(IGitHubFacadeFactory gitHubFacadeFactory, IActiveDirectoryFacade activeDirectoryFacade, IOptions<AppOptions> appOptions)
         {
             this.gitHubFacadeFactory = gitHubFacadeFactory;
             this.activeDirectoryFacade = activeDirectoryFacade;
+            this.appOptions = appOptions.Value;
         }
 
         [HttpPost(Name = "Sync All Orgs")]
@@ -49,7 +52,7 @@ namespace GitHubApp.Controllers
 
             try
             {
-                await Bootstrap.StartTeamSyncAsync(activeDirectoryFacade, client);
+                await Bootstrap.StartTeamSyncAsync(activeDirectoryFacade, client, appOptions);
             }            
             catch
             {
