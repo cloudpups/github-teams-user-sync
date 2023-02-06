@@ -38,7 +38,8 @@ namespace Gttsb.Gh
             }
 
             // Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
-            var groupDisplayNames = inputs.GitHubTeamNames.Concat(new[] { inputs.OrganizationMembersGroup }).Distinct().ToDictionary(t => t);
+            var securityManagers = inputs.SecurityManagerTeams.Concat(appOptions.SecurityManagerTeams).Distinct().ToList();
+            var groupDisplayNames = inputs.GitHubTeamNames.Concat(new[] { inputs.OrganizationMembersGroup }).Concat(securityManagers).Distinct().ToDictionary(t => t);
 
             var org = gitHubFacade.OrgName;
 
@@ -47,7 +48,7 @@ namespace Gttsb.Gh
                 .SelectMany(d => d)
                 .ToLookup(p => p.Key, p => p.Value)
                 .ToDictionary(g => g.Key, g => g.First());
-            var itemsToReplaceRules = inputs.EmailTextToReplaceRules.Concat(appOptions.EmailTextToReplaceRules);
+            var itemsToReplaceRules = inputs.EmailTextToReplaceRules.Concat(appOptions.EmailTextToReplaceRules);            
 
             var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(string.Empty, inputs.EmailAppend, itemsToReplaceRules, emailReplaceRules);
 
@@ -76,6 +77,15 @@ namespace Gttsb.Gh
             var groupSyncResult = await groupSyncer.SyncronizeGroupsAsync(org, groupsToSyncronize.Values, inputs.CreateDeployment);
 
             usersWithSyncIssues.AddRange(groupSyncResult.UsersWithSyncIssues);
+
+            if(securityManagers.Any())
+            {
+                // TODO: remove teams that are not defined in these settings.
+                foreach(var securityManagerTeam in securityManagers)
+                {
+                    await gitHubFacade.AddSecurityManagerTeamAsync(securityManagerTeam);
+                }                
+            }
 
             WriteConsoleOutput(usersWithSyncIssues.DistinctBy(g => g.Email).ToHashSet());
 

@@ -17,6 +17,8 @@ namespace Gttsb.Core
 
         public Task<OperationResponse> AddOrgMemberAsync(string gitHubOrg, ValidGitHubId gitHubId) => gitHubFacade.AddOrgMemberAsync(gitHubOrg, gitHubId);
 
+        public Task AddSecurityManagerTeamAsync(string existingTeamSlug) => gitHubFacade.AddSecurityManagerTeamAsync(existingTeamSlug);
+
         public Task AddTeamMemberAsync(GitHubTeam team, ValidGitHubId userGitHubId) => gitHubFacade.AddTeamMemberAsync(team, userGitHubId);
 
         public Task<GhDeployment> CreateDeploymentAsync(string gitHubOrg) => gitHubFacade.CreateDeploymentAsync(gitHubOrg);

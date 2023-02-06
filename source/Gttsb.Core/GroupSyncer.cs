@@ -15,7 +15,37 @@
 
         public Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teams, bool createDeployment) => SyncronizeGroupsAsync(gitHubOrg, teams, true, createDeployment);
 
-        public Task<GroupSyncResult> SyncronizeMembersAsync(string gitHubOrg, TeamDefinition team) => SyncronizeGroupsAsync(gitHubOrg, new[] { team }, true);
+        public async Task<GroupSyncResult> SyncronizeMembersAsync(string gitHubOrg, params TeamDefinition[] teams)
+        {
+            var usersWithSyncIssues = new List<GitHubUser>();
+            var teamSyncFailures = new List<string>();
+            foreach (var team in teams)
+            {
+                var (status, validUsers, usersWithSyncIssuesToAdd) = await GetValidUsersForTeamAsync(team.Name, gitHubOrg);
+
+                if(!status)
+                {
+                    teamSyncFailures.Add(team.Name);
+                    // must continue trying to add
+                    continue;
+                }
+
+                usersWithSyncIssues.AddRange(usersWithSyncIssuesToAdd);
+
+                // Add user to org if necessary
+                foreach (var validUser in validUsers)
+                {
+                    var result = await _gitHubFacade.IsUserMemberAsync(gitHubOrg, validUser);
+
+                    if (result == MemberCheckResult.IsNotOrgMember)
+                    {
+                        var addStatus = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, validUser);
+                    }
+                }
+            }
+
+            return new GroupSyncResult(usersWithSyncIssues);
+        }
 
         // TODO: clean this up... This method could be doing too much.
         private async Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teamsControlledBySyncer, bool addMembers = false, bool createDeployment = false)
@@ -63,16 +93,16 @@
                 }
 
                 await _gitHubFacade.UpdateTeamDetailsAsync(gitHubOrg, specificTeam, Statics.TeamDescription);
-                
-                var membersResponse = await _activeDirectoryFacade.FetchMembersAsync(team.Name);
 
-                if (!membersResponse.Success)
+                var (status, validUsersForTeam, usersWithSyncIssuesToAdd) = await GetValidUsersForTeamAsync(specificTeam.Name, gitHubOrg);
+
+                if(!status)
                 {
                     teamSyncFailures.Add(team.Name);
-                    // try syncing other teams
                     continue;
                 }
 
+<<<<<<< HEAD
                 var groupMembersWithGitHubIds = membersResponse.Members.Select(m => new
                 {
                     m.Id,
@@ -109,6 +139,9 @@
                         var status = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, validUser);
                     }                    
                 }
+=======
+                usersWithSyncIssues.AddRange(usersWithSyncIssuesToAdd);
+>>>>>>> 2820b7b (:bulb: :bug: allow multiple membership groups)
 
                 var existingMembers = specificTeam.Members.Select(m => m.GitHubId).ToList();
                 var membersToRemove = existingMembers.Except(validUsersForTeam).ToList();
@@ -133,5 +166,44 @@
 
             return new GroupSyncResult(usersWithSyncIssues);
         }
+
+        private async Task<(bool Status, IEnumerable<ValidGitHubId> IDs, IEnumerable<GitHubUser> UsersWithSyncIssues)> GetValidUsersForTeamAsync(string teamName, string gitHubOrg)
+        {
+            var membersResponse = await _activeDirectoryFacade.FetchMembersAsync(teamName);
+
+            if (!membersResponse.Success)
+            {
+                return (false, Enumerable.Empty<ValidGitHubId>(), Enumerable.Empty<GitHubUser>());
+            }
+
+            var groupMembersWithGitHubIds = membersResponse.Members.Select(m => new
+            {
+                m.Id,
+                m.DisplayName,
+                m.Email,
+                GitHubId = _emailToGitHubIdConverter.ToId(m.Email)
+            });
+
+            // Check if user is valid
+            var validUsersForTeam = new List<ValidGitHubId>();
+            var usersWithSyncIssues = new List<GitHubUser>();
+            foreach (var user in groupMembersWithGitHubIds)
+            {
+                var validUser = await _gitHubFacade.DoesUserExistAsync(user.GitHubId);
+
+                if (validUser == null)
+                {
+                    usersWithSyncIssues.Add(new GitHubUser
+                    (
+                        Email: user.Email,
+                        GitHubId: new ValidGitHubId(user.GitHubId)
+                    ));
+                    continue;
+                }
+                validUsersForTeam.Add(validUser);
+            }   
+
+            return (true, validUsersForTeam, usersWithSyncIssues);
+        }        
     }
 }

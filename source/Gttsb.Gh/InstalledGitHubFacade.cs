@@ -73,7 +73,7 @@ namespace Gttsb.Gh
             });
 
             // TODO: leaky- should not have to pass an empty array here. Could be improper shape for object
-            return new GitHubTeam(newTeam.Id, newTeam.Name, Enumerable.Empty<GitHubUser>().ToList());
+            return new GitHubTeam(newTeam.Id, newTeam.Name, Enumerable.Empty<GitHubUser>().ToList());       
         }
 
         public async Task<ValidGitHubId?> DoesUserExistAsync(string gitHubId)
@@ -185,6 +185,11 @@ namespace Gttsb.Gh
             };
 
             return syncInput;
+        }
+
+        public async Task AddSecurityManagerTeamAsync(string existingTeamSlug)
+        {            
+            await gitHubClient.Connection.Put(new Uri($"{gitHubClient.Connection.BaseAddress}orgs/{OrgName}/security-managers/teams/{existingTeamSlug}"));
         }
     }
 }

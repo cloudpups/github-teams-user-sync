@@ -8,5 +8,6 @@
         public string OrganizationMembersGroup { get; init; } = String.Empty;
         public bool CreateDeployment { get; init; } = true;
         public IReadOnlyDictionary<string, string> EmailReplaceRules { get; init; } = new Dictionary<string, string>();
+        public string[] SecurityManagerTeams { get; init; } = Array.Empty<string>();
     };
 }

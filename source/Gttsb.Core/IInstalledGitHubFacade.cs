@@ -16,5 +16,6 @@
         Task<GhDeployment> CreateDeploymentAsync(string gitHubOrg);
         Task UpdateDeploymentAsync(GhDeployment deployment, GhDeployment.Status status);
         Task<SyncInput> GetConfigurationForInstallationAsync();
+        Task AddSecurityManagerTeamAsync(string existingTeamSlug);
     }
 }
