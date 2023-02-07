@@ -68,6 +68,12 @@ namespace Gttsb.Gh
 
             var usersWithSyncIssues = new List<GitHubUser>();
 
+            if (securityManagers.Any())
+            {
+                var memberSyncResult = await groupSyncer.SyncronizeMembersAsync(org, securityManagers.Select(s => groupsToSyncronize[s]).ToArray());
+                usersWithSyncIssues.AddRange(memberSyncResult.UsersWithSyncIssues);
+            }
+
             if (!inputs.OrganizationMembersGroup.IsEmptyOrWhitespace())
             {
                 var memberSyncResult = await groupSyncer.SyncronizeMembersAsync(org, groupsToSyncronize[inputs.OrganizationMembersGroup]);
@@ -81,7 +87,7 @@ namespace Gttsb.Gh
             if(securityManagers.Any())
             {
                 // TODO: remove teams that are not defined in these settings.
-                foreach(var securityManagerTeam in securityManagers)
+                foreach (var securityManagerTeam in securityManagers)
                 {
                     await gitHubFacade.AddSecurityManagerTeamAsync(securityManagerTeam);
                 }                
