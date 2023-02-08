@@ -55,7 +55,7 @@ namespace Gttsb.Gh
 
             var result = await graphQlClient.Run(query);
 
-            return result.ToDictionary(t=> t.Name, t => new GitHubTeam(t.DatabaseId, t.Name, t.Members.Select(m => new GitHubUser(m.Email, new ValidGitHubId(m.Login))).ToList()));
+            return result.ToDictionary(t=> t.Name, t => new GitHubTeam(t.DatabaseId, t.Name, t.Members.Select(m => new GitHubUser(m.Email, new ValidGitHubId(m.Login))).ToList()), StringComparer.CurrentCultureIgnoreCase);
         }
 
         public async Task AddTeamMemberAsync(GitHubTeam team, ValidGitHubId userGitHubId)

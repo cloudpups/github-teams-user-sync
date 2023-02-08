@@ -50,6 +50,11 @@
 
             foreach (var team in teamsControlledBySyncer)
             {
+                if(team.Name == "NA")
+                {
+                    continue;
+                }
+
                 if(!allTeams.TryGetValue(team.Name, out var specificTeam))
                 {
                     Console.WriteLine($"Creating team {team.Name}");
