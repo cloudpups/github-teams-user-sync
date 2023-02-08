@@ -37,7 +37,8 @@
                 return $"{emailPrepend}{emailWithReplaceableItems}{replaceValue}";
             }
 
-            return $"{emailPrepend}{emailWithReplaceableItems}{defaultEmailReplace}";
+            // TODO: this will fail and it should fail. Replace this will actual failure message...
+            return "";
         }
     }
 }
