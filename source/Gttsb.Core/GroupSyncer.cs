@@ -84,7 +84,7 @@
                     m.DisplayName,
                     m.Email,
                     GitHubId = _emailToGitHubIdConverter.ToId(m.Email)
-                });
+                }).Where(u => !string.IsNullOrWhiteSpace(u.GitHubId)).ToList();
 
                 // Check if user is valid
                 var validUsersForTeam = new List<ValidGitHubId>();
