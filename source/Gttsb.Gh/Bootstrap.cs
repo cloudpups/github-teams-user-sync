@@ -43,13 +43,16 @@ namespace Gttsb.Gh
 
             var org = gitHubFacade.OrgName;            
 
-            var groupsToSyncronize = groupDisplayNames.Select(g => new
-            {
-                Key = g.Key,
-                Value = new TeamDefinition("ActiveDirectory", g.Key)
-            }).ToDictionary(o => o.Key, o => o.Value);
+            var groupsToSyncronize = groupDisplayNames.Where(n => !string.IsNullOrWhiteSpace(n.Key))                
+                .Where(n => !(n.Key == "NA" || n.Key == "na"))
+                .Select(g => new
+                {
+                    Key = g.Key,
+                    Value = new TeamDefinition("ActiveDirectory", g.Key)
+                })
+                .ToDictionary(o => o.Key, o => o.Value);
 
-            Console.WriteLine("This Action will attempt to syncronize the following groups:");
+            Console.WriteLine("The sync tool will attempt to syncronize the following groups:");
             foreach (var group in groupsToSyncronize)
             {
                 Console.WriteLine($"* {group.Key}");
