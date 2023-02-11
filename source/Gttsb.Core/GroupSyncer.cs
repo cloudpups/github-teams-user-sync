@@ -100,48 +100,7 @@
                 {
                     teamSyncFailures.Add(team.Name);
                     continue;
-                }
-
-<<<<<<< HEAD
-                var groupMembersWithGitHubIds = membersResponse.Members.Select(m => new
-                {
-                    m.Id,
-                    m.DisplayName,
-                    m.Email,
-                    GitHubId = _emailToGitHubIdConverter.ToId(m.Email)
-                }).Where(u => !string.IsNullOrWhiteSpace(u.GitHubId)).ToList();
-
-                // Check if user is valid
-                var validUsersForTeam = new List<ValidGitHubId>();
-                foreach(var user in groupMembersWithGitHubIds)
-                {
-                    var validUser = await _gitHubFacade.DoesUserExistAsync(user.GitHubId);
-
-                    if (validUser == null)
-                    {
-                        usersWithSyncIssues.Add(new GitHubUser
-                        (
-                            Email: user.Email,
-                            GitHubId: new ValidGitHubId(user.GitHubId)
-                        ));
-                        continue;
-                    }
-                    validUsersForTeam.Add(validUser);
-                }
-
-                // Add user to org if necessary
-                foreach(var validUser in validUsersForTeam)
-                {
-                    var result = await _gitHubFacade.IsUserMemberAsync(gitHubOrg, validUser);
-
-                    if (result == MemberCheckResult.IsNotOrgMember)
-                    {
-                        var status = await _gitHubFacade.AddOrgMemberAsync(gitHubOrg, validUser);
-                    }                    
-                }
-=======
-                usersWithSyncIssues.AddRange(usersWithSyncIssuesToAdd);
->>>>>>> 2820b7b (:bulb: :bug: allow multiple membership groups)
+                }               
 
                 var existingMembers = specificTeam.Members.Select(m => m.GitHubId).ToList();
                 var membersToRemove = existingMembers.Except(validUsersForTeam).ToList();
