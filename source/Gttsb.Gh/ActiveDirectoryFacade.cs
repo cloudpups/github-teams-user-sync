@@ -29,22 +29,36 @@ namespace Gttsb.Gh
                 return new MembersResponse(Success: false, Enumerable.Empty<Member>());
             }
 
-            var groupInQuestion = groups[0];      
+            var groupInQuestion = groups[0];
 
+            // TODO: do proper "string escape" here
+            var filteredExtensionName = _azureOptions.ExtensionPropertyWithGitHubId.Replace(";", "").Replace(",", "").ReplaceLineEndings("").Replace(" ", "");
             var members = await _graphServiceClient.Groups[groupInQuestion.Id].Members
-                .Request()
-                .Select("id,mail,displayName")
+                .Request()                
+                .Select($"id,mail,displayName,{filteredExtensionName}")
                 .GetAsync();
 
             Func<User, Member> memberToUser = (User m) => {
                 // TODO: handle exception case?
-                var asUser = m;
+
+                if(m.AdditionalData.TryGetValue(filteredExtensionName, out var gitHubId))
+                {                    
+                    return new Member
+                    (
+                        DisplayName: m.DisplayName,
+                        Email: m.Mail,
+                        Id: m.Id,
+                        PotentialGitHubId: gitHubId.ToString() ?? string.Empty
+                    );
+                }
+
                 return new Member
-                (
-                    DisplayName: asUser.DisplayName,
-                    Email: asUser.Mail,
-                    Id: asUser.Id
-                );
+                    (
+                        DisplayName: m.DisplayName,
+                        Email: m.Mail,
+                        Id: m.Id,
+                        PotentialGitHubId: string.Empty
+                    );
             };
 
             var users = members.Select(m => memberToUser((User)m)).ToList();

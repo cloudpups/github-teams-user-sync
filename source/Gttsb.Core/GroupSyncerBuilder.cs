@@ -2,9 +2,9 @@
 {
     public static class GroupSyncerBuilder
     {
-        public static IGroupSyncer Build(IActiveDirectoryFacade adFacade, IInstalledGitHubFacade gFacade, IEmailToCloudIdConverter emailToCloudIdConverter)
+        public static IGroupSyncer Build(IActiveDirectoryFacade adFacade, IInstalledGitHubFacade gFacade, AppOptions appOptions)
         {
-            return new GroupSyncer(adFacade, gFacade, emailToCloudIdConverter);
+            return new GroupSyncer(adFacade, gFacade, appOptions);
         }
     }
 }

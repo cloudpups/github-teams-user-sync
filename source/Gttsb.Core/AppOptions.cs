@@ -1,4 +1,4 @@
-﻿namespace Gttsb.Gh
+﻿namespace Gttsb.Core
 {
     public sealed class AppOptions
     {
@@ -9,5 +9,6 @@
         // Perhaps it is user error on Josh's part.
         public Dictionary<string, string> EmailReplaceRules { get; init; } = new Dictionary<string, string>();
         public string[] EmailTextToReplaceRules { get; init; } = Array.Empty<string>();
+        public string GitHubIdAppend { get; init; } = string.Empty;
     }
 }

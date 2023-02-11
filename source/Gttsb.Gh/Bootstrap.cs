@@ -41,18 +41,7 @@ namespace Gttsb.Gh
             var securityManagers = inputs.SecurityManagerTeams.Concat(appOptions.SecurityManagerTeams).Distinct().ToList();
             var groupDisplayNames = inputs.GitHubTeamNames.Concat(new[] { inputs.OrganizationMembersGroup }).Concat(securityManagers).Distinct().ToDictionary(t => t);
 
-            var org = gitHubFacade.OrgName;
-
-            var emailReplaceRuleDictionaries = new[] { inputs.EmailReplaceRules, appOptions.EmailReplaceRules };
-            var emailReplaceRules = emailReplaceRuleDictionaries
-                .SelectMany(d => d)
-                .ToLookup(p => p.Key, p => p.Value)
-                .ToDictionary(g => g.Key, g => g.First());
-            var itemsToReplaceRules = inputs.EmailTextToReplaceRules.Concat(appOptions.EmailTextToReplaceRules);            
-
-            var emailToCloudIdBuilder = EmailToCloudIdBuilder.Build(string.Empty, inputs.EmailAppend, itemsToReplaceRules, emailReplaceRules);
-
-            var groupSyncer = GroupSyncerBuilder.Build(activeDirectoryFacade, gitHubFacade, emailToCloudIdBuilder);
+            var org = gitHubFacade.OrgName;            
 
             var groupsToSyncronize = groupDisplayNames.Select(g => new
             {
@@ -67,6 +56,8 @@ namespace Gttsb.Gh
             }
 
             var usersWithSyncIssues = new List<GitHubUser>();
+
+            var groupSyncer = GroupSyncerBuilder.Build(activeDirectoryFacade, gitHubFacade, appOptions);
 
             if (securityManagers.Any())
             {

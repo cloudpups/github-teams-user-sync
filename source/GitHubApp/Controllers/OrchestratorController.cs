@@ -12,14 +12,14 @@ namespace GitHubApp.Controllers
     public class OrchestratorController : ControllerBase
     {        
         private readonly IGitHubFacadeFactory gitHubFacadeFactory;
-        private readonly IActiveDirectoryFacade activeDirectoryFacade;
+        private readonly IActiveDirectoryFacade activeDirectoryFacade;        
         private readonly AppOptions appOptions;
 
         public OrchestratorController(IGitHubFacadeFactory gitHubFacadeFactory, IActiveDirectoryFacade activeDirectoryFacade, IOptions<AppOptions> appOptions)
         {
             this.gitHubFacadeFactory = gitHubFacadeFactory;
             this.activeDirectoryFacade = activeDirectoryFacade;
-            this.appOptions = appOptions.Value;
+            this.appOptions = appOptions.Value;            
         }
 
         [HttpPost(Name = "Sync All Orgs")]

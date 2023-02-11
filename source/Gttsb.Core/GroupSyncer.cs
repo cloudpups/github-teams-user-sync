@@ -1,16 +1,16 @@
 ﻿namespace Gttsb.Core
 {
-    internal sealed class GroupSyncer : IGroupSyncer
+    public sealed class GroupSyncer : IGroupSyncer
     {
         private readonly IActiveDirectoryFacade _activeDirectoryFacade;
         private readonly IInstalledGitHubFacade _gitHubFacade;
-        private readonly IEmailToCloudIdConverter _emailToGitHubIdConverter;
+        private readonly AppOptions _appOptions;
 
-        public GroupSyncer(IActiveDirectoryFacade activeDirectoryFacade, IInstalledGitHubFacade gitHubFacade, IEmailToCloudIdConverter emailToCloudIdConverter)
+        public GroupSyncer(IActiveDirectoryFacade activeDirectoryFacade, IInstalledGitHubFacade gitHubFacade, AppOptions appOptions)
         {
             _activeDirectoryFacade = activeDirectoryFacade;
             _gitHubFacade = gitHubFacade;
-            _emailToGitHubIdConverter = emailToCloudIdConverter;
+            _appOptions = appOptions;
         }
 
         public Task<GroupSyncResult> SyncronizeGroupsAsync(string gitHubOrg, IEnumerable<TeamDefinition> teams, bool createDeployment) => SyncronizeGroupsAsync(gitHubOrg, teams, true, createDeployment);
@@ -140,7 +140,7 @@
                 m.Id,
                 m.DisplayName,
                 m.Email,
-                GitHubId = _emailToGitHubIdConverter.ToId(m.Email)
+                GitHubId = m.PotentialGitHubId + _appOptions.GitHubIdAppend
             });
 
             // Check if user is valid
@@ -148,6 +148,16 @@
             var usersWithSyncIssues = new List<GitHubUser>();
             foreach (var user in groupMembersWithGitHubIds)
             {
+                if(string.IsNullOrWhiteSpace(user.GitHubId))
+                {
+                    usersWithSyncIssues.Add(new GitHubUser
+                    (
+                        Email: user.Email,
+                        GitHubId: new ValidGitHubId(user.GitHubId)
+                    ));
+                    continue;
+                }
+
                 var validUser = await _gitHubFacade.DoesUserExistAsync(user.GitHubId);
 
                 if (validUser == null)
