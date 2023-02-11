@@ -44,7 +44,7 @@ namespace Gttsb.Gh
             var org = gitHubFacade.OrgName;            
 
             var groupsToSyncronize = groupDisplayNames.Where(n => !string.IsNullOrWhiteSpace(n.Key))                
-                .Where(n => !(n.Key == "NA" || n.Key == "na"))
+                .Where(n => !(n.Key == "NA" || n.Key.Equals("NA", StringComparison.InvariantCultureIgnoreCase)))
                 .Select(g => new
                 {
                     Key = g.Key,
@@ -68,7 +68,7 @@ namespace Gttsb.Gh
                 usersWithSyncIssues.AddRange(memberSyncResult.UsersWithSyncIssues);
             }
 
-            if (!inputs.OrganizationMembersGroup.IsEmptyOrWhitespace())
+            if (!inputs.OrganizationMembersGroup.IsEmptyOrWhitespace() && !inputs.OrganizationMembersGroup.Equals("NA", StringComparison.InvariantCultureIgnoreCase))
             {
                 var memberSyncResult = await groupSyncer.SyncronizeMembersAsync(org, groupsToSyncronize[inputs.OrganizationMembersGroup]);
                 usersWithSyncIssues.AddRange(memberSyncResult.UsersWithSyncIssues);
