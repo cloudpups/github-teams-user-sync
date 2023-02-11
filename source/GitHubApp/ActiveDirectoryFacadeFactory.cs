@@ -6,18 +6,18 @@ using Microsoft.Graph;
 
 internal class ActiveDirectoryFacadeFactory : IActiveDirectoryFacadeFactory
 {
-    private readonly IOptions<AzureOptions> azureOptions;
+    private readonly AzureOptions azureOptions;
 
     public ActiveDirectoryFacadeFactory(IOptions<AzureOptions> azureOptions)
     {
-        this.azureOptions = azureOptions;
+        this.azureOptions = azureOptions.Value;
     }
 
     public IActiveDirectoryFacade GetActiveDirectoryClient()
     {
-        var tenantId = azureOptions.Value.TenantId;
-        var clientId = azureOptions.Value.ClientId;
-        var clientSecret = azureOptions.Value.ClientSecret;      
+        var tenantId = azureOptions.TenantId;
+        var clientId = azureOptions.ClientId;
+        var clientSecret = azureOptions.ClientSecret;      
 
         // The client credentials flow requires that you request the
         // /.default scope, and preconfigure your permissions on the
@@ -25,7 +25,7 @@ internal class ActiveDirectoryFacadeFactory : IActiveDirectoryFacadeFactory
         // to those permissions beforehand.
         var scopes = new[] { "https://graph.microsoft.com/.default" };
         // using Azure.Identity;
-        var options = new TokenCredentialOptions
+        var options = new ClientSecretCredentialOptions
         {
             AuthorityHost = AzureAuthorityHosts.AzurePublicCloud
         };
@@ -33,7 +33,7 @@ internal class ActiveDirectoryFacadeFactory : IActiveDirectoryFacadeFactory
         var clientSecretCredential = new ClientSecretCredential(
             tenantId, clientId, clientSecret, options);
         var graphClient = new GraphServiceClient(clientSecretCredential);
-        var activeDirectoryFacade = new ActiveDirectoryFacade(graphClient);
+        var activeDirectoryFacade = new ActiveDirectoryFacade(graphClient, azureOptions);
 
         return activeDirectoryFacade;
     }

@@ -6,10 +6,12 @@ namespace Gttsb.Gh
     public sealed class ActiveDirectoryFacade : IActiveDirectoryFacade
     {
         private readonly GraphServiceClient _graphServiceClient;
+        private readonly AzureOptions _azureOptions;
 
-        public ActiveDirectoryFacade(GraphServiceClient graphServiceClient)
+        public ActiveDirectoryFacade(GraphServiceClient graphServiceClient, AzureOptions azureOptions)
         {
             _graphServiceClient = graphServiceClient;
+            _azureOptions = azureOptions;
         }
 
         public async Task<MembersResponse> FetchMembersAsync(string groupDisplayName)
