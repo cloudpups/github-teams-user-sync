@@ -28,14 +28,5 @@ namespace GitHubApp.Controllers
 
             await Bootstrap.StartTeamSyncAsync(activeDirectoryFacade, client, appOptions);
         }
-
-        [HttpGet(Name = "Syncronize Security Managers")]
-        public async Task SynconrizeSecurityManagers(long installationId)
-        {
-            var installation = await gitHubFacadeFactory.GetInstallationAsync(installationId);
-            var client = await gitHubFacadeFactory.CreateClientForOrgAsync(installation);
-
-            // await client.AddSecurityManagerTeamAsync("");            
-        }
     }
 }
