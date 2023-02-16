@@ -41,6 +41,17 @@ namespace Gttsb.Gh
             Func<User, Member> memberToUser = (User m) => {
                 // TODO: handle exception case?
 
+                if(m.AdditionalData == null)
+                {
+                    return new Member
+                    (
+                        DisplayName: m.DisplayName,
+                        Email: m.Mail,
+                        Id: m.Id,
+                        PotentialGitHubId: string.Empty
+                    );
+                }
+
                 if(m.AdditionalData.TryGetValue(filteredExtensionName, out var gitHubId))
                 {                    
                     return new Member
