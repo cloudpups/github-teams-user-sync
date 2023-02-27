@@ -29,13 +29,7 @@ namespace Gttsb.Gh
 
         public static async Task<bool> StartTeamSyncAsync(IActiveDirectoryFacade activeDirectoryFacade, IInstalledGitHubFacade gitHubFacade, AppOptions appOptions)
         {
-            var inputs = await gitHubFacade.GetConfigurationForInstallationAsync();
-
-            if (!inputs.GitHubTeamNames.Any())
-            {
-                Console.WriteLine("No teams found to syncronize!");
-                return false;
-            }
+            var inputs = await gitHubFacade.GetConfigurationForInstallationAsync();            
 
             // Azure AD Group and GitHub Team Name must match (my opinion, baked into this tool)	
             var securityManagers = inputs.SecurityManagerTeams.Concat(appOptions.SecurityManagerTeams).Distinct().ToList();

@@ -179,9 +179,10 @@ namespace Gttsb.Gh
             // One could argue that such logic is too many responsibilities for this method. I pose this is a fine tradeoff though...
             // Once we get around to implementing config file status checks, I will most likely change my mind.
             // This could also be turned into a Set.
+            var teamNames = syncInput.GitHubTeamNames ?? Enumerable.Empty<string>();
             syncInput = syncInput with
             {
-                GitHubTeamNames = syncInput.GitHubTeamNames.Distinct().ToList()
+                GitHubTeamNames = teamNames.Distinct().ToList()
             };
 
             return syncInput;
