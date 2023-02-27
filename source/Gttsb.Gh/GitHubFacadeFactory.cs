@@ -94,7 +94,7 @@ namespace Gttsb.Gh
 
             var header = new JwtHeader(signingCredentials);
             var notBefore = DateTime.UtcNow;
-            var expires = notBefore.AddMinutes(10);
+            var expires = notBefore.AddMinutes(9);
             var issuedAt = DateTime.UtcNow;
             var payload = new JwtPayload(issuer: appId, "", Enumerable.Empty<Claim>(), notBefore, expires, issuedAt);
 
