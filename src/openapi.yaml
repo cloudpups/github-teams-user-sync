@@ -4,10 +4,28 @@ info:
   title: Sample API
   description: A sample API to illustrate OpenAPI concepts
 paths:
-  /list:
+  /api/Metadata/GetInstalledOrgs:
     get:
-      operationId: getPets
-      description: Returns a list of stuff              
+      operationId: getInstalledOrgs
+      description: Returns a list of all GitHub Organizations where this app is installed              
       responses:
         '200':
-          description: Successful response
+          description: A successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: "#/components/schemas/OrgModel"
+components:
+  schemas:
+    OrgModel:
+      type: object
+      properties:
+        id:
+          type: number
+        orgName:
+          type: string
+      required:
+      - id
+      - orgName

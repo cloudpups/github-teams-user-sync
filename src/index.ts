@@ -3,6 +3,7 @@ import {OpenAPIBackend, Document} from 'openapi-backend';
 import yaml from "js-yaml";
 import fs from "fs";
 import path from "node:path";
+import {OrgModel} from "./types/sync-models";
 
 const app = express();
 const port = 3000;
@@ -14,10 +15,14 @@ const castDoc = doc as Document;
 
 const api = new OpenAPIBackend({ definition: castDoc });
 
+const sampleOrgResponse : OrgModel[] = [
+    {id:1, orgName:"Test"}
+]
+
 api.register({
-    getPets: (c, req, res) => res.status(200).json({ result: 'what' }),
-    validationFail: (c, req, res) => res.status(400).json({ err: c.validation.errors }),
-    notFound: (c, req, res) => res.status(404).json({ err: 'not found' }),
+    getInstalledOrgs: (c, req, res) => res.status(200).json(sampleOrgResponse),
+    validationFail: (c, _, res) => res.status(400).json({ err: c.validation.errors }),
+    notFound: (c, _, res) => res.status(404).json({ err: 'not found' }),
   });
 
 app.use(express.json());
