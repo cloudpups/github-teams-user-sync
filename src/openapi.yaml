@@ -1,4 +1,6 @@
-openapi: 3.1.0
+# SwaggerUI doesn't support 3.1.0 yet...
+# In other words, leave this error alone
+openapi: 3.0.0
 info:
   version: 1.0.0
   title: Sample API

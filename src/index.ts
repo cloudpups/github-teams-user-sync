@@ -4,6 +4,7 @@ import yaml from "js-yaml";
 import fs from "fs";
 import path from "node:path";
 import {OrgModel} from "./types/sync-models";
+import swaggerUi from "swagger-ui-express"; 
 
 const app = express();
 const port = 3000;
@@ -26,6 +27,7 @@ api.register({
   });
 
 app.use(express.json());
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(doc as swaggerUi.JsonObject));
 app.use((req:any, res:any) => api.handleRequest(req, req, res));
 
 app.listen(port);
