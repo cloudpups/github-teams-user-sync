@@ -4,6 +4,15 @@ Groups (currently Azure Active Directory Only) to GitHub Teams sync
 
 [![Publish Docker image](https://github.com/cloudpups/github-teams-user-sync/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/cloudpups/github-teams-user-sync/actions/workflows/docker-image.yml) [![Docker Pulls](https://img.shields.io/docker/pulls/trfc/github-teams-user-sync)](https://hub.docker.com/r/trfc/github-teams-user-sync)
 
+## Important Commands
+
+```sh
+# Run the application in "dev" mode and watch for changes
+npm start
+# Generate models from the openapi definition
+npm run openapi
+```
+
 ## Configuration File
 
 This service/Action requires that a configuration file be present in the `.github` repository of your GitHub Organization. An example of this is show below:
