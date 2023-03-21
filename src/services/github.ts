@@ -1,6 +1,7 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
+import { OrgConfiguration } from "../OrgConfiguration";
 
 function authenticatedClient() {
     const appOctokit = new Octokit({
@@ -28,14 +29,6 @@ async function GetInstallations(client: Octokit): Promise<Org[]> {
     return mappedOrgs;
 }
 
-async function getCurrentRateLimit(installationOctokit: Octokit) {
-    const limits = await installationOctokit.rest.rateLimit.get();
-
-    return {
-        remaining: limits.data.rate.remaining
-    }
-}
-
 async function GetOrgClient(installationId: number): Promise<InstalledClient> {
     // TODO: look further into this... it seems like it would be best if 
     // installation client was generated from the original client, and not
@@ -49,9 +42,7 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
         }
     })    
 
-    return {
-        GetCurrentRateLimit: () => getCurrentRateLimit(installedOctokit)
-    };
+    return new InstalledGitHubClient(installedOctokit);
 }
 
 export interface Org {
@@ -61,11 +52,22 @@ export interface Org {
 
 export interface GitHubClient {
     GetInstallations(): Promise<Org[]>
-    GetOrgClient(installationId: number): Promise<InstalledClient>
+    GetOrgClient(installationId: number): Promise<InstalledClient>    
 }
 
 export interface InstalledClient {
     GetCurrentRateLimit(): Promise<{remaining:number}>
+    AddOrgMember(id:GitHubId): Response
+    IsUserMember(id:GitHubId):Response<boolean>
+    GetAllTeams():Response<GitHubTeam>
+    AddTeamMember(team:GitHubTeam, id:GitHubUser):Response 
+    CreateTeam(team:GitHubTeam):Response
+    DoesUserExist(gitHubId:string):Response<GitHubId>
+    ListCurrentMembersOfGitHubTeam(team:string):Response<GitHubId[]>
+    RemoveTeamMemberAsync(team:string, user:GitHubUser):Response
+    UpdateTeamDetails(team:string, description:string): Response
+    AddSecurityManagerTeam(team:GitHubTeam):Response
+    GetConfigurationForInstallation():Response<OrgConfiguration>
 }
 
 export function GetClient(): GitHubClient {
@@ -73,5 +75,78 @@ export function GetClient(): GitHubClient {
     return {
         GetInstallations: () => GetInstallations(client),
         GetOrgClient: (installationId: number) => GetOrgClient(installationId)
+    }
+}
+
+export type GenericSucceededResponse<T> = {
+    successful: true,
+    data: T
+}
+
+export type FailedResponse = {
+    successful: false
+}
+
+export type Response<T = any> = Promise<GenericSucceededResponse<T>  | FailedResponse>;
+
+export type GitHubId = string;
+
+export type GitHubUser = {
+    Name: string,
+    Email: string
+}
+
+export type GitHubTeam = {
+    Id: string,
+    Name: string,
+    Members: GitHubUser[]
+}
+
+class InstalledGitHubClient implements InstalledClient {
+    gitHubClient:Octokit;
+
+    constructor(gitHubClient:Octokit) {
+        this.gitHubClient = gitHubClient;
+    }    
+
+    public async GetCurrentRateLimit(): Promise<{ remaining: number; }> {
+        const limits = await this.gitHubClient.rest.rateLimit.get();
+    
+        return {
+            remaining: limits.data.rate.remaining
+        }
+    }
+    public AddOrgMember(id: string): Response<any> {
+        throw new Error("Method not implemented.");
+    }
+    public IsUserMember(id: string): Response<boolean> {
+        throw new Error("Method not implemented.");
+    }
+    public GetAllTeams(): Response<GitHubTeam> {
+        throw new Error("Method not implemented.");
+    }
+    public AddTeamMember(team: GitHubTeam, id: GitHubUser): Response<any> {
+        throw new Error("Method not implemented.");
+    }
+    public CreateTeam(team: GitHubTeam): Response<any> {
+        throw new Error("Method not implemented.");
+    }
+    public DoesUserExist(gitHubId: string): Response<string> {
+        throw new Error("Method not implemented.");
+    }
+    public ListCurrentMembersOfGitHubTeam(team: string): Response<string[]> {
+        throw new Error("Method not implemented.");
+    }
+    public RemoveTeamMemberAsync(team: string, user: GitHubUser): Response<any> {
+        throw new Error("Method not implemented.");
+    }
+    public UpdateTeamDetails(team: string, description: string): Response<any> {
+        throw new Error("Method not implemented.");
+    }
+    public AddSecurityManagerTeam(team: GitHubTeam): Response<any> {
+        throw new Error("Method not implemented.");
+    }
+    public GetConfigurationForInstallation(): Response<OrgConfiguration> {
+        throw new Error("Method not implemented.");
     }
 }

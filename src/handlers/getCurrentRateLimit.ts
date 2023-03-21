@@ -10,9 +10,8 @@ export async function getCurrentRateLimitHandler(
 ) {                
     const installationId = c.request.params.installationId as unknown as number;
 
-    const client = GetClient();
-    const orgClient = await client.GetOrgClient(installationId);
-
+    const client = GetClient();    
+    const orgClient = await client.GetOrgClient(installationId);    
     const limits = await orgClient.GetCurrentRateLimit();
 
     return res.status(200).json(limits as Limits);
