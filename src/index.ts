@@ -4,7 +4,10 @@ import yaml from "js-yaml";
 import fs from "fs";
 import path from "node:path";
 import swaggerUi from "swagger-ui-express";
-import { getInstalledOrgsHandler } from "./handlers/getInstalledOrgs";
+import { routes } from "./routes";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 const port = 3000;
@@ -17,7 +20,7 @@ const castDoc = doc as Document;
 const api = new OpenAPIBackend({ definition: castDoc });
 
 api.register({
-  getInstalledOrgs: getInstalledOrgsHandler,
+  ...routes,
   validationFail: (c, _, res) => res.status(400).json({ err: c.validation.errors }),
   notFound: (c, _, res) => res.status(404).json({ err: 'not found' }),
 });
