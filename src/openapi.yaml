@@ -19,6 +19,23 @@ paths:
                 type: array
                 items: 
                   $ref: "#/components/schemas/OrgModel"
+  /api/Metadata/GetRateLimitsForOrg/{orgId}:
+    get:
+      operationId: getCurrentRateLimit
+      description: Gets the current rate limit information for the specified org
+      parameters:
+      - in: path
+        name: orgId
+        schema:
+          type: number
+        required: true
+      responses:
+        '200':
+          description: A successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Limits"
 components:
   schemas:
     OrgModel:
@@ -31,3 +48,10 @@ components:
       required:
       - id
       - orgName
+    Limits:
+      type: object
+      properties:
+        remaining:
+          type: number
+      required:
+      - remaining

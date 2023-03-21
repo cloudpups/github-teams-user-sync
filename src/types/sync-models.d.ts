@@ -7,3 +7,7 @@ export interface OrgModel {
   orgName: string;
 }
 
+export interface Limits {
+  remaining: number;
+}
+
