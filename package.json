@@ -23,5 +23,15 @@
     "js-yaml": "^4.1.0",
     "openapi-backend": "^5.9.1",
     "swagger-ui-express": "^4.6.2"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src"
+    ],
+    "ext": "ts,json,yaml",
+    "ignore": [
+      "src/**/*.spec.ts"
+    ],
+    "exec": "ts-node ./src/index.ts"
   }
 }
