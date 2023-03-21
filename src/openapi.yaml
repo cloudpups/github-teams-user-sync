@@ -40,6 +40,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Limits"
+  /api/sync/SynconrizeOrg:
+    post:
+      operationId: syncOrg
+      description: Triggers a synchronization job for the specified org 
+      tags:
+      - sync
+      parameters:
+      - in: query
+        name: installationId
+        schema:
+          type: array
+          items:
+            type: number              
+        required: true
+      responses:
+        '200':
+          description: A successful response
+  /api/orchestrator:
+    post:
+      operationId: syncAllOrgs
+      description: Triggers a synchronization job for all orgs 
+      tags:
+      - sync
+      responses:
+        '200':
+          description: A successful response
 components:
   schemas:
     OrgModel:
