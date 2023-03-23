@@ -1,7 +1,7 @@
 import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
 import { OrgModel } from "../types/sync-models";
-import { GetClient } from "../services/github";
+import { GetClient } from "../services/gitHub";
 
 export async function getInstalledOrgsHandler(
     c: Context,

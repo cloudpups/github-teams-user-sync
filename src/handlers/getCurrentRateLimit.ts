@@ -1,6 +1,6 @@
 import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
-import { GetClient } from "../services/github";
+import { GetClient } from "../services/gitHub";
 import { Limits } from "../types/sync-models";
 
 export async function getCurrentRateLimitHandler(

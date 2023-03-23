@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { GetClient } from "./src/services/github";
+import { GetClient } from "./src/services/gitHub";
 
 dotenv.config();
 
