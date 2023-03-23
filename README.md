@@ -1,8 +1,12 @@
+<div align="center">
+
 # group-to-teams-sync-bot
 
 Groups (currently Azure Active Directory Only) to GitHub Teams sync
 
-[![CodeQL](https://github.com/cloudpups/github-teams-user-sync/actions/workflows/codeql.yml/badge.svg)](https://github.com/cloudpups/github-teams-user-sync/actions/workflows/codeql.yml) [![Docker Pulls](https://img.shields.io/docker/pulls/trfc/github-teams-user-sync)](https://hub.docker.com/r/trfc/github-teams-user-sync)
+[![CodeQL](https://github.com/cloudpups/github-teams-user-sync/actions/workflows/codeql.yml/badge.svg)](https://github.com/cloudpups/github-teams-user-sync/actions/workflows/codeql.yml) [![Docker Pulls](https://img.shields.io/docker/pulls/trfc/github-teams-user-sync)](https://hub.docker.com/r/trfc/github-teams-user-sync) [![CodeFactor](https://www.codefactor.io/repository/github/cloudpups/github-teams-user-sync/badge)](https://www.codefactor.io/repository/github/cloudpups/github-teams-user-sync)
+
+</div>
 
 ## Important Commands
 
