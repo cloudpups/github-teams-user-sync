@@ -9,32 +9,32 @@ paths:
   /api/Metadata/GetInstalledOrgs:
     get:
       operationId: getInstalledOrgs
-      description: Returns a list of all GitHub Organizations where this app is installed  
+      description: Returns a list of all GitHub Organizations where this app is installed
       tags:
-      - metadata            
+        - metadata
       responses:
-        '200':
+        "200":
           description: A successful response
           content:
             application/json:
               schema:
                 type: array
-                items: 
+                items:
                   $ref: "#/components/schemas/OrgModel"
   /api/Metadata/GetRateLimitsForOrg/{installationId}:
     get:
       operationId: getCurrentRateLimit
       description: Gets the current rate limit information for the specified org
       tags:
-      - metadata
+        - metadata
       parameters:
-      - in: path
-        name: installationId
-        schema:
-          type: number
-        required: true
+        - in: path
+          name: installationId
+          schema:
+            type: number
+          required: true
       responses:
-        '200':
+        "200":
           description: A successful response
           content:
             application/json:
@@ -43,28 +43,28 @@ paths:
   /api/sync/SynchronizeOrg:
     post:
       operationId: syncOrg
-      description: Triggers a synchronization job for the specified org 
+      description: Triggers a synchronization job for the specified org
       tags:
-      - sync
+        - sync
       parameters:
-      - in: query
-        name: installationId
-        schema:
-          type: array
-          items:
-            type: number              
-        required: true
+        - in: query
+          name: installationId
+          schema:
+            type: array
+            items:
+              type: number
+          required: true
       responses:
-        '200':
+        "200":
           description: A successful response
   /api/orchestrator:
     post:
       operationId: syncAllOrgs
-      description: Triggers a synchronization job for all orgs 
+      description: Triggers a synchronization job for all orgs
       tags:
-      - sync
+        - sync
       responses:
-        '200':
+        "200":
           description: A successful response
 components:
   schemas:
@@ -76,12 +76,12 @@ components:
         orgName:
           type: string
       required:
-      - id
-      - orgName
+        - id
+        - orgName
     Limits:
       type: object
       properties:
         remaining:
           type: number
       required:
-      - remaining
+        - remaining

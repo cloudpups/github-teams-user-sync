@@ -19,8 +19,13 @@ export async function GetOrgClient(installationId: number): Promise<InstalledCli
 
     const orgName = await installedOctokit.rest.apps.getInstallation({ installation_id: installationId });
 
+    if(!orgName.data.account?.login) {
+        // TODO: throw custom wrapped error...
+        throw new Error("Login cannot be null for orgs")
+    }
+
     // TODO: wrap in caching decorator 
-    return new InstalledGitHubClient(installedOctokit, orgName.data.account?.login!);
+    return new InstalledGitHubClient(installedOctokit, orgName.data.account?.login);
 }
 
 class InstalledGitHubClient implements InstalledClient {
@@ -207,7 +212,7 @@ class InstalledGitHubClient implements InstalledClient {
 
         const filesResponse = await this.gitHubClient.rest.repos.getContent(getContentRequest);
 
-        let potentialFiles = filesResponse.data;
+        const potentialFiles = filesResponse.data;
 
         if (!Array.isArray(potentialFiles)) {
             return {
