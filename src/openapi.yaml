@@ -40,7 +40,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Limits"
-  /api/sync/SynconrizeOrg:
+  /api/sync/SynchronizeOrg:
     post:
       operationId: syncOrg
       description: Triggers a synchronization job for the specified org 
