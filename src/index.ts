@@ -5,9 +5,6 @@ import fs from "fs";
 import path from "node:path";
 import swaggerUi from "swagger-ui-express";
 import { routes } from "./routes";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const app = express();
 const port = 8080;
