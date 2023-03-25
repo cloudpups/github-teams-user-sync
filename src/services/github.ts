@@ -167,8 +167,6 @@ class InstalledGitHubClient implements InstalledClient {
                 org: this.orgName,
                 username: id
             })
-    
-            console.log(response)
         }
         catch{
             // TODO: actually catch exception and investigate...
@@ -262,11 +260,11 @@ class InstalledGitHubClient implements InstalledClient {
         }
     }
 
-    public async RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubUser): Response<any> {
+    public async RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): Response<any> {
         await this.gitHubClient.rest.teams.removeMembershipForUserInOrg({
             team_slug: team,
             org: this.orgName,
-            username: user.Name
+            username: user
         })
 
         return {

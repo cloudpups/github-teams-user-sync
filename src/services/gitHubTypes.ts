@@ -21,7 +21,7 @@ export interface InstalledClient {
     CreateTeam(teamName: GitHubTeamName): Response
     DoesUserExist(gitHubId: string): Response<GitHubId>
     ListCurrentMembersOfGitHubTeam(team: GitHubTeamName): Response<GitHubId[]>
-    RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubUser): Response
+    RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): Response
     UpdateTeamDetails(team: GitHubTeamName, description: string): Response
     AddSecurityManagerTeam(team: GitHubTeamName): Promise<any>
     GetConfigurationForInstallation(): Response<OrgConfiguration>    
