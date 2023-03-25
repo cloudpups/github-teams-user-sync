@@ -25,6 +25,7 @@ export interface InstalledClient {
     UpdateTeamDetails(team: GitHubTeamName, description: string): Response
     AddSecurityManagerTeam(team: GitHubTeamName): Promise<any>
     GetConfigurationForInstallation(): Response<OrgConfiguration>    
+    GetOrgMembers(): Response<GitHubId[]>
 }
 
 

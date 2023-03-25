@@ -21,8 +21,9 @@
     "typescript": "^5.0.2"
   },
   "dependencies": {
+    "@octokit/plugin-throttling": "^5.0.1",
     "dotenv": "^16.0.3",
-    "express": "^4.18.2",    
+    "express": "^4.18.2",
     "js-yaml": "^4.1.0",
     "ldapjs": "^3.0.1",
     "octokit": "^2.0.14",

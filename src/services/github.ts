@@ -4,6 +4,7 @@ import { Config } from "../config";
 import { GitHubClient, GitHubId, GitHubTeamId, GitHubTeamName, GitHubUser, InstalledClient, Org, OrgConfiguration, Response } from "./gitHubTypes";
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
+import { throttling } from "@octokit/plugin-throttling";
 
 const config = Config();
 
@@ -11,13 +12,36 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
     // TODO: look further into this... it seems like it would be best if 
     // installation client was generated from the original client, and not
     // created fresh.
-    const installedOctokit = new Octokit({
+    const MyOctokit = Octokit.plugin(throttling);
+
+    const installedOctokit = new MyOctokit({
         authStrategy: createAppAuth,
         auth: {
             appId: Config().GitHub.AppId,
             privateKey: Config().GitHub.PrivateKey,
             installationId
-        }
+        },
+        throttle: {
+            onRateLimit: (retryAfter:any, options:any, octokit:any, retryCount:any) => {
+              octokit.log.warn(
+                `Request quota exhausted for request ${options.method} ${options.url}`
+              );
+        
+              if (retryCount < 10) {
+                // retries 10 times
+                octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+                return true;
+              }
+            },
+            onSecondaryRateLimit: (retryAfter:any, options:any, octokit:any) => {
+              // does not retry, only logs a warning
+              octokit.log.warn(
+                `SecondaryRateLimit detected for request ${options.method} ${options.url}. Retry after ${retryAfter} seconds`
+              );              
+
+              return true;
+            },
+          }          
     })
 
     const orgName = await installedOctokit.rest.apps.getInstallation({ installation_id: installationId });
@@ -130,6 +154,19 @@ class InstalledGitHubClient implements InstalledClient {
     constructor(gitHubClient: Octokit, orgName: string) {
         this.gitHubClient = gitHubClient;
         this.orgName = orgName;
+    }
+
+    public async GetOrgMembers(): Response<GitHubId[]> {
+        const response = await this.gitHubClient.paginate(this.gitHubClient.rest.orgs.listMembers, {
+            org: this.orgName
+        })
+
+        return {
+            successful: true,
+            data: response.map(i => {
+                return i.login
+            })
+        }
     }
 
     public GetCurrentOrgName(): string {

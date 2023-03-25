@@ -1,5 +1,6 @@
 import { getCurrentRateLimitHandler } from "./handlers/getCurrentRateLimit";
 import { getInstalledOrgsHandler } from "./handlers/getInstalledOrgs";
+import { syncOrgHandler } from "./handlers/syncOrg";
 
 function notImplementedHandler(c: any, req: any, res: any) {
     return res
@@ -10,6 +11,6 @@ function notImplementedHandler(c: any, req: any, res: any) {
 export const routes = {
     getInstalledOrgs: getInstalledOrgsHandler,
     getCurrentRateLimit: getCurrentRateLimitHandler,
-    syncOrg: notImplementedHandler,
+    syncOrg: syncOrgHandler,
     syncAllOrgs: notImplementedHandler
 }

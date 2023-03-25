@@ -18,7 +18,10 @@ async function DoSomething() {
     const specificClient = await ghClient.GetOrgClient(installationId);
     const config = await ghClient.GetAppConfig();
 
-    await SyncOrg(specificClient, config);     
+    const members = await specificClient.GetOrgMembers();
+    console.log(members);
+    
+    // await SyncOrg(specificClient, config);     
 }
 
 DoSomething();
