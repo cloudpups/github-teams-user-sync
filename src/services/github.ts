@@ -1,7 +1,7 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
-import { GitHubClient, InstalledClient, Org } from "./gitHubTypes";
+import { GitHubClient, Org } from "./gitHubTypes";
 import { GetOrgClient } from "./installedGitHubClient";
 
 function authenticatedClient() {
