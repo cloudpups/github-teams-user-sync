@@ -18,8 +18,10 @@ export function Config() {
             GroupBaseDN: process.env.LDAP_GROUP_BASE_DN!
         },
         AppOptions: {
-            GitHubIdAppend: process.env.APP_OPTIONS_GitHubIdAppend!,
-            SecurityManagerTeams: securityManagerTeams
+            AppConfigRepo: process.env.APP_OPTIONS_AppConfigRepo!,
+            AppConfigOrg: process.env.APP_OPTIONS_AppConfigOrg!
+            // GitHubIdAppend: process.env.APP_OPTIONS_GitHubIdAppend!,
+            // SecurityManagerTeams: securityManagerTeams
         }
     }
 

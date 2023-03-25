@@ -1,3 +1,4 @@
+import { AppConfig } from "./appConfig"
 
 export interface Org {
     id: number,
@@ -7,6 +8,7 @@ export interface Org {
 export interface GitHubClient {
     GetInstallations(): Promise<Org[]>
     GetOrgClient(installationId: number): Promise<InstalledClient>
+    GetAppConfig(): Promise<AppConfig>
 }
 
 export interface InstalledClient {
@@ -22,7 +24,7 @@ export interface InstalledClient {
     RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubUser): Response
     UpdateTeamDetails(team: GitHubTeamName, description: string): Response
     AddSecurityManagerTeam(team: GitHubTeamName): Promise<any>
-    GetConfigurationForInstallation(): Response<OrgConfiguration>
+    GetConfigurationForInstallation(): Response<OrgConfiguration>    
 }
 
 
