@@ -143,6 +143,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
     if (orgConfig.OrganizationMembersGroup != undefined || orgConfig.OrganizationMembersGroup != null) {
         console.log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()}: ${orgConfig.OrganizationMembersGroup}`)
         currentMembers = await SynchronizeOrgMembers(installedGitHubClient, orgConfig.OrganizationMembersGroup, config)
+        await SynchronizeGitHubTeam(installedGitHubClient, orgConfig.OrganizationMembersGroup, config, currentMembers);
     }
 
     if (currentMembers.length == 0) {
