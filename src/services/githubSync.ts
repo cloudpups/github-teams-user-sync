@@ -14,7 +14,7 @@ async function GetGitHubIds(teamName:string, config:AppConfig) {
     })
 }
 
-export async function SynchronizeOrgMembers(installedGitHubClient:InstalledClient, teamName:string, config:AppConfig) {    
+async function SynchronizeOrgMembers(installedGitHubClient:InstalledClient, teamName:string, config:AppConfig) {    
     const gitHubIds = await GetGitHubIds(teamName, config);
 
     for(let gitHubId of gitHubIds) {        
@@ -34,7 +34,7 @@ export async function SynchronizeOrgMembers(installedGitHubClient:InstalledClien
     }
 }
 
-export async function SynchronizeGitHubTeam(installedGitHubClient:InstalledClient, teamName:string, config:AppConfig) {
+async function SynchronizeGitHubTeam(installedGitHubClient:InstalledClient, teamName:string, config:AppConfig) {
     const trueMembersList = await GetGitHubIds(teamName, config);
 
     const currentOrgMembers: string[] = [];
@@ -75,5 +75,40 @@ export async function SynchronizeGitHubTeam(installedGitHubClient:InstalledClien
 
     for(let m of membersToAdd) {
         await installedGitHubClient.AddTeamMember(teamName, m)
+    }
+}
+
+export async function SyncOrg(installedGitHubClient:InstalledClient, config:AppConfig) {
+    if(config.SecurityManagerTeams) {
+        for(let t of config.SecurityManagerTeams) {
+            console.log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+            await SynchronizeOrgMembers(installedGitHubClient, t, config);
+            await SynchronizeGitHubTeam(installedGitHubClient, t, config);
+        }
+    }
+
+    const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();
+
+    if(!orgConfigResponse.successful) {
+        throw new Error("Cannot fetch org config");
+    }
+
+    const orgConfig = orgConfigResponse.data;
+
+    console.log(orgConfig);
+
+    if(orgConfig.OrganizationMembersGroup != undefined || orgConfig.OrganizationMembersGroup != null) {
+        console.log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()}: ${orgConfig.OrganizationMembersGroup}`)
+        await SynchronizeOrgMembers(installedGitHubClient, orgConfig.OrganizationMembersGroup, config)
+    }
+
+    if(!orgConfig.GitHubTeamNames || orgConfig.GitHubTeamNames.length < 1) {
+        // no teams to sync
+        return
+    }
+
+    for(let t of orgConfig.GitHubTeamNames) {
+        console.log(`Syncing Members for ${t} in ${installedGitHubClient.GetCurrentOrgName()}`)
+        await SynchronizeGitHubTeam(installedGitHubClient, t, config);
     }
 }

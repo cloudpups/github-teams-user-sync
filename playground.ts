@@ -3,7 +3,7 @@ import { Config } from "./src/config";
 import { GetClient } from "./src/services/gitHub";
 import { SearchAllAsync } from "./src/services/ldapClient";
 import dotenv from "dotenv";
-import { SynchronizeGitHubTeam, SynchronizeOrgMembers } from "./src/services/githubSync";
+import { SyncOrg } from "./src/services/githubSync";
 
 dotenv.config();
 
@@ -18,8 +18,7 @@ async function DoSomething() {
     const specificClient = await ghClient.GetOrgClient(installationId);
     const config = await ghClient.GetAppConfig();
 
-    await SynchronizeOrgMembers(specificClient, groupName, config);    
-    await SynchronizeGitHubTeam(specificClient, groupName, config);
+    await SyncOrg(specificClient, config);     
 }
 
 DoSomething();

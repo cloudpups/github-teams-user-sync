@@ -60,6 +60,6 @@ export type GitHubTeam = {
 export type GitHubTeamName = string;
 
 export type OrgConfiguration = {
-    GitHubTeamNames: string[]
-    OrganizationMembersGroup: string
+    GitHubTeamNames?: string[]
+    OrganizationMembersGroup?: string
 }
