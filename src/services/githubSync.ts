@@ -65,7 +65,7 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
     return orgMembers;
 }
 
-async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[]) {
+async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[]) {    
     const trueMembersList = await GetGitHubIds(teamName, config);
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
@@ -126,20 +126,43 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
 }
 
 export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig) {
-    if (config.SecurityManagerTeams) {
-        for (let t of config.SecurityManagerTeams) {
-            console.log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
-            const orgMembers = await SynchronizeOrgMembers(installedGitHubClient, t, config);
-            await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers);
-        }
-    }
-
+    const orgName = installedGitHubClient.GetCurrentOrgName();
     const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();
 
     if (!orgConfigResponse.successful) {
         throw new Error("Cannot fetch org config");
     }
 
+    const teamsThatShouldExist = [
+        ...config.SecurityManagerTeams,
+        ...(orgConfigResponse.data.GitHubTeamNames ?? []),
+        ...(orgConfigResponse.data.OrganizationMembersGroup != undefined ? [orgConfigResponse.data.OrganizationMembersGroup] : [])
+    ]
+
+    const existingTeamsResponse = await installedGitHubClient.GetAllTeams();
+
+    if(!existingTeamsResponse.successful) {
+        throw new Error("Unable to get existing teams");
+    }
+
+    const setOfExistingTeams = new Set(existingTeamsResponse.data.map(t => t.Name.toUpperCase()));        
+    const teamsToCreate = teamsThatShouldExist.filter(t => !setOfExistingTeams.has(t.toUpperCase()))
+
+    if(teamsToCreate.length > 0) {
+        for(let t of teamsToCreate) {
+            console.log(`Creating team '${orgName}/${t}'`)
+            await installedGitHubClient.CreateTeam(t);
+        }
+    }
+
+    if (config.SecurityManagerTeams) {
+        for (let t of config.SecurityManagerTeams) {
+            console.log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+            const orgMembers = await SynchronizeOrgMembers(installedGitHubClient, t, config);
+            await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers);
+        }
+    }    
+   
     const orgConfig = orgConfigResponse.data;
 
     console.log(orgConfig);
