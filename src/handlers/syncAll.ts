@@ -8,6 +8,8 @@ export async function syncAllHandler(
     _req: Request,
     res: Response
 ) {
+    const start = Date.now();
+
     const client = GetClient();
     const installations = await client.GetInstallations();
     
@@ -24,5 +26,12 @@ export async function syncAllHandler(
 
     const results = await Promise.all(orgSyncPromises);
 
-    return res.status(200).json(results);
+    const end = Date.now();
+
+    const resultObject = {
+        orgSyncResults: results,
+        timeToCompleteInMilliseconds: end - start
+    }
+
+    return res.status(200).json(resultObject);
 }
