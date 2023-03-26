@@ -5,6 +5,7 @@ import { GitHubClient, GitHubId, GitHubTeamId, GitHubTeamName, GitHubUser, Insta
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
+import { AsyncReturnType } from "../utility";
 
 const config = Config();
 
@@ -353,7 +354,16 @@ class InstalledGitHubClient implements InstalledClient {
             path: ""
         };
 
-        const filesResponse = await this.gitHubClient.rest.repos.getContent(getContentRequest);
+        let filesResponse : AsyncReturnType<typeof this.gitHubClient.rest.repos.getContent>;
+
+        try{
+            filesResponse = await this.gitHubClient.rest.repos.getContent(getContentRequest);
+        }        
+        catch {
+            return {
+                successful: false
+            }
+        }
 
         const potentialFiles = filesResponse.data;
 

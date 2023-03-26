@@ -2,6 +2,7 @@ import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
 import { GetClient } from "../services/gitHub";
 import { SyncOrg } from "../services/githubSync";
+import { AsyncReturnType } from "../utility";
 
 export async function syncOrgHandler(
     c: Context,
@@ -16,12 +17,14 @@ export async function syncOrgHandler(
 
     const client = GetClient();
 
+    const syncOrgResponses : AsyncReturnType<typeof SyncOrg>[] = [];
+
     for (let i of distinctIds) {
         const orgClient = await client.GetOrgClient(i);
         const appConfig = await client.GetAppConfig();
 
-        await SyncOrg(orgClient, appConfig)
+        syncOrgResponses.push(await SyncOrg(orgClient, appConfig));
     }
 
-    return res.status(200).json("Done!");
+    return res.status(200).json(syncOrgResponses);
 }

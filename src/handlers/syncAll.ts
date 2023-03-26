@@ -15,14 +15,14 @@ export async function syncAllHandler(
         const orgClient = await client.GetOrgClient(installationId);
         const appConfig = await client.GetAppConfig();
 
-        await SyncOrg(orgClient, appConfig)
+        return await SyncOrg(orgClient, appConfig)
     }
 
     console.log(`Syncing the following orgs: ${JSON.stringify(installations)}`)
 
     const orgSyncPromises = installations.map(i => syncOrg(i.id))
 
-    await Promise.all(orgSyncPromises);
+    const results = await Promise.all(orgSyncPromises);
 
-    return res.status(200).json("Done!");
+    return res.status(200).json(results);
 }

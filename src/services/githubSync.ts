@@ -127,41 +127,60 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
 
 export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig) {
     const orgName = installedGitHubClient.GetCurrentOrgName();
+
+    let response:any = {
+        orgName: orgName,
+        successful: false        
+    }
+    
+    const existingTeamsResponse = await installedGitHubClient.GetAllTeams();
+    if(!existingTeamsResponse.successful) {
+        throw new Error("Unable to get existing teams");
+    }
+    const setOfExistingTeams = new Set(existingTeamsResponse.data.map(t => t.Name.toUpperCase()));
+
+    if (config.SecurityManagerTeams) {
+        for (let t of config.SecurityManagerTeams) {
+            if(!setOfExistingTeams.has(t.toUpperCase())) {
+                console.log(`Creating team '${orgName}/${t}'`)
+                await installedGitHubClient.CreateTeam(t); 
+                setOfExistingTeams.add(t);
+            }
+
+            console.log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+            const orgMembers = await SynchronizeOrgMembers(installedGitHubClient, t, config);
+            await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers);           
+        }
+
+        response = {
+            ...response,
+            syncedSecurityManagerTeams: config.SecurityManagerTeams
+        }
+    }    
+    
     const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();
 
     if (!orgConfigResponse.successful) {
-        throw new Error("Cannot fetch org config");
+        return {
+            ...response,
+            message: "Cannot access/fetch organization config"
+        }
     }
 
     const teamsThatShouldExist = [
         ...config.SecurityManagerTeams,
         ...(orgConfigResponse.data.GitHubTeamNames ?? []),
         ...(orgConfigResponse.data.OrganizationMembersGroup != undefined ? [orgConfigResponse.data.OrganizationMembersGroup] : [])
-    ]
-
-    const existingTeamsResponse = await installedGitHubClient.GetAllTeams();
-
-    if(!existingTeamsResponse.successful) {
-        throw new Error("Unable to get existing teams");
-    }
-
-    const setOfExistingTeams = new Set(existingTeamsResponse.data.map(t => t.Name.toUpperCase()));        
+    ]    
+            
     const teamsToCreate = teamsThatShouldExist.filter(t => !setOfExistingTeams.has(t.toUpperCase()))
 
     if(teamsToCreate.length > 0) {
         for(let t of teamsToCreate) {
             console.log(`Creating team '${orgName}/${t}'`)
-            await installedGitHubClient.CreateTeam(t);
+            await installedGitHubClient.CreateTeam(t); 
         }
     }
-
-    if (config.SecurityManagerTeams) {
-        for (let t of config.SecurityManagerTeams) {
-            console.log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
-            const orgMembers = await SynchronizeOrgMembers(installedGitHubClient, t, config);
-            await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers);
-        }
-    }    
    
     const orgConfig = orgConfigResponse.data;
 
@@ -197,4 +216,9 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
     const teamSyncPromises = orgConfig.GitHubTeamNames.map(t => syncTeam(t));
 
     await Promise.all(teamSyncPromises);
+
+    return {
+        ...response,        
+        successful: true
+    }
 }
