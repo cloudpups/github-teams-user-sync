@@ -264,10 +264,12 @@ class InstalledGitHubClient implements InstalledClient {
         }
     }
 
-    public async CreateTeam(team: GitHubTeamName): Response<any> {
+    public async CreateTeam(team: GitHubTeamName, description:string): Response<any> {
         await this.gitHubClient.rest.teams.create({
             name: team,
-            org: this.orgName
+            org: this.orgName,
+            description,
+            privacy:"closed"
         })
 
         return {
@@ -328,7 +330,7 @@ class InstalledGitHubClient implements InstalledClient {
             org: this.orgName,
             privacy: "closed",
             team_slug: team,
-            description: description
+            description: description            
         })
 
         return {

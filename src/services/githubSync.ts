@@ -71,6 +71,8 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
 }
 
 async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[]) {    
+    await installedGitHubClient.UpdateTeamDetails(teamName, teamDescription);
+
     const trueMembersList = await GetGitHubIds(teamName, config);
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
@@ -102,9 +104,7 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
     }
 
     const validMemberCheckResults = await Promise.all(trueMembersList.map(tm => checkValidOrgMember(tm)));
-    const trueValidTeamMembersList: string[] = validMemberCheckResults.filter(r => r.successful).map(r => r.gitHubId);
-
-    await installedGitHubClient.UpdateTeamDetails(teamName, teamDescription);
+    const trueValidTeamMembersList: string[] = validMemberCheckResults.filter(r => r.successful).map(r => r.gitHubId);    
 
     const listMembersResponse = await installedGitHubClient.ListCurrentMembersOfGitHubTeam(teamName);
 
@@ -148,7 +148,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
         for (let t of config.SecurityManagerTeams) {
             if(!setOfExistingTeams.has(t.toUpperCase())) {
                 console.log(`Creating team '${orgName}/${t}'`)
-                await installedGitHubClient.CreateTeam(t); 
+                await installedGitHubClient.CreateTeam(t, teamDescription); 
                 setOfExistingTeams.add(t);
             }
 
@@ -183,7 +183,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
     if(teamsToCreate.length > 0) {
         for(let t of teamsToCreate) {
             console.log(`Creating team '${orgName}/${t}'`)
-            await installedGitHubClient.CreateTeam(t); 
+            await installedGitHubClient.CreateTeam(t, teamDescription); 
         }
     }
    

@@ -18,7 +18,7 @@ export interface InstalledClient {
     IsUserMember(id: GitHubId): Response<boolean>
     GetAllTeams(): Response<GitHubTeamId[]>
     AddTeamMember(team: GitHubTeamName, id: GitHubId): Response
-    CreateTeam(teamName: GitHubTeamName): Response
+    CreateTeam(teamName: GitHubTeamName, description:string): Response
     DoesUserExist(gitHubId: string): Response<GitHubId>
     ListCurrentMembersOfGitHubTeam(team: GitHubTeamName): Response<GitHubId[]>
     RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): Response
