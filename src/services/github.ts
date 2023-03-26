@@ -70,16 +70,27 @@ function authenticatedClient() {
 async function GetInstallations(client: Octokit): Promise<Org[]> {
     const installationList = await client.paginate(client.rest.apps.listInstallations, {
         per_page: 100
-    })
+    })    
 
     const mappedOrgs = installationList.map(i => {
         return {
             id: i.id,
-            orgName: i.account?.login ?? ""
+            orgName: i.account?.login ?? "",
+            suspendedAt: i.suspended_at,
+            suspendedBy: i.suspended_by?.login
         }
     });
 
-    return mappedOrgs;
+    const suspendedInstallations = mappedOrgs.filter(i => i.suspendedAt != undefined);
+
+    console.log(`The following installations have been suspended: ${JSON.stringify(suspendedInstallations)}`)
+
+    return mappedOrgs.filter(i => i.suspendedAt == undefined).map(i => {
+        return {
+            id: i.id,
+            orgName: i.orgName
+        }
+    });
 }
 
 async function GetAppConfig(client: Octokit): Promise<AppConfig> {

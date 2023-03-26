@@ -17,6 +17,8 @@ async function GetGitHubIds(teamName: string, config: AppConfig) {
 async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig) {
     const gitHubIds = await GetGitHubIds(teamName, config);
 
+    const orgName = installedGitHubClient.GetCurrentOrgName();
+
     async function addOrgMember(gitHubId: GitHubId) {
         const isUserReal = await installedGitHubClient.DoesUserExist(gitHubId);
 
@@ -32,7 +34,7 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
 
         if (!isUserMemberAsync.successful) {
             throw new Error("What");
-        }        
+        }
 
         if (isUserMemberAsync.data) {
             return {
@@ -56,39 +58,41 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
     const orgMembers = responses.filter(r => r.successful).map(r => r.user);
     const problematicGitHubIds = responses.filter(r => !r.successful);
 
-    console.log(`The following issues were found: ${JSON.stringify(problematicGitHubIds)}`)
+    if (problematicGitHubIds.length > 0) {
+        console.log(`The following issues were found when syncing ${orgName}/${teamName}: ${JSON.stringify(problematicGitHubIds)}`)
+    }
 
     return orgMembers;
 }
 
 async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[]) {
     const trueMembersList = await GetGitHubIds(teamName, config);
-    const orgName = installedGitHubClient.GetCurrentOrgName();    
+    const orgName = installedGitHubClient.GetCurrentOrgName();
 
-    async function checkValidOrgMember(gitHubId:GitHubId) {
+    async function checkValidOrgMember(gitHubId: GitHubId) {
         const isUserReal = await installedGitHubClient.DoesUserExist(gitHubId);
 
         if (!isUserReal.successful || !isUserReal.data) {
-            console.log(`User '${gitHubId}' does not exist in GitHub.`)
             return {
-                successful:false,
-                gitHubId:gitHubId
+                successful: false,
+                gitHubId: gitHubId,
+                message: `User '${gitHubId}' does not exist in GitHub.`
             };
         }
 
         const isMember = existingMembers.filter(em => em == gitHubId);
 
         if (!isMember) {
-            console.log(`User '${gitHubId} is not an Org Member of ${orgName}`)
             return {
-                successful:false,
-                gitHubId:gitHubId
+                successful: false,
+                gitHubId: gitHubId,
+                message: `User '${gitHubId} is not an Org Member of ${orgName}`
             };
         }
 
         return {
-            successful:true,
-            gitHubId:gitHubId
+            successful: true,
+            gitHubId: gitHubId
         };
     }
 
@@ -106,15 +110,16 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
     const currentTeamMembers = listMembersResponse.data;
 
     const membersToRemove = currentTeamMembers.filter(m => !trueValidTeamMembersList.find((rm => rm == m)));
-    const membersToAdd = trueValidTeamMembersList.filter(m => !currentTeamMembers.find((rm) => rm == m));    
+    const membersToAdd = trueValidTeamMembersList.filter(m => !currentTeamMembers.find((rm) => rm == m));
 
     const teamSyncNotes = {
         teamSlug: `${orgName}/${teamName}`,
         toRemove: membersToRemove,
-        toAdd: membersToAdd
+        toAdd: membersToAdd,
+        issues: validMemberCheckResults.filter(r => !r.successful)
     }
 
-    console.log(JSON.stringify(teamSyncNotes));    
+    console.log(JSON.stringify(teamSyncNotes));
 
     await Promise.all(membersToRemove.map(mtr => installedGitHubClient.RemoveTeamMemberAsync(teamName, mtr)));
     await Promise.all(membersToAdd.map(mta => installedGitHubClient.AddTeamMember(teamName, mta)));
@@ -161,7 +166,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
         return
     }
 
-    async function syncTeam(teamName:string) {
+    async function syncTeam(teamName: string) {
         console.log(`Syncing Team Members for ${teamName} in ${installedGitHubClient.GetCurrentOrgName()}`)
         await SynchronizeGitHubTeam(installedGitHubClient, teamName, config, currentMembers);
     }
