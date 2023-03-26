@@ -6,11 +6,16 @@ import { SearchAllAsync } from "./ldapClient";
 
 const teamDescription = "🤖 This Team is controlled by the Groups to Teams Sync bot! Any changes will be overridden. For more information, please check out the following: https://github.com/cloudpups/groups-to-teams-sync-bot";
 
+const replaceAll = function(original:string, search:string, replacement:string) {
+    var target = original;
+    return target.replace(new RegExp(search, 'g'), replacement);
+};
+
 async function GetGitHubIds(teamName: string, config: AppConfig) {
     const membersFromSourceOfTruth = await SearchAllAsync(teamName);
 
     return membersFromSourceOfTruth.entries.map(e => {
-        return e.cn.replace('_', '-') + config.GitHubIdAppend;
+        return replaceAll(e.cn, '_', '-') + config.GitHubIdAppend;
     })
 }
 
