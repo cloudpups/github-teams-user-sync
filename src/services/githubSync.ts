@@ -12,7 +12,10 @@ const replaceAll = function(original:string, search:string, replacement:string) 
 };
 
 async function GetGitHubIds(teamName: string, config: AppConfig) {
+    console.log(`Searching for group '${teamName}'`)
     const membersFromSourceOfTruth = await SearchAllAsync(teamName);
+
+    console.log(`Found the following members '${JSON.stringify(membersFromSourceOfTruth)}'`)
 
     return membersFromSourceOfTruth.entries.map(e => {
         return replaceAll(e.cn, '_', '-') + config.GitHubIdAppend;

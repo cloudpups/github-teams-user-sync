@@ -9,7 +9,7 @@
     "start": "node ./out/src/app.js",
     "build": "tsc && shx cp ./src/openapi.yaml ./out/src/openapi.yaml",
     "openapi": "npx -y openapi-to-ts -i ./src/openapi.yaml -o ./src/types/sync-models.d.ts",
-    "play": "ts-node playground.ts"
+    "play": "ts-node playground.ts"    
   },
   "author": "",
   "license": "ISC",

@@ -9,6 +9,19 @@ import { AsyncReturnType } from "../utility";
 
 const config = Config();
 
+function MakeTeamNameSafe(teamName:string) {
+    // There are most likely much more than this...
+    const specialCharacterRemoveRegexp = /[ &%#@!$]/g;
+    const saferName = teamName.replaceAll(specialCharacterRemoveRegexp, '-');
+
+    const multiReplaceRegexp = /(-){2,}/g;
+    const removeTrailingDashesRegexp = /-+$/g
+    
+    const withDuplicatesRemoved = saferName.replaceAll(multiReplaceRegexp, "-").replaceAll(removeTrailingDashesRegexp, "");
+    
+    return withDuplicatesRemoved;
+}
+
 async function GetOrgClient(installationId: number): Promise<InstalledClient> {
     // TODO: look further into this... it seems like it would be best if 
     // installation client was generated from the original client, and not
@@ -251,9 +264,11 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     public async AddTeamMember(team: GitHubTeamName, id: GitHubId): Response<any> {
+        const safeTeam = MakeTeamNameSafe(team);
+
         await this.gitHubClient.rest.teams.addOrUpdateMembershipForUserInOrg({
             org: this.orgName,
-            team_slug: team,
+            team_slug: safeTeam,
             username: id
         })
 
@@ -298,9 +313,11 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     public async ListCurrentMembersOfGitHubTeam(team: GitHubTeamName): Response<GitHubId[]> {
+        const safeTeam = MakeTeamNameSafe(team);
+
         const response = await this.gitHubClient.paginate(this.gitHubClient.rest.teams.listMembersInOrg, {
             org: this.orgName,
-            team_slug: team,            
+            team_slug: safeTeam,            
         })
 
         return {
@@ -312,8 +329,10 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     public async RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): Response<any> {
+        const safeTeam = MakeTeamNameSafe(team);
+
         await this.gitHubClient.rest.teams.removeMembershipForUserInOrg({
-            team_slug: team,
+            team_slug: safeTeam,
             org: this.orgName,
             username: user
         })
@@ -326,10 +345,12 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     public async UpdateTeamDetails(team: GitHubTeamName, description: string): Response<any> {
+        const safeTeam = MakeTeamNameSafe(team);
+
         await this.gitHubClient.rest.teams.updateInOrg({
             org: this.orgName,
             privacy: "closed",
-            team_slug: team,
+            team_slug: safeTeam,
             description: description            
         })
 
@@ -341,9 +362,11 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     public async AddSecurityManagerTeam(team: GitHubTeamName) {
+        const safeTeam = MakeTeamNameSafe(team);
+
         await this.gitHubClient.rest.orgs.addSecurityManagerTeam({
             org: this.orgName,
-            team_slug: team
+            team_slug: safeTeam
         })
     }
 

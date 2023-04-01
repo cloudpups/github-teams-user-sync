@@ -12,7 +12,8 @@ client.bind(config.LDAP.User, config.LDAP.Password, (err) => {
 });
 
 function SearchAsync(groupName: string): Promise<any> {
-    const ldapSearchString = `(&(objectCategory=user)(memberOf=CN=${groupName},CN=Users,${config.LDAP.GroupBaseDN}))`
+    const component = encodeURIComponent(groupName);
+    const ldapSearchString = `(&(objectCategory=user)(memberOf=CN=${component},CN=Users,${config.LDAP.GroupBaseDN}))`
 
     const opts: ldap.SearchOptions = {
         filter: ldapSearchString,
@@ -23,7 +24,7 @@ function SearchAsync(groupName: string): Promise<any> {
         //     pageSize: 250,
         //     pagePause: true
         //   }
-    };
+    };    
 
     return new Promise((resolve, reject) => {
         client.search(config.LDAP.GroupBaseDN, opts, (err, res) => {
