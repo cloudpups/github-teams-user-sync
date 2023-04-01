@@ -23,7 +23,7 @@ export interface InstalledClient {
     ListCurrentMembersOfGitHubTeam(team: GitHubTeamName): Response<GitHubId[]>
     RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): Response
     UpdateTeamDetails(team: GitHubTeamName, description: string): Response
-    AddSecurityManagerTeam(team: GitHubTeamName): Promise<any>
+    AddSecurityManagerTeam(team: GitHubTeamName): Promise<unknown>
     GetConfigurationForInstallation(): Response<OrgConfiguration>    
     GetOrgMembers(): Response<GitHubId[]>
 }
@@ -38,7 +38,7 @@ export type FailedResponse = {
     successful: false
 }
 
-export type Response<T = any> = Promise<GenericSucceededResponse<T> | FailedResponse>;
+export type Response<T = unknown> = Promise<GenericSucceededResponse<T> | FailedResponse>;
 
 export type GitHubId = string;
 

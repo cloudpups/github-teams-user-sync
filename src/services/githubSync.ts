@@ -6,8 +6,8 @@ import { SearchAllAsync } from "./ldapClient";
 
 const teamDescription = "🤖 This Team is controlled by the Groups to Teams Sync bot! Any changes will be overridden. For more information, please check out the following: https://github.com/cloudpups/groups-to-teams-sync-bot";
 
-const replaceAll = function(original:string, search:string, replacement:string) {
-    var target = original;
+const replaceAll = function (original: string, search: string, replacement: string) {
+    const target = original;
     return target.replace(new RegExp(search, 'g'), replacement);
 };
 
@@ -73,7 +73,7 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
     return orgMembers;
 }
 
-async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[]) {    
+async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[]) {
     await installedGitHubClient.UpdateTeamDetails(teamName, teamDescription);
 
     const trueMembersList = await GetGitHubIds(teamName, config);
@@ -107,7 +107,7 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
     }
 
     const validMemberCheckResults = await Promise.all(trueMembersList.map(tm => checkValidOrgMember(tm)));
-    const trueValidTeamMembersList: string[] = validMemberCheckResults.filter(r => r.successful).map(r => r.gitHubId);    
+    const trueValidTeamMembersList: string[] = validMemberCheckResults.filter(r => r.successful).map(r => r.gitHubId);
 
     const listMembersResponse = await installedGitHubClient.ListCurrentMembersOfGitHubTeam(teamName);
 
@@ -136,36 +136,37 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
 export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig) {
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
-    let response:any = {
+    let response = {
         orgName: orgName,
-        successful: false        
+        successful: false,
+        syncedSecurityManagerTeams: [] as string[]
     }
-    
+
     const existingTeamsResponse = await installedGitHubClient.GetAllTeams();
-    if(!existingTeamsResponse.successful) {
+    if (!existingTeamsResponse.successful) {
         throw new Error("Unable to get existing teams");
     }
     const setOfExistingTeams = new Set(existingTeamsResponse.data.map(t => t.Name.toUpperCase()));
 
     if (config.SecurityManagerTeams) {
         for (let t of config.SecurityManagerTeams) {
-            if(!setOfExistingTeams.has(t.toUpperCase())) {
+            if (!setOfExistingTeams.has(t.toUpperCase())) {
                 console.log(`Creating team '${orgName}/${t}'`)
-                await installedGitHubClient.CreateTeam(t, teamDescription); 
+                await installedGitHubClient.CreateTeam(t, teamDescription);
                 setOfExistingTeams.add(t);
             }
 
             console.log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
             const orgMembers = await SynchronizeOrgMembers(installedGitHubClient, t, config);
-            await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers);           
+            await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers);
         }
 
         response = {
             ...response,
             syncedSecurityManagerTeams: config.SecurityManagerTeams
         }
-    }    
-    
+    }
+
     const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();
 
     if (!orgConfigResponse.successful) {
@@ -179,17 +180,17 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
         ...config.SecurityManagerTeams,
         ...(orgConfigResponse.data.GitHubTeamNames ?? []),
         ...(orgConfigResponse.data.OrganizationMembersGroup != undefined ? [orgConfigResponse.data.OrganizationMembersGroup] : [])
-    ]    
-            
+    ]
+
     const teamsToCreate = teamsThatShouldExist.filter(t => !setOfExistingTeams.has(t.toUpperCase()))
 
-    if(teamsToCreate.length > 0) {
-        for(let t of teamsToCreate) {
+    if (teamsToCreate.length > 0) {
+        for (const t of teamsToCreate) {
             console.log(`Creating team '${orgName}/${t}'`)
-            await installedGitHubClient.CreateTeam(t, teamDescription); 
+            await installedGitHubClient.CreateTeam(t, teamDescription);
         }
     }
-   
+
     const orgConfig = orgConfigResponse.data;
 
     console.log(orgConfig);
@@ -226,7 +227,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
     await Promise.all(teamSyncPromises);
 
     return {
-        ...response,        
+        ...response,
         successful: true
     }
 }

@@ -1,7 +1,7 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
-import { GitHubClient, GitHubId, GitHubTeamId, GitHubTeamName, GitHubUser, InstalledClient, Org, OrgConfiguration, Response } from "./gitHubTypes";
+import { GitHubClient, GitHubId, GitHubTeamId, GitHubTeamName, InstalledClient, Org, OrgConfiguration, Response } from "./gitHubTypes";
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
@@ -23,6 +23,11 @@ function MakeTeamNameSafe(teamName:string) {
 }
 
 async function GetOrgClient(installationId: number): Promise<InstalledClient> {
+    interface options {
+        method:string
+        url:string
+    }
+
     // TODO: look further into this... it seems like it would be best if 
     // installation client was generated from the original client, and not
     // created fresh.
@@ -36,7 +41,7 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
             installationId
         },
         throttle: {
-            onRateLimit: (retryAfter:any, options:any, octokit:any, retryCount:any) => {
+            onRateLimit: (retryAfter:number, options:options, octokit:Octokit, retryCount:number) => {
               octokit.log.warn(
                 `Request quota exhausted for request ${options.method} ${options.url}`
               );
@@ -47,7 +52,7 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
                 return true;
               }
             },
-            onSecondaryRateLimit: (retryAfter:any, options:any, octokit:any) => {
+            onSecondaryRateLimit: (retryAfter:number, options:options, octokit:Octokit) => {
               // does not retry, only logs a warning
               octokit.log.warn(
                 `SecondaryRateLimit detected for request ${options.method} ${options.url}. Retry after ${retryAfter} seconds`
@@ -225,7 +230,7 @@ class InstalledGitHubClient implements InstalledClient {
 
     public async IsUserMember(id: string): Response<boolean> {        
         try {
-            const response = await this.gitHubClient.rest.orgs.checkMembershipForUser({
+            await this.gitHubClient.rest.orgs.checkMembershipForUser({
                 org: this.orgName,
                 username: id
             })
@@ -263,7 +268,7 @@ class InstalledGitHubClient implements InstalledClient {
         }
     }
 
-    public async AddTeamMember(team: GitHubTeamName, id: GitHubId): Response<any> {
+    public async AddTeamMember(team: GitHubTeamName, id: GitHubId): Response<unknown> {
         const safeTeam = MakeTeamNameSafe(team);
 
         await this.gitHubClient.rest.teams.addOrUpdateMembershipForUserInOrg({
@@ -279,7 +284,7 @@ class InstalledGitHubClient implements InstalledClient {
         }
     }
 
-    public async CreateTeam(team: GitHubTeamName, description:string): Response<any> {
+    public async CreateTeam(team: GitHubTeamName, description:string): Response<unknown> {
         await this.gitHubClient.rest.teams.create({
             name: team,
             org: this.orgName,
@@ -328,7 +333,7 @@ class InstalledGitHubClient implements InstalledClient {
         }
     }
 
-    public async RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): Response<any> {
+    public async RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): Response<unknown> {
         const safeTeam = MakeTeamNameSafe(team);
 
         await this.gitHubClient.rest.teams.removeMembershipForUserInOrg({
@@ -344,7 +349,7 @@ class InstalledGitHubClient implements InstalledClient {
         }
     }
 
-    public async UpdateTeamDetails(team: GitHubTeamName, description: string): Response<any> {
+    public async UpdateTeamDetails(team: GitHubTeamName, description: string): Response<unknown> {
         const safeTeam = MakeTeamNameSafe(team);
 
         await this.gitHubClient.rest.teams.updateInOrg({
