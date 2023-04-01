@@ -1,5 +1,6 @@
 import { Config } from "../config";
 import ldap from "ldapjs";
+import ldapEscape from "ldap-escape";
 
 const config = Config()
 
@@ -12,7 +13,7 @@ client.bind(config.LDAP.User, config.LDAP.Password, (err) => {
 });
 
 function SearchAsync(groupName: string): Promise<any> {
-    const component = encodeURIComponent(groupName);
+    const component = ldapEscape.filter`${groupName}`;    
     const ldapSearchString = `(&(objectCategory=user)(memberOf=CN=${component},CN=Users,${config.LDAP.GroupBaseDN}))`
 
     const opts: ldap.SearchOptions = {
