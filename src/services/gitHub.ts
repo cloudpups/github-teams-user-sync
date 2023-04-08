@@ -9,23 +9,23 @@ import { AsyncReturnType } from "../utility";
 
 const config = Config();
 
-function MakeTeamNameSafe(teamName:string) {
+function MakeTeamNameSafe(teamName: string) {
     // There are most likely much more than this...
     const specialCharacterRemoveRegexp = /[ &%#@!$]/g;
     const saferName = teamName.replaceAll(specialCharacterRemoveRegexp, '-');
 
     const multiReplaceRegexp = /(-){2,}/g;
     const removeTrailingDashesRegexp = /-+$/g
-    
+
     const withDuplicatesRemoved = saferName.replaceAll(multiReplaceRegexp, "-").replaceAll(removeTrailingDashesRegexp, "");
-    
+
     return withDuplicatesRemoved;
 }
 
 async function GetOrgClient(installationId: number): Promise<InstalledClient> {
     interface options {
-        method:string
-        url:string
+        method: string
+        url: string
     }
 
     // TODO: look further into this... it seems like it would be best if 
@@ -41,31 +41,31 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
             installationId
         },
         throttle: {
-            onRateLimit: (retryAfter:number, options:options, octokit:Octokit, retryCount:number) => {
-              octokit.log.warn(
-                `Request quota exhausted for request ${options.method} ${options.url}`
-              );
-        
-              if (retryCount < 10) {
-                // retries 10 times
-                octokit.log.info(`Retrying after ${retryAfter} seconds!`);
-                return true;
-              }
-            },
-            onSecondaryRateLimit: (retryAfter:number, options:options, octokit:Octokit) => {
-              // does not retry, only logs a warning
-              octokit.log.warn(
-                `SecondaryRateLimit detected for request ${options.method} ${options.url}. Retry after ${retryAfter} seconds`
-              );              
+            onRateLimit: (retryAfter: number, options: options, octokit: Octokit, retryCount: number) => {
+                octokit.log.warn(
+                    `Request quota exhausted for request ${options.method} ${options.url}`
+                );
 
-              return true;
+                if (retryCount < 10) {
+                    // retries 10 times
+                    octokit.log.info(`Retrying after ${retryAfter} seconds!`);
+                    return true;
+                }
             },
-          }          
+            onSecondaryRateLimit: (retryAfter: number, options: options, octokit: Octokit) => {
+                // does not retry, only logs a warning
+                octokit.log.warn(
+                    `SecondaryRateLimit detected for request ${options.method} ${options.url}. Retry after ${retryAfter} seconds`
+                );
+
+                return true;
+            },
+        }
     })
 
     const orgName = await installedOctokit.rest.apps.getInstallation({ installation_id: installationId });
 
-    if(!orgName.data.account?.login) {
+    if (!orgName.data.account?.login) {
         // TODO: throw custom wrapped error...
         throw new Error("Login cannot be null for orgs")
     }
@@ -87,29 +87,37 @@ function authenticatedClient() {
 }
 
 async function GetInstallations(client: Octokit): Promise<Org[]> {
-    const installationList = await client.paginate(client.rest.apps.listInstallations, {
-        per_page: 100
-    })    
+    try {
+        const installationList = await client.paginate(client.rest.apps.listInstallations, {
+            per_page: 100
+        })
 
-    const mappedOrgs = installationList.map(i => {
-        return {
-            id: i.id,
-            orgName: i.account?.login ?? "",
-            suspendedAt: i.suspended_at,
-            suspendedBy: i.suspended_by?.login
-        }
-    });
+        // TODO: this function is doing too much, it is not 
+        // just a simple facade anymore...
+        const mappedOrgs = installationList.map(i => {
+            return {
+                id: i.id,
+                orgName: i.account?.login ?? "",
+                suspendedAt: i.suspended_at,
+                suspendedBy: i.suspended_by?.login
+            }
+        });
 
-    const suspendedInstallations = mappedOrgs.filter(i => i.suspendedAt != undefined);
+        const suspendedInstallations = mappedOrgs.filter(i => i.suspendedAt != undefined);
 
-    console.log(`The following installations have been suspended: ${JSON.stringify(suspendedInstallations)}`)
+        console.log(`The following installations have been suspended: ${JSON.stringify(suspendedInstallations)}`)
 
-    return mappedOrgs.filter(i => i.suspendedAt == undefined).map(i => {
-        return {
-            id: i.id,
-            orgName: i.orgName
-        }
-    });
+        return mappedOrgs.filter(i => i.suspendedAt == undefined).map(i => {
+            return {
+                id: i.id,
+                orgName: i.orgName
+            }
+        });
+    }
+    catch {
+        // TODO: log error
+        return [] as Org[]
+    }
 }
 
 async function GetAppConfig(client: Octokit): Promise<AppConfig> {
@@ -134,7 +142,7 @@ async function GetAppConfig(client: Octokit): Promise<AppConfig> {
 
     const filesResponse = await appOctokit.rest.repos.getContent(getContentRequest);
 
-    const potentialFiles = filesResponse.data;    
+    const potentialFiles = filesResponse.data;
 
     if (!Array.isArray(potentialFiles)) {
         throw new Error("AppConfig not found!")
@@ -228,14 +236,14 @@ class InstalledGitHubClient implements InstalledClient {
         }
     }
 
-    public async IsUserMember(id: string): Response<boolean> {        
+    public async IsUserMember(id: string): Response<boolean> {
         try {
             await this.gitHubClient.rest.orgs.checkMembershipForUser({
                 org: this.orgName,
                 username: id
             })
         }
-        catch{
+        catch {
             // TODO: actually catch exception and investigate...
             // not all exceptions could mean that the user is not a member
             return {
@@ -243,10 +251,10 @@ class InstalledGitHubClient implements InstalledClient {
                 data: false
             }
         }
-        
+
         return {
             successful: true,
-            data: true            
+            data: true
         }
     }
 
@@ -258,7 +266,7 @@ class InstalledGitHubClient implements InstalledClient {
         const teams = response.map(i => {
             return {
                 Id: i.id,
-                Name: i.name                             
+                Name: i.name
             }
         });
 
@@ -271,26 +279,40 @@ class InstalledGitHubClient implements InstalledClient {
     public async AddTeamMember(team: GitHubTeamName, id: GitHubId): Response<unknown> {
         const safeTeam = MakeTeamNameSafe(team);
 
-        await this.gitHubClient.rest.teams.addOrUpdateMembershipForUserInOrg({
-            org: this.orgName,
-            team_slug: safeTeam,
-            username: id
-        })
+        try {
+            await this.gitHubClient.rest.teams.addOrUpdateMembershipForUserInOrg({
+                org: this.orgName,
+                team_slug: safeTeam,
+                username: id
+            })
 
-        return {
-            successful: true,
-            // TODO: make this type better to avoid nulls...
-            data: null
+            return {
+                successful: true,
+                // TODO: make this type better to avoid nulls...
+                data: null
+            }
+        }
+        catch {
+            return {
+                successful: false
+            }
         }
     }
 
-    public async CreateTeam(team: GitHubTeamName, description:string): Response<unknown> {
-        await this.gitHubClient.rest.teams.create({
-            name: team,
-            org: this.orgName,
-            description,
-            privacy:"closed"
-        })
+    public async CreateTeam(team: GitHubTeamName, description: string): Response<unknown> {
+        try {
+            await this.gitHubClient.rest.teams.create({
+                name: team,
+                org: this.orgName,
+                description,
+                privacy: "closed"
+            })
+        }
+        catch {
+            return {
+                successful: false
+            }
+        }
 
         return {
             successful: true,
@@ -306,7 +328,7 @@ class InstalledGitHubClient implements InstalledClient {
             })
 
             return {
-                successful:true,
+                successful: true,
                 data: response.data.login
             }
         }
@@ -322,7 +344,7 @@ class InstalledGitHubClient implements InstalledClient {
 
         const response = await this.gitHubClient.paginate(this.gitHubClient.rest.teams.listMembersInOrg, {
             org: this.orgName,
-            team_slug: safeTeam,            
+            team_slug: safeTeam,
         })
 
         return {
@@ -336,16 +358,23 @@ class InstalledGitHubClient implements InstalledClient {
     public async RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): Response<unknown> {
         const safeTeam = MakeTeamNameSafe(team);
 
-        await this.gitHubClient.rest.teams.removeMembershipForUserInOrg({
-            team_slug: safeTeam,
-            org: this.orgName,
-            username: user
-        })
+        try {
+            await this.gitHubClient.rest.teams.removeMembershipForUserInOrg({
+                team_slug: safeTeam,
+                org: this.orgName,
+                username: user
+            })
 
-        return {
-            successful: true,
-            // TODO: make this type better to avoid nulls...
-            data: null
+            return {
+                successful: true,
+                // TODO: make this type better to avoid nulls...
+                data: null
+            }
+        }
+        catch {
+            return {
+                successful: false
+            }
         }
     }
 
@@ -356,7 +385,7 @@ class InstalledGitHubClient implements InstalledClient {
             org: this.orgName,
             privacy: "closed",
             team_slug: safeTeam,
-            description: description            
+            description: description
         })
 
         return {
@@ -384,11 +413,11 @@ class InstalledGitHubClient implements InstalledClient {
             path: ""
         };
 
-        let filesResponse : AsyncReturnType<typeof this.gitHubClient.rest.repos.getContent>;
+        let filesResponse: AsyncReturnType<typeof this.gitHubClient.rest.repos.getContent>;
 
-        try{
+        try {
             filesResponse = await this.gitHubClient.rest.repos.getContent(getContentRequest);
-        }        
+        }
         catch {
             return {
                 successful: false
