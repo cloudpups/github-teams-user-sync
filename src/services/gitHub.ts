@@ -342,16 +342,23 @@ class InstalledGitHubClient implements InstalledClient {
     public async ListCurrentMembersOfGitHubTeam(team: GitHubTeamName): Response<GitHubId[]> {
         const safeTeam = MakeTeamNameSafe(team);
 
-        const response = await this.gitHubClient.paginate(this.gitHubClient.rest.teams.listMembersInOrg, {
-            org: this.orgName,
-            team_slug: safeTeam,
-        })
-
-        return {
-            successful: true,
-            data: response.map(i => {
-                return i.login
+        try {
+            const response = await this.gitHubClient.paginate(this.gitHubClient.rest.teams.listMembersInOrg, {
+                org: this.orgName,
+                team_slug: safeTeam,
             })
+
+            return {
+                successful: true,
+                data: response.map(i => {
+                    return i.login
+                })
+            }
+        }
+        catch {
+            return {
+                successful: false
+            }
         }
     }
 
@@ -381,17 +388,24 @@ class InstalledGitHubClient implements InstalledClient {
     public async UpdateTeamDetails(team: GitHubTeamName, description: string): Response<unknown> {
         const safeTeam = MakeTeamNameSafe(team);
 
-        await this.gitHubClient.rest.teams.updateInOrg({
-            org: this.orgName,
-            privacy: "closed",
-            team_slug: safeTeam,
-            description: description
-        })
-
-        return {
-            successful: true,
-            // TODO: make this type better to avoid nulls...
-            data: null
+        try {
+            await this.gitHubClient.rest.teams.updateInOrg({
+                org: this.orgName,
+                privacy: "closed",
+                team_slug: safeTeam,
+                description: description
+            })
+    
+            return {
+                successful: true,
+                // TODO: make this type better to avoid nulls...
+                data: null
+            }
+        }
+        catch {
+            return {
+                successful: false
+            }
         }
     }
 

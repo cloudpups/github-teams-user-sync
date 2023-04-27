@@ -13,7 +13,7 @@ client.bind(config.LDAP.User, config.LDAP.Password, (err) => {
 });
 
 function SearchAsync(groupName: string): Promise<any> {
-    const component = ldapEscape.filter`${groupName}`;    
+    const component = ldapEscape.filter`${groupName}`;
     const ldapSearchString = `(&(objectCategory=user)(memberOf=CN=${component},CN=Users,${config.LDAP.GroupBaseDN}))`
 
     const opts: ldap.SearchOptions = {
@@ -25,7 +25,7 @@ function SearchAsync(groupName: string): Promise<any> {
         //     pageSize: 250,
         //     pagePause: true
         //   }
-    };    
+    };
 
     return new Promise((resolve, reject) => {
         client.search(config.LDAP.GroupBaseDN, opts, (err, res) => {
@@ -48,13 +48,18 @@ export type SearchAllResponse = Promise<{
     referrals: any[]
 }>
 
-export async function SearchAllAsync(groupName: string): SearchAllResponse {
+async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllResponse {
     // TODO: implement paging somehow!!
     const response = await SearchAsync(groupName);
+
     const entries: Entry[] = [];
     let referrals: any[] = [];
 
     return new Promise((resolve, reject) => {
+        // res.on('searchRequest', (searchRequest) => {
+        //     console.log('searchRequest: ', searchRequest.messageId);
+        // });
+
         response.on('searchEntry', (entry: any) => {
             const attributes = entry.pojo.attributes.map((a: any) => {
                 return [
@@ -64,17 +69,11 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
             })
             entries.push(Object.fromEntries(attributes) as Entry);
         });
+
         response.on('searchReference', (referral: any) => {
             referrals = referrals.concat(referral.uris);
         });
-        // response.on('error', (error:any) => {
-        //     if (error.name === 'SizeLimitExceededError' &&
-        //         options.sizeLimit && options.sizeLimit > 0) {
-        //         return resolve(entries);
-        //     } else {
-        //         return reject(error);
-        //     }
-        // })
+
         response.on('end', (result: any) => {
             if (result.status !== 0) {
                 return reject(result.status);
@@ -85,23 +84,31 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
                 referrals: referrals
             });
         });
+
+        response.on('error', (err: any) => {
+            console.error('error: ' + err.message);
+            return reject();
+        });
+
+        // response.on('error', (error:any) => {
+        //     if (error.name === 'SizeLimitExceededError' &&
+        //         options.sizeLimit && options.sizeLimit > 0) {
+        //         return resolve(entries);
+        //     } else {
+        //         return reject(error);
+        //     }
+        // })
     });
 }
 
-
-            // res.on('searchRequest', (searchRequest) => {
-            //     console.log('searchRequest: ', searchRequest.messageId);
-            // });
-            // res.on('searchEntry', (entry: any) => {
-            //     console.log('entry: ' + JSON.stringify(entry.pojo));
-            //     fs.writeFileSync("./what.json", JSON.stringify(entry.pojo))
-            // });
-            // res.on('searchReference', (referral) => {
-            //     console.log('referral: ' + referral.uris.join());
-            // });
-            // res.on('error', (err) => {
-            //     console.error('error: ' + err.message);
-            // });
-            // res.on('end', (result: any) => {
-            //     console.log('status: ' + result.status);
-            // });
+export async function SearchAllAsync(groupName: string): SearchAllResponse {
+    try {
+        return await SearchAllAsyncNoExceptionHandling(groupName);
+    }
+    catch {
+        return {
+            entries: [] as Entry[],
+            referrals: []
+        }
+    }
+}            

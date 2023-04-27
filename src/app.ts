@@ -7,6 +7,7 @@ import swaggerUi from "swagger-ui-express";
 import { routes } from "./routes";
 
 const app = express();
+
 const port = 8080;
 
 // TODO: fix/determine why OpenAPIBackend is having issues loading files on its own...
@@ -23,7 +24,15 @@ api.register({
 });
 
 app.use(express.json());
+
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(doc as swaggerUi.JsonObject));
-app.use((req: any, res: any) => api.handleRequest(req, req, res));
+
+app.use((req: any, res: any) => {
+    api.handleRequest(req, req, res).catch((reason:any) => {
+      console.log(reason);      
+
+      res.status(500).json({ err: 'An internal error occurred :( Please ask the maintainers of the running application to check the logs.' })
+    })
+});
 
 app.listen(port);
