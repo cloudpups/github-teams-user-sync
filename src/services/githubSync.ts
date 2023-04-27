@@ -133,7 +133,9 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
     await Promise.all(membersToAdd.map(mta => installedGitHubClient.AddTeamMember(teamName, mta)));
 }
 
-export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig) {
+type ReturnTypeOfSyncOrg = ReturnType<typeof syncOrg>
+
+async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig) {
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
     let response = {
@@ -214,7 +216,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
 
     if (!orgConfig.GitHubTeamNames || orgConfig.GitHubTeamNames.length < 1) {
         // no teams to sync
-        return
+        return response;
     }
 
     async function syncTeam(teamName: string) {
@@ -229,5 +231,21 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
     return {
         ...response,
         successful: true
+    }
+}
+
+export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig) : ReturnTypeOfSyncOrg {
+    try {
+        return await syncOrg(installedGitHubClient, config);
+    }
+    catch(error) {
+        console.log(error);
+
+        return {
+            message: "Failed to sync org. Please check logs.",
+            orgName: installedGitHubClient.GetCurrentOrgName(),
+            successful: false,
+            syncedSecurityManagerTeams: []
+        }
     }
 }

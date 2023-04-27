@@ -24,7 +24,7 @@ export async function syncAllHandler(
 
     const orgSyncPromises = installations.map(i => syncOrg(i.id))
 
-    const results = await Promise.all(orgSyncPromises);
+    const results = await Promise.allSettled(orgSyncPromises);
 
     const end = Date.now();
 

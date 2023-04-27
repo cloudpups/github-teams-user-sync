@@ -8,7 +8,7 @@ export async function getInstalledOrgsHandler(
     _req: Request,
     res: Response
 ) {        
-    const client = GetClient();
+    const client = GetClient();    
 
     const installations = await client.GetInstallations();
 
