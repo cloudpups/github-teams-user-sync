@@ -65,13 +65,15 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
 
     const orgName = await installedOctokit.rest.apps.getInstallation({ installation_id: installationId });
 
-    if (!orgName.data.account?.login) {
+    // HACK: gross typing nonsense
+    if (!(orgName?.data?.account as any).login) {
         // TODO: throw custom wrapped error...
         throw new Error("Login cannot be null for orgs")
     }
 
     // TODO: wrap in caching decorator 
-    return new InstalledGitHubClient(installedOctokit, orgName.data.account?.login);
+    // HACK: gross typing nonsense
+    return new InstalledGitHubClient(installedOctokit, (orgName?.data?.account as any)?.login);
 }
 
 function authenticatedClient() {
@@ -95,9 +97,11 @@ async function GetInstallations(client: Octokit): Promise<Org[]> {
         // TODO: this function is doing too much, it is not 
         // just a simple facade anymore...
         const mappedOrgs = installationList.map(i => {
+            const account = i.account as any; // HACK: gross typing nonsense
+
             return {
                 id: i.id,
-                orgName: i.account?.login ?? "",
+                orgName:  account.login ?? "",
                 suspendedAt: i.suspended_at,
                 suspendedBy: i.suspended_by?.login
             }
