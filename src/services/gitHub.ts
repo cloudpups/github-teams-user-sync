@@ -416,10 +416,18 @@ class InstalledGitHubClient implements InstalledClient {
     public async AddSecurityManagerTeam(team: GitHubTeamName) {
         const safeTeam = MakeTeamNameSafe(team);
 
-        await this.gitHubClient.rest.orgs.addSecurityManagerTeam({
-            org: this.orgName,
-            team_slug: safeTeam
-        })
+        try{
+            await this.gitHubClient.rest.orgs.addSecurityManagerTeam({
+                org: this.orgName,
+                team_slug: safeTeam
+            })
+            return true;
+        }
+        catch{
+            console.log(`Error adding ${team} as Security Managers for Org ${this.orgName}.`)
+            return false;
+        }
+        
     }
 
     public async GetConfigurationForInstallation(): Response<OrgConfiguration> {

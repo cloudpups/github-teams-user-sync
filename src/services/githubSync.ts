@@ -161,6 +161,12 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
             console.log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
             const orgMembers = await SynchronizeOrgMembers(installedGitHubClient, t, config);
             await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers);
+
+            console.log(`Add Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+            const addResult = await installedGitHubClient.AddSecurityManagerTeam(t);
+            if(addResult) {
+                console.log(`Added Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+            }
         }
 
         response = {
