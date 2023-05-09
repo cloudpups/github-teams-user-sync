@@ -34,7 +34,8 @@
     "ldapjs": "^3.0.1",
     "octokit": "^2.0.14",
     "openapi-backend": "^5.9.1",
-    "swagger-ui-express": "^4.6.2"
+    "swagger-ui-express": "^4.6.2",
+    "@octokit/auth-app": "4.0.9"
   },
   "nodemonConfig": {
     "watch": [
