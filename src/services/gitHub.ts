@@ -41,7 +41,8 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
             installationId
         },
         throttle: {
-            onRateLimit: (retryAfter: number, options: options, octokit: Octokit, retryCount: number) => {
+            // TODO: remove use of ANY
+            onRateLimit: (retryAfter: number, options: any, octokit: Octokit, retryCount: number) => {
                 octokit.log.warn(
                     `Request quota exhausted for request ${options.method} ${options.url}`
                 );
@@ -52,7 +53,8 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
                     return true;
                 }
             },
-            onSecondaryRateLimit: (retryAfter: number, options: options, octokit: Octokit) => {
+            // TODO: remove use of ANY
+            onSecondaryRateLimit: (retryAfter: number, options: any, octokit: Octokit) => {
                 // does not retry, only logs a warning
                 octokit.log.warn(
                     `SecondaryRateLimit detected for request ${options.method} ${options.url}. Retry after ${retryAfter} seconds`
