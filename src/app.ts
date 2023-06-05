@@ -35,8 +35,10 @@ app.use((req: any, res: any) => {
     })
 });
 
-console.log(`Starting server on port '${port}'`);
-if(process.env.GITHUB_PROXY) {
-  console.log(`Forwarding GitHub requests to '${process.env.GITHUB_PROXY}'`);
-}
+console.log({
+  HostPort: port,
+  ForwardingGitHubRequestsTo: process.env.GITHUB_PROXY ?? "Not forwarding",
+  ForwardingGroupRequestsTo: process.env.SOURCE_PROXY ?? "Not forwarding"
+})
+
 app.listen(port);

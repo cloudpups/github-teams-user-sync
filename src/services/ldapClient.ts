@@ -1,16 +1,24 @@
 import { Config } from "../config";
 import ldap from "ldapjs";
 import ldapEscape from "ldap-escape";
+import axios from "axios";
 
 const config = Config()
 
-const client = ldap.createClient({
-    url: [config.LDAP.Server]
-});
+let client: ldap.Client;
 
-client.bind(config.LDAP.User, config.LDAP.Password, (err) => {
-    console.log(err);
-});
+if(!process.env.SOURCE_PROXY) {
+    client = ldap.createClient({
+        url: [config.LDAP.Server]
+    });
+    
+    client.bind(config.LDAP.User, config.LDAP.Password, (err) => {
+        console.log(err);
+    });
+}
+else {
+    console.log("Group Proxy is set. LDAP will not be configured for this instance.")
+}
 
 function SearchAsync(groupName: string): Promise<any> {
     const component = ldapEscape.filter`${groupName}`;
@@ -101,7 +109,7 @@ async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllRe
     });
 }
 
-export async function SearchAllAsync(groupName: string): SearchAllResponse {
+async function SearchAllAsyncInternal(groupName: string): SearchAllResponse {
     try {
         return await SearchAllAsyncNoExceptionHandling(groupName);
     }
@@ -112,3 +120,25 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
         }
     }
 }            
+
+export async function SearchAllAsync(groupName: string): SearchAllResponse {
+    try {
+        if(process.env.SOURCE_PROXY) {
+            console.log(`Forwarding request to '${process.env.SOURCE_PROXY}'`);
+
+            const requestUrl = `${process.env.SOURCE_PROXY}/api/get-source-team?teamName=${groupName}`    
+
+            const result = await axios.get(requestUrl);
+        
+            return result.data;
+        }
+    
+        return await SearchAllAsyncNoExceptionHandling(groupName);
+    }
+    catch {
+        return {
+            entries: [] as Entry[],
+            referrals: []
+        }
+    }
+}

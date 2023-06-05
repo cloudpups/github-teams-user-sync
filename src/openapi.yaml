@@ -66,6 +66,21 @@ paths:
       responses:
         "200":
           description: A successful response
+  /api/get-source-team:
+    get:
+      operationId: getSourceTeam
+      description: Gets a list of users given a source team
+      tags:
+        - metadata
+      parameters:
+        - in: query
+          name: teamName
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: A successful response
 components:
   schemas:
     OrgModel:
