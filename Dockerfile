@@ -1,5 +1,5 @@
 FROM node:18 AS Build
-ARG NPM_REGISTRY
+ARG NPM_REGISTRY="https://registry.npmjs.org"
 WORKDIR /usr/src/app
 COPY . .
 RUN npm config set registry ${NPM_REGISTRY} && \
