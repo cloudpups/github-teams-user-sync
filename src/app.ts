@@ -8,7 +8,7 @@ import { routes } from "./routes";
 
 const app = express();
 
-const port = 8080;
+const port = process.env.PORT;
 
 // TODO: fix/determine why OpenAPIBackend is having issues loading files on its own...
 const doc = yaml.load(fs.readFileSync(path.resolve(__dirname, 'openapi.yaml'), 'utf8'));
@@ -35,4 +35,8 @@ app.use((req: any, res: any) => {
     })
 });
 
+console.log(`Starting server on port '${port}'`);
+if(process.env.GITHUB_PROXY) {
+  console.log(`Forwarding GitHub requests to '${process.env.GITHUB_PROXY}'`);
+}
 app.listen(port);
