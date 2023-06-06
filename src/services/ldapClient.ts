@@ -2,6 +2,7 @@ import { Config } from "../config";
 import ldap from "ldapjs";
 import ldapEscape from "ldap-escape";
 import axios from "axios";
+import axiosRetry from "axios-retry";
 
 const config = Config()
 
@@ -133,7 +134,12 @@ async function ForwardSearch(groupName: string) {
 
     console.log(`Retrieving group (${groupName}) information from '${requestUrl}'`);
     try{
-        const result = await axios.get(requestUrl);
+        // TODO: do not directly use axios.create from within a function like this
+        // it will cause a new client to be made per request.
+        const client = axios.create();
+        axiosRetry(client, { retries: 5 });
+
+        const result = await client.get(requestUrl);
         console.log(`Results for ${groupName}: ${result}`);
         return result.data as SearchAllResponse;
     }    

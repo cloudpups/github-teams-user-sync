@@ -25,9 +25,11 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.0.2"
   },
-  "dependencies": {    
+  "dependencies": {
+    "@octokit/auth-app": "4.0.13",
     "@octokit/plugin-throttling": "^5.0.1",
     "axios": "^1.4.0",
+    "axios-retry": "^3.5.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "js-yaml": "^4.1.0",
@@ -35,8 +37,7 @@
     "ldapjs": "^3.0.1",
     "octokit": "^2.0.14",
     "openapi-backend": "^5.9.1",
-    "swagger-ui-express": "^4.6.2",
-    "@octokit/auth-app": "4.0.13"
+    "swagger-ui-express": "^4.6.2"
   },
   "nodemonConfig": {
     "watch": [
