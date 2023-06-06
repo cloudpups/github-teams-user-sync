@@ -77,6 +77,12 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
     await installedGitHubClient.UpdateTeamDetails(teamName, teamDescription);
 
     const trueMembersList = await GetGitHubIds(teamName, config);
+
+    if(trueMembersList.length < 1) {
+        console.log(`Found no members for '${teamName}' in source of truth. Skipping.`)
+        return;
+    }
+
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
     async function checkValidOrgMember(gitHubId: GitHubId) {
