@@ -132,8 +132,17 @@ async function ForwardSearch(groupName: string) {
     const requestUrl = `${process.env.SOURCE_PROXY}/api/get-source-team?teamName=${groupName}&cb=${Date.now()}`;
 
     console.log(`Retrieving group (${groupName}) information from '${requestUrl}'`);
-    const result = await axios.get(requestUrl);
-    console.log(`Results for ${groupName}: ${result}`);
-
-    return result.data as SearchAllResponse;
+    try{
+        const result = await axios.get(requestUrl);
+        console.log(`Results for ${groupName}: ${result}`);
+        return result.data as SearchAllResponse;
+    }    
+    catch(e) {        
+        console.log(`Error when retrieving results for ${groupName}: ${e}`);
+    }
+    
+    return {
+        entries: [] as Entry[],
+        referrals: []
+    }
 }

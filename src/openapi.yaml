@@ -78,6 +78,12 @@ paths:
           schema:
             type: string
           required: true
+        - in: query
+          name: cb
+          description: For use in cache busting
+          schema:
+            type: string
+          required: false
       responses:
         "200":
           description: A successful response
