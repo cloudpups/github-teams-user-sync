@@ -107,30 +107,12 @@ async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllRe
         //     }
         // })
     });
-}
-
-async function SearchAllAsyncInternal(groupName: string): SearchAllResponse {
-    try {
-        return await SearchAllAsyncNoExceptionHandling(groupName);
-    }
-    catch {
-        return {
-            entries: [] as Entry[],
-            referrals: []
-        }
-    }
-}            
+}         
 
 export async function SearchAllAsync(groupName: string): SearchAllResponse {
     try {
         if(process.env.SOURCE_PROXY) {
-            console.log(`Forwarding request to '${process.env.SOURCE_PROXY}'`);
-
-            const requestUrl = `${process.env.SOURCE_PROXY}/api/get-source-team?teamName=${groupName}`    
-
-            const result = await axios.get(requestUrl);
-        
-            return result.data;
+            return await ForwardSearch(groupName);
         }
     
         return await SearchAllAsyncNoExceptionHandling(groupName);
@@ -141,4 +123,15 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
             referrals: []
         }
     }
+}
+
+async function ForwardSearch(groupName: string) {
+    console.log(`Forwarding request to '${process.env.SOURCE_PROXY}'`);
+    
+    // cb is for cache busting.
+    const requestUrl = `${process.env.SOURCE_PROXY}/api/get-source-team?teamName=${groupName}&cb=${Date.now()}`;
+
+    const result = await axios.get(requestUrl);
+
+    return result.data;
 }
