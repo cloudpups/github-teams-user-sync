@@ -142,6 +142,8 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
 
     await Promise.all(membersToRemove.map(mtr => installedGitHubClient.RemoveTeamMemberAsync(teamName, mtr)));
     await Promise.all(membersToAdd.map(mta => installedGitHubClient.AddTeamMember(teamName, mta)));
+
+    return teamSyncNotes;
 }
 
 type ReturnTypeOfSyncOrg = ReturnType<typeof syncOrg>
