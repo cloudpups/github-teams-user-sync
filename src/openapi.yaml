@@ -66,6 +66,28 @@ paths:
       responses:
         "200":
           description: A successful response
+  /api/sync/SynchronizeSpecificTeam:
+    post:
+      operationId: syncSpecificTeam
+      description: Triggers a synchronization job for all orgs. **Note**, at this point in time, this endpoint will NOT check org membership first.
+      tags:
+        - sync
+      parameters:
+        - in: query
+          name: orgId
+          description: This value can be retrieved from the `/metadata/getInstalledOrgs` endpoint
+          schema:
+            type: number                          
+          required: true
+        - in: query
+          name: teamName
+          description: The name of the team to synchronize
+          schema:
+            type: string                          
+          required: true
+      responses:
+        "200":
+          description: A successful response
   /api/get-source-team:
     get:
       operationId: getSourceTeam

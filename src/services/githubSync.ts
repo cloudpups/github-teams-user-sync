@@ -73,7 +73,7 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
     return orgMembers;
 }
 
-async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[]) {
+async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[], checkOrgMembers:boolean = true) {
     await installedGitHubClient.UpdateTeamDetails(teamName, teamDescription);
 
     const trueMembersList = await GetGitHubIds(teamName, config);
@@ -96,14 +96,19 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
             };
         }
 
-        const isMember = existingMembers.filter(em => em == gitHubId);
+        if(checkOrgMembers) {
+            const isMember = existingMembers.filter(em => em == gitHubId);
 
-        if (!isMember) {
-            return {
-                successful: false,
-                gitHubId: gitHubId,
-                message: `User '${gitHubId} is not an Org Member of ${orgName}`
-            };
+            if (!isMember) {
+                return {
+                    successful: false,
+                    gitHubId: gitHubId,
+                    message: `User '${gitHubId} is not an Org Member of ${orgName}`
+                };
+            }
+        }
+        else {
+            console.log(`Skipping Org Membership check for ${gitHubId}`);
         }
 
         return {
@@ -244,6 +249,12 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
         ...response,
         successful: true
     }
+}
+
+export async function SyncTeam(teamName:string, client: InstalledClient, config: AppConfig) {
+    const response = await SynchronizeGitHubTeam(client, teamName, config, [], false);
+
+    return response;
 }
 
 export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig) : ReturnTypeOfSyncOrg {
