@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "app.ts",
+  "module": "es2015",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon",
-    "start": "node ./out/src/app.js",
+    "start": "node ./out/src/app.js",    
     "build": "tsc && shx cp ./src/openapi.yaml ./out/src/openapi.yaml",
     "openapi": "npx -y openapi-to-ts -i ./src/openapi.yaml -o ./src/types/sync-models.d.ts",
     "play": "ts-node playground.ts"
