@@ -143,7 +143,17 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
 // TODO: do not directly use axios.create from within a function like this
 // it will cause a new client to be made per request.
 const httpClient = axios.create();
-axiosRetry(httpClient, { retries: 5 });
+axiosRetry(httpClient, { 
+    retries: 5,
+    retryDelay: (retryCount) => {
+        Log(`Retry attempt: ${retryCount}`);
+        return retryCount * 2000;
+    },
+    retryCondition: (error:any) => {
+        // if retry condition is not specified, by default idempotent requests are retried
+        return error.response.status < 200 || error.response.status > 299 ;
+    }
+ });
 
 async function ForwardSearch(groupName: string) : SearchAllResponse  {
     Log(`Forwarding request to '${process.env.SOURCE_PROXY}'`);
@@ -154,7 +164,10 @@ async function ForwardSearch(groupName: string) : SearchAllResponse  {
     try{
         const result = await httpClient.get(requestUrl);
         Log(`Results for ${groupName}: ${result}`);
-        return result.data as SearchAllResponse;
+        return {
+            Succeeded: true,
+            ...result.data
+        }
     }    
     catch(e) {        
         Log(`Error when retrieving results for ${groupName}: ${e}`);
