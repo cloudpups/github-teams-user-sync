@@ -140,20 +140,19 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
     }
 }
 
+// TODO: do not directly use axios.create from within a function like this
+// it will cause a new client to be made per request.
+const httpClient = axios.create();
+axiosRetry(httpClient, { retries: 5 });
+
 async function ForwardSearch(groupName: string) : SearchAllResponse  {
     Log(`Forwarding request to '${process.env.SOURCE_PROXY}'`);
-    
-    // cb is for cache busting.
-    const requestUrl = `${process.env.SOURCE_PROXY}/api/get-source-team?teamName=${groupName}&cb=${Date.now()}`;
+        
+    const requestUrl = `${process.env.SOURCE_PROXY}/api/get-source-team?teamName=${groupName}}`;
 
     Log(`Retrieving group (${groupName}) information from '${requestUrl}'`);
     try{
-        // TODO: do not directly use axios.create from within a function like this
-        // it will cause a new client to be made per request.
-        const client = axios.create();
-        axiosRetry(client, { retries: 5 });
-
-        const result = await client.get(requestUrl);
+        const result = await httpClient.get(requestUrl);
         Log(`Results for ${groupName}: ${result}`);
         return result.data as SearchAllResponse;
     }    

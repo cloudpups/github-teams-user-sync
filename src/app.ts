@@ -5,11 +5,13 @@ import fs from "fs";
 import path from "node:path";
 import swaggerUi from "swagger-ui-express";
 import { routes } from "./routes";
-import { Log, SetupLogging } from "./logging";
+import { SetupLogging } from "./logging";
+import nocache from "nocache";
 
 SetupLogging();
 
 const app = express();
+app.use(nocache());
 
 const port = process.env.PORT;
 
