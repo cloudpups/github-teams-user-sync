@@ -44,6 +44,7 @@ function SearchAsync(groupName: string): Promise<any> {
     return new Promise((resolve, reject) => {
         client.search(config.LDAP.GroupBaseDN, opts, (err, res) => {
             if (err) {
+                LogError(`Error searching for ${component}: ${JSON.stringify(err)}`)
                 return reject(err);
             }
 

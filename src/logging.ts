@@ -5,7 +5,7 @@ import TelemetryClient from "applicationinsights/out/Library/TelemetryClient";
 
 interface ILogger {
     Log(s:string):void
-    LogError(ex: Error):void
+    LogError(ex: string):void
 }
 
 class AiLogger implements ILogger {
@@ -20,10 +20,10 @@ class AiLogger implements ILogger {
             message: s                     
         });
     }
-    LogError(ex: Error): void {
+    LogError(ex: string): void {
         console.log(ex);
         this.client.trackTrace({
-            message: JSON.stringify(ex),
+            message: ex,
             severity: SeverityLevel.Error            
         });
     }
@@ -33,7 +33,7 @@ class StdLogger implements ILogger {
     Log(s: string): void {
         console.log(s);
     }
-    LogError(ex: Error): void {
+    LogError(ex: string): void {
         console.log(ex);
     }
 }
@@ -44,7 +44,7 @@ export function Log(s:string) {
     logger.Log(s);
 } 
 
-export function LogError(ex: Error) {
+export function LogError(ex: string) {
     logger.LogError(ex);
 } 
 
