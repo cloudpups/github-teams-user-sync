@@ -97,7 +97,9 @@ async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllRe
         });
 
         response.on('end', (result: any) => {
-            if (result.status !== 0) {
+            Log(`Search Ended for Group '${groupName}' with result '${JSON.stringify(result)}'`)
+
+            if (result?.status !== 0 || result == null || result == undefined) {
                 return reject(result.status);
             }
 
@@ -109,7 +111,7 @@ async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllRe
         });
 
         response.on('error', (err: any) => {
-            Log('error: ' + err.message);
+            LogError(`Search Errored for Group '${groupName}': ${JSON.stringify(err)}`);
             return reject();
         });
 

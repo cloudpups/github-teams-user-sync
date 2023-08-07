@@ -1,6 +1,6 @@
 const appInsights = require("applicationinsights");
 
-import { SeverityLevel, TelemetryType } from "applicationinsights/out/Declarations/Contracts";
+import { SeverityLevel } from "applicationinsights/out/Declarations/Contracts";
 import TelemetryClient from "applicationinsights/out/Library/TelemetryClient";
 
 interface ILogger {
@@ -51,8 +51,8 @@ export function LogError(ex: string) {
 export function SetupLogging() {
     if(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
         console.log("Using AppInsights Logger")
-        appInsights.setup(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING).start();
-    
+        appInsights.setup(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING).start();        
+
         const telemetryClient = appInsights.defaultClient;
     
         logger = new AiLogger(telemetryClient);
