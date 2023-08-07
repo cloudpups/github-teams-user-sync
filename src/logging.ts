@@ -1,9 +1,11 @@
-import appInsights from "applicationinsights";
+const appInsights = require("applicationinsights");
+
+import { TelemetryType } from "applicationinsights/out/Declarations/Contracts";
 import TelemetryClient from "applicationinsights/out/Library/TelemetryClient";
 
-export interface ILogger {
-    Log(s:any):void
-    LogError(s:any):void
+interface ILogger {
+    Log(s:string):void
+    LogError(ex: Error):void
 }
 
 class AiLogger implements ILogger {
@@ -12,37 +14,46 @@ class AiLogger implements ILogger {
     constructor(client: TelemetryClient) {
         this.client = client;
     }
-    Log(s: any): void {
-        throw new Error("Method not implemented.");
+    Log(s: string): void {
+        console.log(s);
+        this.client.trackTrace({
+            message: s                     
+        });
     }
-    LogError(s: any): void {
-        throw new Error("Method not implemented.");
+    LogError(ex: Error): void {
+        console.log(ex);
+        this.client.trackException({
+            exception: ex
+        });
     }
 }
 
 class StdLogger implements ILogger {
-    Log(s: any): void {
+    Log(s: string): void {
         console.log(s);
     }
-    LogError(s: any): void {
-        console.log(s);
+    LogError(ex: Error): void {
+        console.log(ex);
     }
 }
 
 let logger: ILogger = new StdLogger();
 
-if(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
-    appInsights.setup().start();
-
-    const telemetryClient = appInsights.defaultClient;
-
-    logger = new AiLogger(telemetryClient);
-}
-
-export function Log(s:any) {
+export function Log(s:string) {
     logger.Log(s);
 } 
 
-export function LogError(s:any) {
-    logger.LogError(s);
+export function LogError(ex: Error) {
+    logger.LogError(ex);
 } 
+
+export function SetupLogging() {
+    if(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
+        console.log("Using AppInsights Logger")
+        appInsights.setup(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING).start();
+    
+        const telemetryClient = appInsights.defaultClient;
+    
+        logger = new AiLogger(telemetryClient);
+    }
+}

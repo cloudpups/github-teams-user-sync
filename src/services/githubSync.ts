@@ -1,6 +1,6 @@
 // REMEMBER TO REPLACE '_' with '-' for GitHub Names! 🤦‍♂️
 
-import { Log } from "../logging";
+import { Log, LogError } from "../logging";
 import { AppConfig } from "./appConfig";
 import { GitHubId, InstalledClient } from "./gitHubTypes";
 import { SearchAllAsync } from "./ldapClient";
@@ -264,7 +264,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
 
     const orgConfig = orgConfigResponse.data;
 
-    Log(orgConfig);
+    Log(JSON.stringify(orgConfig));
 
     let currentMembers: GitHubId[] = [];
     if (orgConfig.OrganizationMembersGroup != undefined || orgConfig.OrganizationMembersGroup != null) {
@@ -323,7 +323,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
         return await syncOrg(installedGitHubClient, config);
     }
     catch(error) {
-        Log(error);
+        LogError(error as any);
 
         return {
             message: "Failed to sync org. Please check logs.",

@@ -3,7 +3,7 @@ import ldap from "ldapjs";
 import ldapEscape from "ldap-escape";
 import axios from "axios";
 import axiosRetry from "axios-retry";
-import { Log } from "../logging";
+import { Log, LogError } from "../logging";
 
 const config = Config()
 
@@ -14,8 +14,12 @@ if(!process.env.SOURCE_PROXY) {
         url: [config.LDAP.Server]
     });
     
-    client.bind(config.LDAP.User, config.LDAP.Password, (err) => {
-        Log(err);
+    client.bind(config.LDAP.User, config.LDAP.Password, (err, result) => {
+        if(err) {
+            LogError(JSON.stringify(err) as any);
+        }        
+        
+        console.log("Connected to LDAP Server");
     });
 }
 else {
