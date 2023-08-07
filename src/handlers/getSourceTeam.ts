@@ -8,6 +8,7 @@ export async function getSourceTeamHandler(
     res: Response
 ) {    
     const teamName = _req.query.teamName as string;
+
     const result = await SearchAllAsync(teamName)
 
     return res.status(200).json(result);

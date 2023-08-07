@@ -11,19 +11,54 @@ const replaceAll = function (original: string, search: string, replacement: stri
     return target.replace(new RegExp(search, 'g'), replacement);
 };
 
-async function GetGitHubIds(teamName: string, config: AppConfig) {
+type GitHubIdsFailed = {
+    Succeeded: false
+}
+
+type GitHubIdsSucceeded = {
+    Succeeded: true
+    Ids: string[]
+}
+
+async function GetGitHubIds(teamName: string, config: AppConfig): Promise<GitHubIdsFailed | GitHubIdsSucceeded> {
     console.log(`Searching for group '${teamName}'`)
     const membersFromSourceOfTruth = await SearchAllAsync(teamName);
 
+    if(membersFromSourceOfTruth.Succeeded == false) {
+        return {
+            Succeeded: false
+        }
+    }
+
     console.log(`Found the following members '${JSON.stringify(membersFromSourceOfTruth)}'`)
 
-    return membersFromSourceOfTruth.entries.map(e => {
-        return replaceAll(e.cn, '_', '-') + config.GitHubIdAppend;
-    })
+    return {
+        Succeeded: true,
+        Ids: membersFromSourceOfTruth.entries.map(e => {
+            return replaceAll(e.cn, '_', '-') + config.GitHubIdAppend;
+        })
+    }
 }
 
-async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig) {
-    const gitHubIds = await GetGitHubIds(teamName, config);
+type SyncFailed = {
+    Succeeded: false
+}
+
+type SyncSucceeded = {
+    Succeeded: true
+    OrgMembers: string[]
+}
+
+async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig): Promise<SyncFailed | SyncSucceeded>{
+    const gitHubIdsResponse = await GetGitHubIds(teamName, config);
+
+    if(gitHubIdsResponse.Succeeded == false) {
+        return {
+            Succeeded:false
+        };
+    }
+
+    const gitHubIds = gitHubIdsResponse.Ids!;
 
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
@@ -70,13 +105,22 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
         console.log(`The following issues were found when syncing ${orgName}/${teamName}: ${JSON.stringify(problematicGitHubIds)}`)
     }
 
-    return orgMembers;
+    return {
+        Succeeded:true,
+        OrgMembers: orgMembers
+    };
 }
 
 async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[], checkOrgMembers:boolean = true) {
     await installedGitHubClient.UpdateTeamDetails(teamName, teamDescription);
 
-    const trueMembersList = await GetGitHubIds(teamName, config);
+    const trueMembersListResponse = await GetGitHubIds(teamName, config);
+
+    if(trueMembersListResponse.Succeeded == false) {
+        return false;
+    }
+
+    const trueMembersList = trueMembersListResponse.Ids;
 
     if(trueMembersList.length < 1) {
         console.log(`Found no members for '${teamName}' in source of truth. Skipping.`)
@@ -173,7 +217,12 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
 
             console.log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
             const orgMembers = await SynchronizeOrgMembers(installedGitHubClient, t, config);
-            await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers);
+
+            if(orgMembers.Succeeded == false) {
+                return false;
+            }
+
+            await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers.OrgMembers);
 
             console.log(`Add Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
             const addResult = await installedGitHubClient.AddSecurityManagerTeam(t);
@@ -219,7 +268,16 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
     let currentMembers: GitHubId[] = [];
     if (orgConfig.OrganizationMembersGroup != undefined || orgConfig.OrganizationMembersGroup != null) {
         console.log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()}: ${orgConfig.OrganizationMembersGroup}`)
-        currentMembers = await SynchronizeOrgMembers(installedGitHubClient, orgConfig.OrganizationMembersGroup, config)
+        const currentMembersResponse = await SynchronizeOrgMembers(installedGitHubClient, orgConfig.OrganizationMembersGroup, config)
+
+        if(currentMembersResponse.Succeeded == false) {
+            console.log("Failed to sync members");
+
+            return false;
+        }
+
+        currentMembers = currentMembersResponse.OrgMembers;
+
         await SynchronizeGitHubTeam(installedGitHubClient, orgConfig.OrganizationMembersGroup, config, currentMembers);
     }
 

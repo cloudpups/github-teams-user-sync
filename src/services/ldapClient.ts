@@ -52,10 +52,17 @@ export interface Entry {
     userPrincipalName: string
 }
 
-export type SearchAllResponse = Promise<{
+export type SearchAllFailed = {
+    Succeeded: false
+}
+
+export type SearchAllSucceeded = {
+    Succeeded: true,
     entries: Entry[],
     referrals: any[]
-}>
+}
+
+export type SearchAllResponse = Promise<SearchAllFailed | SearchAllSucceeded>
 
 async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllResponse {
     // TODO: implement paging somehow!!
@@ -90,7 +97,8 @@ async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllRe
 
             return resolve({
                 entries: entries,
-                referrals: referrals
+                referrals: referrals,
+                Succeeded: true
             });
         });
 
@@ -118,15 +126,16 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
     
         return await SearchAllAsyncNoExceptionHandling(groupName);
     }
-    catch {
+    catch(ex: any) {
+        console.log(ex);
+        
         return {
-            entries: [] as Entry[],
-            referrals: []
+            Succeeded: false
         }
     }
 }
 
-async function ForwardSearch(groupName: string) {
+async function ForwardSearch(groupName: string) : SearchAllResponse  {
     console.log(`Forwarding request to '${process.env.SOURCE_PROXY}'`);
     
     // cb is for cache busting.
@@ -148,7 +157,6 @@ async function ForwardSearch(groupName: string) {
     }
     
     return {
-        entries: [] as Entry[],
-        referrals: []
+        Succeeded: false
     }
 }
