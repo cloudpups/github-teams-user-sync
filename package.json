@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon",
-    "start": "node ./out/src/app.js",    
+    "start": "node ./out/src/app.js",
     "build": "tsc && shx cp ./src/openapi.yaml ./out/src/openapi.yaml",
     "openapi": "npx -y openapi-to-ts -i ./src/openapi.yaml -o ./src/types/sync-models.d.ts",
     "play": "ts-node playground.ts"
@@ -29,6 +29,7 @@
   "dependencies": {
     "@octokit/auth-app": "4.0.13",
     "@octokit/plugin-throttling": "^5.0.1",
+    "applicationinsights": "^2.7.0",
     "axios": "^1.4.0",
     "axios-retry": "^3.5.0",
     "dotenv": "^16.0.3",
