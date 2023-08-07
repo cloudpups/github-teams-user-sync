@@ -1,6 +1,6 @@
 const appInsights = require("applicationinsights");
 
-import { TelemetryType } from "applicationinsights/out/Declarations/Contracts";
+import { SeverityLevel, TelemetryType } from "applicationinsights/out/Declarations/Contracts";
 import TelemetryClient from "applicationinsights/out/Library/TelemetryClient";
 
 interface ILogger {
@@ -22,8 +22,9 @@ class AiLogger implements ILogger {
     }
     LogError(ex: Error): void {
         console.log(ex);
-        this.client.trackException({
-            exception: ex
+        this.client.trackTrace({
+            message: JSON.stringify(ex),
+            severity: SeverityLevel.Error            
         });
     }
 }
