@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "node:path";
 import swaggerUi from "swagger-ui-express";
 import { routes } from "./routes";
+import { Log } from "./logging";
 
 const app = express();
 
@@ -35,7 +36,7 @@ app.use((req: any, res: any) => {
     })
 });
 
-console.log({
+Log({
   HostPort: port,
   ForwardingGitHubRequestsTo: process.env.GITHUB_PROXY ?? "Not forwarding",
   ForwardingGroupRequestsTo: process.env.SOURCE_PROXY ?? "Not forwarding"

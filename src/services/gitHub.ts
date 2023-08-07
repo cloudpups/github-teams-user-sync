@@ -8,6 +8,7 @@ import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
 import { AsyncReturnType } from "../utility";
+import { Log } from "../logging";
 
 const config = Config();
 
@@ -113,7 +114,7 @@ async function GetInstallations(client: Octokit): Promise<Org[]> {
 
         const suspendedInstallations = mappedOrgs.filter(i => i.suspendedAt != undefined);
 
-        console.log(`The following installations have been suspended: ${JSON.stringify(suspendedInstallations)}`)
+        Log(`The following installations have been suspended: ${JSON.stringify(suspendedInstallations)}`)
 
         return mappedOrgs.filter(i => i.suspendedAt == undefined).map(i => {
             return {
@@ -428,7 +429,7 @@ class InstalledGitHubClient implements InstalledClient {
             return true;
         }
         catch{
-            console.log(`Error adding ${team} as Security Managers for Org ${this.orgName}.`)
+            Log(`Error adding ${team} as Security Managers for Org ${this.orgName}.`)
             return false;
         }
         

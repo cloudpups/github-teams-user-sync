@@ -3,6 +3,7 @@ import ldap from "ldapjs";
 import ldapEscape from "ldap-escape";
 import axios from "axios";
 import axiosRetry from "axios-retry";
+import { Log } from "../logging";
 
 const config = Config()
 
@@ -14,11 +15,11 @@ if(!process.env.SOURCE_PROXY) {
     });
     
     client.bind(config.LDAP.User, config.LDAP.Password, (err) => {
-        console.log(err);
+        Log(err);
     });
 }
 else {
-    console.log("Group Proxy is set. LDAP will not be configured for this instance.")
+    Log("Group Proxy is set. LDAP will not be configured for this instance.")
 }
 
 function SearchAsync(groupName: string): Promise<any> {
@@ -73,7 +74,7 @@ async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllRe
 
     return new Promise((resolve, reject) => {
         // res.on('searchRequest', (searchRequest) => {
-        //     console.log('searchRequest: ', searchRequest.messageId);
+        //     Log('searchRequest: ', searchRequest.messageId);
         // });
 
         response.on('searchEntry', (entry: any) => {
@@ -103,7 +104,7 @@ async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllRe
         });
 
         response.on('error', (err: any) => {
-            console.error('error: ' + err.message);
+            Log('error: ' + err.message);
             return reject();
         });
 
@@ -127,7 +128,7 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
         return await SearchAllAsyncNoExceptionHandling(groupName);
     }
     catch(ex: any) {
-        console.log(ex);
+        Log(ex);
         
         return {
             Succeeded: false
@@ -136,12 +137,12 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
 }
 
 async function ForwardSearch(groupName: string) : SearchAllResponse  {
-    console.log(`Forwarding request to '${process.env.SOURCE_PROXY}'`);
+    Log(`Forwarding request to '${process.env.SOURCE_PROXY}'`);
     
     // cb is for cache busting.
     const requestUrl = `${process.env.SOURCE_PROXY}/api/get-source-team?teamName=${groupName}&cb=${Date.now()}`;
 
-    console.log(`Retrieving group (${groupName}) information from '${requestUrl}'`);
+    Log(`Retrieving group (${groupName}) information from '${requestUrl}'`);
     try{
         // TODO: do not directly use axios.create from within a function like this
         // it will cause a new client to be made per request.
@@ -149,11 +150,11 @@ async function ForwardSearch(groupName: string) : SearchAllResponse  {
         axiosRetry(client, { retries: 5 });
 
         const result = await client.get(requestUrl);
-        console.log(`Results for ${groupName}: ${result}`);
+        Log(`Results for ${groupName}: ${result}`);
         return result.data as SearchAllResponse;
     }    
     catch(e) {        
-        console.log(`Error when retrieving results for ${groupName}: ${e}`);
+        Log(`Error when retrieving results for ${groupName}: ${e}`);
     }
     
     return {

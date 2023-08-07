@@ -4,9 +4,10 @@ import { GetClient } from "../services/gitHub";
 import { SyncOrg } from "../services/githubSync";
 import { AsyncReturnType } from "../utility";
 import axios from 'axios';
+import { Log } from "../logging";
 
 async function forwardToProxy(installationId: number) {    
-    console.log(`Forwarding request to '${process.env.GITHUB_PROXY}'`);
+    Log(`Forwarding request to '${process.env.GITHUB_PROXY}'`);
     const requestUrl = `${process.env.GITHUB_PROXY}/api/sync/SynchronizeOrg?installationId=${installationId}`    
 
     const result = await axios.post(requestUrl);

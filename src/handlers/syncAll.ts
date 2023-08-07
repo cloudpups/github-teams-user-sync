@@ -4,6 +4,7 @@ import { GetClient } from "../services/gitHub";
 import { SyncOrg } from "../services/githubSync";
 import { GitHubClient } from "../services/gitHubTypes";
 import axios from 'axios';
+import { Log } from "../logging";
 
 async function syncOrgLocal(installationId: number, client: GitHubClient) {
     const orgClient = await client.GetOrgClient(installationId);
@@ -22,12 +23,12 @@ export async function syncAllHandler(
     const client = GetClient();
     const installations = await client.GetInstallations();
 
-    console.log(`Syncing the following orgs: ${JSON.stringify(installations)}`)
+    Log(`Syncing the following orgs: ${JSON.stringify(installations)}`)
     
     if (process.env.GITHUB_PROXY) {
         // TODO: clean this up... Such forwarding logic should not be included in 
         // "handlers"
-        console.log(`Forwarding request to '${process.env.GITHUB_PROXY}'`);
+        Log(`Forwarding request to '${process.env.GITHUB_PROXY}'`);
         const requestUrl = `${process.env.GITHUB_PROXY}/api/sync/SynchronizeOrg?installationId=`
         const orgSyncPromises = installations.map(i => axios.post(`${requestUrl}i`));
 

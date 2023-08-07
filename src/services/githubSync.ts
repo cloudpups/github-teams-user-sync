@@ -1,5 +1,6 @@
 // REMEMBER TO REPLACE '_' with '-' for GitHub Names! 🤦‍♂️
 
+import { Log } from "../logging";
 import { AppConfig } from "./appConfig";
 import { GitHubId, InstalledClient } from "./gitHubTypes";
 import { SearchAllAsync } from "./ldapClient";
@@ -21,7 +22,7 @@ type GitHubIdsSucceeded = {
 }
 
 async function GetGitHubIds(teamName: string, config: AppConfig): Promise<GitHubIdsFailed | GitHubIdsSucceeded> {
-    console.log(`Searching for group '${teamName}'`)
+    Log(`Searching for group '${teamName}'`)
     const membersFromSourceOfTruth = await SearchAllAsync(teamName);
 
     if(membersFromSourceOfTruth.Succeeded == false) {
@@ -30,7 +31,7 @@ async function GetGitHubIds(teamName: string, config: AppConfig): Promise<GitHub
         }
     }
 
-    console.log(`Found the following members '${JSON.stringify(membersFromSourceOfTruth)}'`)
+    Log(`Found the following members '${JSON.stringify(membersFromSourceOfTruth)}'`)
 
     return {
         Succeeded: true,
@@ -102,7 +103,7 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
     const problematicGitHubIds = responses.filter(r => !r.successful);
 
     if (problematicGitHubIds.length > 0) {
-        console.log(`The following issues were found when syncing ${orgName}/${teamName}: ${JSON.stringify(problematicGitHubIds)}`)
+        Log(`The following issues were found when syncing ${orgName}/${teamName}: ${JSON.stringify(problematicGitHubIds)}`)
     }
 
     return {
@@ -123,7 +124,7 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
     const trueMembersList = trueMembersListResponse.Ids;
 
     if(trueMembersList.length < 1) {
-        console.log(`Found no members for '${teamName}' in source of truth. Skipping.`)
+        Log(`Found no members for '${teamName}' in source of truth. Skipping.`)
         return;
     }
 
@@ -152,7 +153,7 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
             }
         }
         else {
-            console.log(`Skipping Org Membership check for ${gitHubId}`);
+            Log(`Skipping Org Membership check for ${gitHubId}`);
         }
 
         return {
@@ -182,7 +183,7 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
         issues: validMemberCheckResults.filter(r => !r.successful)
     }
 
-    console.log(JSON.stringify(teamSyncNotes));
+    Log(JSON.stringify(teamSyncNotes));
 
     await Promise.all(membersToRemove.map(mtr => installedGitHubClient.RemoveTeamMemberAsync(teamName, mtr)));
     await Promise.all(membersToAdd.map(mta => installedGitHubClient.AddTeamMember(teamName, mta)));
@@ -210,12 +211,12 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
     if (config.SecurityManagerTeams) {
         for (let t of config.SecurityManagerTeams) {
             if (!setOfExistingTeams.has(t.toUpperCase())) {
-                console.log(`Creating team '${orgName}/${t}'`)
+                Log(`Creating team '${orgName}/${t}'`)
                 await installedGitHubClient.CreateTeam(t, teamDescription);
                 setOfExistingTeams.add(t);
             }
 
-            console.log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+            Log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
             const orgMembers = await SynchronizeOrgMembers(installedGitHubClient, t, config);
 
             if(orgMembers.Succeeded == false) {
@@ -224,10 +225,10 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
 
             await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers.OrgMembers);
 
-            console.log(`Add Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+            Log(`Add Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
             const addResult = await installedGitHubClient.AddSecurityManagerTeam(t);
             if(addResult) {
-                console.log(`Added Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+                Log(`Added Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
             }
         }
 
@@ -256,22 +257,22 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
 
     if (teamsToCreate.length > 0) {
         for (const t of teamsToCreate) {
-            console.log(`Creating team '${orgName}/${t}'`)
+            Log(`Creating team '${orgName}/${t}'`)
             await installedGitHubClient.CreateTeam(t, teamDescription);
         }
     }
 
     const orgConfig = orgConfigResponse.data;
 
-    console.log(orgConfig);
+    Log(orgConfig);
 
     let currentMembers: GitHubId[] = [];
     if (orgConfig.OrganizationMembersGroup != undefined || orgConfig.OrganizationMembersGroup != null) {
-        console.log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()}: ${orgConfig.OrganizationMembersGroup}`)
+        Log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()}: ${orgConfig.OrganizationMembersGroup}`)
         const currentMembersResponse = await SynchronizeOrgMembers(installedGitHubClient, orgConfig.OrganizationMembersGroup, config)
 
         if(currentMembersResponse.Succeeded == false) {
-            console.log("Failed to sync members");
+            Log("Failed to sync members");
 
             return false;
         }
@@ -297,7 +298,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
     }
 
     async function syncTeam(teamName: string) {
-        console.log(`Syncing Team Members for ${teamName} in ${installedGitHubClient.GetCurrentOrgName()}`)
+        Log(`Syncing Team Members for ${teamName} in ${installedGitHubClient.GetCurrentOrgName()}`)
         await SynchronizeGitHubTeam(installedGitHubClient, teamName, config, currentMembers);
     }
 
@@ -322,7 +323,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
         return await syncOrg(installedGitHubClient, config);
     }
     catch(error) {
-        console.log(error);
+        Log(error);
 
         return {
             message: "Failed to sync org. Please check logs.",
