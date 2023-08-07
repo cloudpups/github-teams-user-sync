@@ -318,18 +318,29 @@ export async function SyncTeam(teamName:string, client: InstalledClient, config:
     return response;
 }
 
-export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig) : ReturnTypeOfSyncOrg {
+export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig) : ReturnTypeOfSyncOrg {          
+    const orgName = installedGitHubClient.GetCurrentOrgName();
+    Log(`Sync Started for '${orgName}'`);
+    
     try {
-        return await syncOrg(installedGitHubClient, config);
+        const response = await syncOrg(installedGitHubClient, config);
+
+        Log(`Sync Completed for '${orgName}': '${JSON.stringify(response)}'`);
+
+        return response;
     }
     catch(error) {
         LogError(error as any);
 
-        return {
+        const response = {
             message: "Failed to sync org. Please check logs.",
-            orgName: installedGitHubClient.GetCurrentOrgName(),
+            orgName: orgName,
             successful: false,
             syncedSecurityManagerTeams: []
         }
+
+        Log(`Sync Completed for '${orgName}': '${JSON.stringify(response)}'`);
+
+        return response;
     }
 }
