@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@octokit/auth-app": "4.0.13",
-    "@octokit/plugin-throttling": "^5.0.1",
+    "@octokit/plugin-throttling": "^7.0.0",
     "applicationinsights": "^2.7.0",
     "axios": "^1.4.0",
     "axios-retry": "^3.5.0",
