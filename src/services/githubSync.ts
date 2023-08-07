@@ -320,12 +320,25 @@ export async function SyncTeam(teamName:string, client: InstalledClient, config:
 
 export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig) : ReturnTypeOfSyncOrg {          
     const orgName = installedGitHubClient.GetCurrentOrgName();
-    Log(`Sync Started for '${orgName}'`);
+    Log(JSON.stringify(
+        {            
+            orgName: orgName,
+            operation: "OrgSync",
+            status: "Started"
+        }
+    ));
     
     try {
         const response = await syncOrg(installedGitHubClient, config);
 
-        Log(`Sync Completed for '${orgName}': '${JSON.stringify(response)}'`);
+        Log(JSON.stringify(
+            {                
+                data: response,
+                orgName: orgName,
+                operation: "OrgSync",
+                status: "Completed"
+            }
+        ));        
 
         return response;
     }
@@ -333,13 +346,20 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
         LogError(error as any);
 
         const response = {
-            message: "Failed to sync org. Please check logs.",
             orgName: orgName,
+            message: "Failed to sync org. Please check logs.",
             successful: false,
             syncedSecurityManagerTeams: []
         }
 
-        Log(`Sync Completed for '${orgName}': '${JSON.stringify(response)}'`);
+        Log(JSON.stringify(
+            {                
+                data: response,
+                orgName: orgName,
+                operation: "OrgSync",
+                status: "Failed"
+            }
+        )); 
 
         return response;
     }

@@ -96,7 +96,7 @@ async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllRe
             referrals = referrals.concat(referral.uris);
         });
 
-        response.on('end', (result: any) => {
+        response.on('end', (result: any) => {            
             Log(`Search Ended for Group '${groupName}' with result '${JSON.stringify(result)}'`)
 
             if (result?.status !== 0 || result == null || result == undefined) {
