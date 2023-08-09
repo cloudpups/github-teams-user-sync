@@ -75,10 +75,11 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
         // TODO: throw custom wrapped error...
         throw new Error("Login cannot be null for orgs")
     }
-
-    // TODO: wrap in caching decorator 
+    
     // HACK: gross typing nonsense
-    return new InstalledGitHubClient(installedOctokit, (orgName?.data?.account as any)?.login);
+    const baseClient = new InstalledGitHubClient(installedOctokit, (orgName?.data?.account as any)?.login);
+    const cachedClient = new GitHubClientCache(baseClient);
+    return cachedClient;
 }
 
 function authenticatedClient() {
