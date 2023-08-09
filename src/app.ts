@@ -10,7 +10,10 @@ import nocache from "nocache";
 import { createClient } from 'redis';
 import { Config } from "./config";
 
-export const redisClient = createClient();
+export const redisClient = createClient({
+  url: `redis://${process.env.APP_OPTIONS_RedisHost}`
+});
+
 export type CacheClient = typeof redisClient;
 Do();
 
