@@ -9,6 +9,9 @@ import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
 import { AsyncReturnType } from "../utility";
 import { Log } from "../logging";
+import { GitHubClientCache } from "./gitHubCache";
+import { redisClient } from "../app";
+
 
 const config = Config();
 
@@ -75,10 +78,16 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
         // TODO: throw custom wrapped error...
         throw new Error("Login cannot be null for orgs")
     }
-
-    // TODO: wrap in caching decorator 
+    
     // HACK: gross typing nonsense
-    return new InstalledGitHubClient(installedOctokit, (orgName?.data?.account as any)?.login);
+    const baseClient = new InstalledGitHubClient(installedOctokit, (orgName?.data?.account as any)?.login);
+
+    if(Config().AppOptions.RedisHost) {
+        const cachedClient = new GitHubClientCache(baseClient, redisClient);
+        return cachedClient;
+    }        
+
+    return baseClient;
 }
 
 function authenticatedClient() {

@@ -19,7 +19,8 @@ export function Config() {
         },
         AppOptions: {
             AppConfigRepo: process.env.APP_OPTIONS_AppConfigRepo!,
-            AppConfigOrg: process.env.APP_OPTIONS_AppConfigOrg!
+            AppConfigOrg: process.env.APP_OPTIONS_AppConfigOrg!,
+            RedisHost: process.env.APP_OPTIONS_RedisHost
             // GitHubIdAppend: process.env.APP_OPTIONS_GitHubIdAppend!,
             // SecurityManagerTeams: securityManagerTeams
         }
