@@ -153,8 +153,11 @@ axiosRetry(httpClient, {
         return retryCount * 2000;
     },
     retryCondition: (error:any) => {
-        // if retry condition is not specified, by default idempotent requests are retried
-        return error.response.status < 200 || error.response.status > 299 ;
+        if(error && error.response && error.response.status) {            
+            return error.response.status < 200 || error.response.status > 299 ;
+        }        
+        
+        return true;
     }
  });
 
