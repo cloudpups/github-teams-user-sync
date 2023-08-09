@@ -57,7 +57,8 @@ async function Do() {
   console.log({
     HostPort: port,
     ForwardingGitHubRequestsTo: process.env.GITHUB_PROXY ?? "Not forwarding",
-    ForwardingGroupRequestsTo: process.env.SOURCE_PROXY ?? "Not forwarding"
+    ForwardingGroupRequestsTo: process.env.SOURCE_PROXY ?? "Not forwarding",
+    RedisCacheHost: process.env.APP_OPTIONS_RedisHost ?? "No cache"
   })
 
   app.listen(port);

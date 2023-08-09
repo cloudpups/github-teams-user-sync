@@ -4,21 +4,22 @@ import ldapEscape from "ldap-escape";
 import axios from "axios";
 import axiosRetry from "axios-retry";
 import { Log, LogError } from "../logging";
+import { redisClient } from "../app";
 
 const config = Config()
 
 let client: ldap.Client;
 
-if(!process.env.SOURCE_PROXY) {
+if (!process.env.SOURCE_PROXY) {
     client = ldap.createClient({
         url: [config.LDAP.Server]
     });
-    
+
     client.bind(config.LDAP.User, config.LDAP.Password, (err, result) => {
-        if(err) {
+        if (err) {
             LogError(JSON.stringify(err) as any);
-        }        
-        
+        }
+
         console.log("Connected to LDAP Server");
     });
 }
@@ -96,7 +97,7 @@ async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllRe
             referrals = referrals.concat(referral.uris);
         });
 
-        response.on('end', (result: any) => {            
+        response.on('end', (result: any) => {
             Log(`Search Ended for Group '${groupName}' with result '${JSON.stringify(result)}'`)
 
             if (result?.status !== 0 || result == null || result == undefined) {
@@ -124,19 +125,41 @@ async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllRe
         //     }
         // })
     });
-}         
+}
 
 export async function SearchAllAsync(groupName: string): SearchAllResponse {
+    const cacheKey = `sot-group:${groupName}`;
+
+    const result = await redisClient.get(cacheKey);
+
+    if (result) {
+        Log(`Group Search Cache Hit: ${groupName}`)
+        return JSON.parse(result) as SearchAllResponse
+    }
+
+    const actualResult = await PrivateSearchAllAsync(groupName);
+
+    // Slightly complex for caching logic, but we don't want to cache useless results
+    if (actualResult.Succeeded && actualResult.entries.length > 0) {
+        await redisClient.set(cacheKey, JSON.stringify(actualResult), {
+            EX: 600 // Expire after 10 minutes
+        });
+    }
+
+    return actualResult;
+}
+
+async function PrivateSearchAllAsync(groupName: string): SearchAllResponse {
     try {
-        if(process.env.SOURCE_PROXY) {
+        if (process.env.SOURCE_PROXY) {
             return await ForwardSearch(groupName);
         }
-    
+
         return await SearchAllAsyncNoExceptionHandling(groupName);
     }
-    catch(ex: any) {
+    catch (ex: any) {
         Log(ex);
-        
+
         return {
             Succeeded: false
         }
@@ -146,39 +169,39 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
 // TODO: do not directly use axios.create from within a function like this
 // it will cause a new client to be made per request.
 const httpClient = axios.create();
-axiosRetry(httpClient, { 
+axiosRetry(httpClient, {
     retries: 5,
     retryDelay: (retryCount) => {
         Log(`Retry attempt: ${retryCount}`);
         return retryCount * 2000;
     },
-    retryCondition: (error:any) => {
-        if(error && error.response && error.response.status) {            
-            return error.response.status < 200 || error.response.status > 299 ;
-        }        
-        
+    retryCondition: (error: any) => {
+        if (error && error.response && error.response.status) {
+            return error.response.status < 200 || error.response.status > 299;
+        }
+
         return true;
     }
- });
+});
 
-async function ForwardSearch(groupName: string) : SearchAllResponse  {
+async function ForwardSearch(groupName: string): SearchAllResponse {
     Log(`Forwarding request to '${process.env.SOURCE_PROXY}'`);
-        
+
     const requestUrl = `${process.env.SOURCE_PROXY}/api/get-source-team?teamName=${groupName}`;
 
     Log(`Retrieving group (${groupName}) information from '${requestUrl}'`);
-    try{
+    try {
         const result = await httpClient.get(requestUrl);
         Log(`Results for ${groupName}: ${result}`);
         return {
             Succeeded: true,
             ...result.data
         }
-    }    
-    catch(e) {        
+    }
+    catch (e) {
         Log(`Error when retrieving results for ${groupName}: ${e}`);
     }
-    
+
     return {
         Succeeded: false
     }
