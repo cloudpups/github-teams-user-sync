@@ -1,8 +1,5 @@
 import { CacheClient } from "../app";
 import { GitHubTeamId, InstalledClient, OrgConfiguration, Response } from "./gitHubTypes";
-import { createClient } from 'redis';
-
-
 
 export class GitHubClientCache implements InstalledClient {
     client: InstalledClient;

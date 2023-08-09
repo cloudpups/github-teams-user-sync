@@ -81,8 +81,13 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
     
     // HACK: gross typing nonsense
     const baseClient = new InstalledGitHubClient(installedOctokit, (orgName?.data?.account as any)?.login);
-    const cachedClient = new GitHubClientCache(baseClient, redisClient);
-    return cachedClient;
+
+    if(Config().AppOptions.RedisHost) {
+        const cachedClient = new GitHubClientCache(baseClient, redisClient);
+        return cachedClient;
+    }        
+
+    return baseClient;
 }
 
 function authenticatedClient() {
