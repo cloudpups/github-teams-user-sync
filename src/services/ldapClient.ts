@@ -164,7 +164,7 @@ axiosRetry(httpClient, {
 async function ForwardSearch(groupName: string) : SearchAllResponse  {
     Log(`Forwarding request to '${process.env.SOURCE_PROXY}'`);
         
-    const requestUrl = `${process.env.SOURCE_PROXY}/api/get-source-team?teamName=${groupName}}`;
+    const requestUrl = `${process.env.SOURCE_PROXY}/api/get-source-team?teamName=${groupName}`;
 
     Log(`Retrieving group (${groupName}) information from '${requestUrl}'`);
     try{
