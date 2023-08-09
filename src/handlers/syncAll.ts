@@ -30,7 +30,7 @@ export async function syncAllHandler(
         // "handlers"
         Log(`Forwarding request to '${process.env.GITHUB_PROXY}'`);
         const requestUrl = `${process.env.GITHUB_PROXY}/api/sync/SynchronizeOrg?installationId=`
-        const orgSyncPromises = installations.map(i => axios.post(`${requestUrl}i`));
+        const orgSyncPromises = installations.map(i => axios.post(`${requestUrl}${i}`));
 
         const results = await Promise.allSettled(orgSyncPromises);
 
