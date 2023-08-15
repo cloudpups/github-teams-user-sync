@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
@@ -78,14 +76,14 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
         // TODO: throw custom wrapped error...
         throw new Error("Login cannot be null for orgs")
     }
-    
+
     // HACK: gross typing nonsense
     const baseClient = new InstalledGitHubClient(installedOctokit, (orgName?.data?.account as any)?.login);
 
-    if(Config().AppOptions.RedisHost) {
+    if (Config().AppOptions.RedisHost) {
         const cachedClient = new GitHubClientCache(baseClient, redisClient, LoggerToUse());
         return cachedClient;
-    }        
+    }
 
     return baseClient;
 }
@@ -115,7 +113,7 @@ async function GetInstallations(client: Octokit): Promise<Org[]> {
 
             return {
                 id: i.id,
-                orgName:  account.login ?? "",
+                orgName: account.login ?? "",
                 suspendedAt: i.suspended_at,
                 suspendedBy: i.suspended_by?.login
             }
@@ -212,14 +210,14 @@ class InstalledGitHubClient implements InstalledClient {
         this.orgName = orgName;
     }
 
-    public async SetOrgRole(id:GitHubId, role: OrgRoles) : Response {
+    public async SetOrgRole(id: GitHubId, role: OrgRoles): Response {
         const response = await this.gitHubClient.rest.orgs.setMembershipForUser({
             org: this.orgName,
             username: id,
             role: role
         })
 
-        if(response.status > 200 && response.status < 300) {
+        if (response.status > 200 && response.status < 300) {
             return {
                 successful: true,
                 data: null
@@ -227,8 +225,8 @@ class InstalledGitHubClient implements InstalledClient {
         }
 
         return {
-            successful: false            
-        } 
+            successful: false
+        }
     }
 
     public async GetOrgMembers(): Response<GitHubId[]> {
@@ -432,7 +430,7 @@ class InstalledGitHubClient implements InstalledClient {
                 team_slug: safeTeam,
                 description: description
             })
-    
+
             return {
                 successful: true,
                 // TODO: make this type better to avoid nulls...
@@ -449,18 +447,18 @@ class InstalledGitHubClient implements InstalledClient {
     public async AddSecurityManagerTeam(team: GitHubTeamName) {
         const safeTeam = MakeTeamNameSafe(team);
 
-        try{
+        try {
             await this.gitHubClient.rest.orgs.addSecurityManagerTeam({
                 org: this.orgName,
                 team_slug: safeTeam
             })
             return true;
         }
-        catch{
+        catch {
             Log(`Error adding ${team} as Security Managers for Org ${this.orgName}.`)
             return false;
         }
-        
+
     }
 
     public async GetConfigurationForInstallation(): Response<OrgConfiguration> {

@@ -15,7 +15,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@octokit/types": "^9.2.1",
+    "@octokit/types": "^11.1.0",
     "@types/express": "^4.17.17",
     "@types/js-yaml": "^4.0.5",
     "@types/ldap-escape": "^2.0.0",
@@ -28,8 +28,7 @@
     "typescript": "^5.0.2"
   },
   "dependencies": {
-    "@octokit/auth-app": "4.0.13",
-    "@octokit/plugin-throttling": "^5.0.1",
+    "@octokit/auth-app": "^6.0.0",
     "applicationinsights": "^2.7.0",
     "axios": "^1.4.0",
     "axios-retry": "^3.5.0",
@@ -39,7 +38,7 @@
     "ldap-escape": "^2.0.6",
     "ldapjs": "^3.0.1",
     "nocache": "^4.0.0",
-    "octokit": "^2.0.14",
+    "octokit": "3.1.0",
     "openapi-backend": "^5.9.1",
     "redis": "^4.6.7",
     "swagger-ui-express": "^4.6.2"
