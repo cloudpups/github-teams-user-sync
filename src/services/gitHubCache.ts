@@ -73,7 +73,7 @@ export class GitHubClientCache implements InstalledClient {
     }
 
     async DoesUserExist(gitHubId: string): Response<string> {
-        const cacheKey = `github-user:${gitHubId}`;
+        const cacheKey = `github-user-2:${gitHubId}`;
 
         const result = await this.cacheClient.get(cacheKey);        
 
@@ -87,17 +87,26 @@ export class GitHubClientCache implements InstalledClient {
                 }
             })
 
-            return {
-                successful: true,
-                data: result
-            }
+            return JSON.parse(result);
         }        
 
         const actualResult = await this.client.DoesUserExist(gitHubId);
 
         if (actualResult.successful) {
-            await this.cacheClient.set(cacheKey, actualResult.data, {
+            await this.cacheClient.set(cacheKey, JSON.stringify(actualResult), {
                 EX: 2592000 // Expire every 30 days
+            });
+        }
+        else {
+            // While this caching logic is a bit more complex than I'd like
+            // (i.e., contains conditional), I believe it is appropriate given
+            // the context. A user is much more likely to exist for a long 
+            // time than *not exist,* though it is also likely that a user will
+            // not exist for a short period of time once they realize they do 
+            // not exist...
+            await this.cacheClient.set(cacheKey, JSON.stringify(actualResult), {
+                EX: 1800 // Expire every 30 minutes
+                // It is unlikely that 30 minutes will cause much pain
             });
         }
 
