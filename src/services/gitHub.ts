@@ -3,7 +3,7 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
-import { GitHubClient, GitHubId, GitHubTeamId, GitHubTeamName, InstalledClient, Org, OrgConfiguration, Response } from "./gitHubTypes";
+import { GitHubClient, GitHubId, GitHubTeamId, GitHubTeamName, InstalledClient, Org, OrgConfiguration, OrgRoles, Response } from "./gitHubTypes";
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
@@ -210,6 +210,25 @@ class InstalledGitHubClient implements InstalledClient {
     constructor(gitHubClient: Octokit, orgName: string) {
         this.gitHubClient = gitHubClient;
         this.orgName = orgName;
+    }
+
+    public async SetOrgRole(id:GitHubId, role: OrgRoles) : Response {
+        const response = await this.gitHubClient.rest.orgs.setMembershipForUser({
+            org: this.orgName,
+            username: id,
+            role: role
+        })
+
+        if(response.status > 200 && response.status < 300) {
+            return {
+                successful: true,
+                data: null
+            }
+        }
+
+        return {
+            successful: false            
+        } 
     }
 
     public async GetOrgMembers(): Response<GitHubId[]> {

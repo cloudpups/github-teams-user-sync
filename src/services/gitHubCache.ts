@@ -1,6 +1,6 @@
 import { CacheClient } from "../app";
 import { ILogger } from "../logging";
-import { GitHubTeamId, InstalledClient, OrgConfiguration, Response } from "./gitHubTypes";
+import { GitHubTeamId, InstalledClient, OrgConfiguration, OrgRoles, Response } from "./gitHubTypes";
 
 export class GitHubClientCache implements InstalledClient {
     client: InstalledClient;
@@ -11,6 +11,9 @@ export class GitHubClientCache implements InstalledClient {
         this.client = client;
         this.cacheClient = cacheClient;
         this.logger = logger;
+    }
+    SetOrgRole(id: string, role: OrgRoles): Response<unknown> {
+        return this.client.SetOrgRole(id, role);
     }
 
     GetCurrentOrgName(): string {

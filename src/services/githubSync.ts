@@ -199,7 +199,8 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
     let response = {
         orgName: orgName,
         successful: false,
-        syncedSecurityManagerTeams: [] as string[]
+        syncedSecurityManagerTeams: [] as string[],
+        orgOwnersGroup: ""
     }
 
     const existingTeamsResponse = await installedGitHubClient.GetAllTeams();
@@ -249,6 +250,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
 
     const teamsThatShouldExist = [
         ...config.SecurityManagerTeams,
+        ...(orgConfigResponse.data.OrganizationOwnersGroup ? [orgConfigResponse.data.OrganizationOwnersGroup] : []),     
         ...(orgConfigResponse.data.GitHubTeamNames ?? []),
         ...(orgConfigResponse.data.OrganizationMembersGroup != undefined ? [orgConfigResponse.data.OrganizationMembersGroup] : [])
     ]
@@ -305,6 +307,31 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
     const teamSyncPromises = orgConfig.GitHubTeamNames.map(t => syncTeam(t));
 
     await Promise.all(teamSyncPromises);
+    
+    if(orgConfig.OrganizationOwnersGroup) {
+        const teamMembers = await installedGitHubClient.ListCurrentMembersOfGitHubTeam(orgConfig.OrganizationOwnersGroup);
+
+        if(!teamMembers.successful) {
+            return {
+                ...response,
+                successful: false                
+            } 
+        }
+
+        for(const id of teamMembers.data) {
+            Log(JSON.stringify({
+                message: `Adding Org Owner`,
+                org: installedGitHubClient.GetCurrentOrgName(),
+                gitHubUser: id
+            }))            
+            await installedGitHubClient.SetOrgRole(id, "admin");
+
+            response = {
+                ...response,
+                orgOwnersGroup:  orgConfig.OrganizationOwnersGroup
+            }
+        }
+    }
 
     return {
         ...response,
@@ -349,7 +376,8 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
             orgName: orgName,
             message: "Failed to sync org. Please check logs.",
             successful: false,
-            syncedSecurityManagerTeams: []
+            syncedSecurityManagerTeams: [],
+            orgOwnersGroup: ""
         }
 
         Log(JSON.stringify(

@@ -11,6 +11,8 @@ export interface GitHubClient {
     GetAppConfig(): Promise<AppConfig>
 }
 
+export type OrgRoles = "admin" | "member";
+
 export interface InstalledClient {
     GetCurrentOrgName(): string
     GetCurrentRateLimit(): Promise<{ remaining: number }>
@@ -26,6 +28,7 @@ export interface InstalledClient {
     AddSecurityManagerTeam(team: GitHubTeamName): Promise<unknown>
     GetConfigurationForInstallation(): Response<OrgConfiguration>    
     GetOrgMembers(): Response<GitHubId[]>
+    SetOrgRole(id: GitHubId, role: OrgRoles): Response
 }
 
 
@@ -63,4 +66,5 @@ export type GitHubTeamName = string;
 export type OrgConfiguration = {
     GitHubTeamNames?: string[]
     OrganizationMembersGroup?: string
+    OrganizationOwnersGroup?: string
 }
