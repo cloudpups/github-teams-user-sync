@@ -135,7 +135,7 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
     if (result) {
         LoggerToUse().ReportEvent({
             Name: "CacheHit",
-            ContextObjects: {
+            properties: {
                 "Data": groupName,
                 "Operation": "SearchAllAsync",
                 "Group": "Ldap"

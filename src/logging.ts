@@ -6,7 +6,7 @@ import TelemetryClient from "applicationinsights/out/Library/TelemetryClient";
 
 type LogEvent = {
     Name: string,
-    ContextObjects?:{
+    properties?:{
         [name: string]: any;
     } | undefined
 }
@@ -26,8 +26,8 @@ class AiLogger implements ILogger {
 
     ReportEvent(event: LogEvent): void {           
         this.client.trackEvent({
-            name: event.Name,
-            contextObjects: event.ContextObjects
+            name: event.Name,            
+            properties: event.properties        
         })
     }
     Log(s: string): void {        
