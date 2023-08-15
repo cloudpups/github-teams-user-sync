@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
@@ -83,7 +81,7 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
     const baseClient = new InstalledGitHubClient(installedOctokit, (orgName?.data?.account as any)?.login);
 
     if(Config().AppOptions.RedisHost) {
-        const cachedClient = new GitHubClientCache(baseClient, redisClient, LoggerToUse);
+        const cachedClient = new GitHubClientCache(baseClient, redisClient, LoggerToUse());
         return cachedClient;
     }        
 

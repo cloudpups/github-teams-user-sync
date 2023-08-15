@@ -32,7 +32,12 @@ export class GitHubClientCache implements InstalledClient {
 
         if (result) {
             this.logger.ReportEvent({
-                Name:"CacheHit:GitHub:IsUserMember"
+                Name:"CacheHit",
+                ContextObjects: {
+                    "Data": id,
+                    "Operation": "IsUserMember",
+                    "Group": "GitHub"
+                }
             })
 
             return {
@@ -71,7 +76,12 @@ export class GitHubClientCache implements InstalledClient {
 
         if (result) {            
             this.logger.ReportEvent({
-                Name:"CacheHit:GitHub:DoesUserExist"
+                Name:"CacheHit",
+                ContextObjects: {
+                    "Data": gitHubId,
+                    "Operation": "DoesUserExist",
+                    "Group": "GitHub"
+                }
             })
 
             return {

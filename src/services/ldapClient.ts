@@ -132,9 +132,14 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
 
     const result = await redisClient.get(cacheKey);
 
-    if (result) {        
-        LoggerToUse.ReportEvent({
-            Name:"CacheHit:Ldap:SearchAllAsync"
+    if (result) {
+        LoggerToUse().ReportEvent({
+            Name: "CacheHit",
+            ContextObjects: {
+                "Data": groupName,
+                "Operation": "SearchAllAsync",
+                "Group": "Ldap"
+            }
         })
         return JSON.parse(result) as SearchAllResponse
     }
