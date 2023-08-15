@@ -55,7 +55,7 @@ class StdLogger implements ILogger {
     }
 }
 
-let logger: ILogger;
+let logger: ILogger = new StdLogger();
 
 // HACK: do some better version of DI here...
 // maybe don't use a DI Container due to slowness in
