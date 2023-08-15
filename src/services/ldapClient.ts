@@ -3,7 +3,7 @@ import ldap from "ldapjs";
 import ldapEscape from "ldap-escape";
 import axios from "axios";
 import axiosRetry from "axios-retry";
-import { Log, LogError } from "../logging";
+import { Log, LogError, LoggerToUse } from "../logging";
 import { redisClient } from "../app";
 
 const config = Config()
@@ -132,8 +132,10 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
 
     const result = await redisClient.get(cacheKey);
 
-    if (result) {
-        Log(`Group Search Cache Hit: ${groupName}`)
+    if (result) {        
+        LoggerToUse.ReportEvent({
+            Name:"CacheHit:Ldap:SearchAllAsync"
+        })
         return JSON.parse(result) as SearchAllResponse
     }
 

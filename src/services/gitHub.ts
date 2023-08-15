@@ -8,7 +8,7 @@ import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
 import { AsyncReturnType } from "../utility";
-import { Log } from "../logging";
+import { Log, LoggerToUse } from "../logging";
 import { GitHubClientCache } from "./gitHubCache";
 import { redisClient } from "../app";
 
@@ -83,7 +83,7 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
     const baseClient = new InstalledGitHubClient(installedOctokit, (orgName?.data?.account as any)?.login);
 
     if(Config().AppOptions.RedisHost) {
-        const cachedClient = new GitHubClientCache(baseClient, redisClient);
+        const cachedClient = new GitHubClientCache(baseClient, redisClient, LoggerToUse);
         return cachedClient;
     }        
 

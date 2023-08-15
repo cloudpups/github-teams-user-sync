@@ -1,13 +1,16 @@
 import { CacheClient } from "../app";
+import { ILogger } from "../logging";
 import { GitHubTeamId, InstalledClient, OrgConfiguration, Response } from "./gitHubTypes";
 
 export class GitHubClientCache implements InstalledClient {
     client: InstalledClient;
     cacheClient: CacheClient;
+    logger:ILogger;
 
-    constructor(client: InstalledClient, cacheClient: CacheClient) {
+    constructor(client: InstalledClient, cacheClient: CacheClient, logger:ILogger) {
         this.client = client;
         this.cacheClient = cacheClient;
+        this.logger = logger;
     }
 
     GetCurrentOrgName(): string {
@@ -28,6 +31,10 @@ export class GitHubClientCache implements InstalledClient {
         const result = await this.cacheClient.get(cacheKey);        
 
         if (result) {
+            this.logger.ReportEvent({
+                Name:"CacheHit:GitHub:IsUserMember"
+            })
+
             return {
                 successful: true,
                 data: Boolean(result)
@@ -62,7 +69,11 @@ export class GitHubClientCache implements InstalledClient {
 
         const result = await this.cacheClient.get(cacheKey);        
 
-        if (result) {
+        if (result) {            
+            this.logger.ReportEvent({
+                Name:"CacheHit:GitHub:DoesUserExist"
+            })
+
             return {
                 successful: true,
                 data: result
