@@ -1,7 +1,7 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
-import { GitHubClient, GitHubId, GitHubTeamId, GitHubTeamName, InstalledClient, Org, OrgConfiguration, OrgRoles, Response } from "./gitHubTypes";
+import { GitHubClient, GitHubId, GitHubTeamId, GitHubTeamName, InstalledClient, Org, OrgConfiguration, OrgInvite, OrgRoles, Response } from "./gitHubTypes";
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
@@ -208,6 +208,50 @@ class InstalledGitHubClient implements InstalledClient {
     constructor(gitHubClient: Octokit, orgName: string) {
         this.gitHubClient = gitHubClient;
         this.orgName = orgName;
+    }
+    
+    async CancelOrgInvite(invite: OrgInvite): Response<unknown> {
+        const response = await this.gitHubClient.rest.orgs.cancelInvitation({
+            invitation_id: invite.InviteId,
+            org: this.orgName
+        })
+
+        if(response.status < 200 || response.status > 299) {
+            return {
+                successful: false
+            }
+        }
+
+        return {
+            successful: true,
+            data: null
+        }
+    }
+
+    async GetPendingOrgInvites(): Response<OrgInvite[]> {
+        // const response = await this.gitHubClient.request('GET /orgs/{org}/invitations', {
+        //     org: this.orgName,
+        //     headers: {
+        //       'X-GitHub-Api-Version': '2022-11-28'
+        //     }
+        //   })
+        const response = await this.gitHubClient.paginate(this.gitHubClient.rest.orgs.listPendingInvitations, {
+            org: this.orgName,
+            role: "all",
+            headers: {
+                "x-github-api-version":"2022-11-28"
+            }        
+        })
+
+        return {
+            successful: true,
+            data: (response as any)?.map((d:any) => {
+                return {
+                    InviteId:d.id,
+                    GitHubUser:d.login!                   
+                }
+            }) ?? []
+        }
     }
 
     public async SetOrgRole(id: GitHubId, role: OrgRoles): Response {
