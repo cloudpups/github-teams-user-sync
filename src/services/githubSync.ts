@@ -415,22 +415,3 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
         return response;
     }
 }
-
-async function CancelPendingOrgInvites(installedGitHubClient: InstalledClient) {
-    const orgName = installedGitHubClient.GetCurrentOrgName();    
-    const response = await installedGitHubClient.GetPendingOrgInvites();
-
-    if(!response.successful) {
-        return;
-    }
-
-    for(const invite of response.data) {
-        const user = invite.GitHubUser;
-        Log(JSON.stringify({
-            message: `Cancelling invite for ${user} in ${orgName}`,
-            org: orgName,            
-            user: invite.GitHubUser
-        }))
-        await installedGitHubClient.CancelOrgInvite(invite);
-    }
-}
