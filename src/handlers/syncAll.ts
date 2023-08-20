@@ -5,12 +5,15 @@ import { SyncOrg } from "../services/githubSync";
 import { GitHubClient } from "../services/gitHubTypes";
 import axios from 'axios';
 import { Log } from "../logging";
+import { GetInvitationsClient } from "../services/githubInvitations";
 
 async function syncOrgLocal(installationId: number, client: GitHubClient) {
     const orgClient = await client.GetOrgClient(installationId);
     const appConfig = await client.GetAppConfig();
 
-    return await SyncOrg(orgClient, appConfig)
+    const invitationsClient = GetInvitationsClient(orgClient);
+
+    return await SyncOrg(orgClient, appConfig, invitationsClient)
 }
 
 export async function syncAllHandler(

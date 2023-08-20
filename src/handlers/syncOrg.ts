@@ -5,6 +5,7 @@ import { SyncOrg } from "../services/githubSync";
 import { AsyncReturnType } from "../utility";
 import axios from 'axios';
 import { Log } from "../logging";
+import { GetInvitationsClient } from "../services/githubInvitations";
 
 async function forwardToProxy(installationId: number) {    
     Log(`Forwarding request to '${process.env.GITHUB_PROXY}'`);
@@ -48,8 +49,9 @@ export async function syncOrgHandler(
     for (let i of distinctIds) {
         const orgClient = await client.GetOrgClient(i);
         const appConfig = await client.GetAppConfig();
+        const invitationsClient = GetInvitationsClient(orgClient);
 
-        syncOrgResponses.push(await SyncOrg(orgClient, appConfig));
+        syncOrgResponses.push(await SyncOrg(orgClient, appConfig, invitationsClient));
     }
 
     return res.status(200).json(syncOrgResponses);

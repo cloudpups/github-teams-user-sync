@@ -13,6 +13,11 @@ export interface GitHubClient {
 
 export type OrgRoles = "admin" | "member";
 
+export type OrgInvite = {
+    InviteId: number,
+    GitHubUser: string
+}
+
 export interface InstalledClient {
     GetCurrentOrgName(): string
     GetCurrentRateLimit(): Promise<{ remaining: number }>
@@ -29,6 +34,9 @@ export interface InstalledClient {
     GetConfigurationForInstallation(): Response<OrgConfiguration>    
     GetOrgMembers(): Response<GitHubId[]>
     SetOrgRole(id: GitHubId, role: OrgRoles): Response
+    GetPendingOrgInvites():Response<OrgInvite[]>
+    CancelOrgInvite(invite:OrgInvite): Response    
+    ListPendingInvitesForTeam(teamName: GitHubTeamName):Response<OrgInvite[]>
 }
 
 
