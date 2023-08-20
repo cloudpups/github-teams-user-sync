@@ -202,16 +202,22 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
     return teamSyncNotes;
 }
 
-type ReturnTypeOfSyncOrg = ReturnType<typeof syncOrg>
+type ReturnTypeOfSyncOrg = {
+    message?: string;
+    status: "failed" | "completed" | "no_config";
+    orgName: string;
+    syncedSecurityManagerTeams: string[];
+    orgOwnersGroup: string;
+}
 
-async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig, invitationsClient: IGitHubInvitations) {
+async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig, invitationsClient: IGitHubInvitations): Promise<ReturnTypeOfSyncOrg> {
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
-    let response = {
+    let response: ReturnTypeOfSyncOrg = {
         orgName: orgName,
-        successful: false,
+        status: "failed",
         syncedSecurityManagerTeams: [] as string[],
-        orgOwnersGroup: ""
+        orgOwnersGroup: ""        
     }
 
     // TODO: add this back once these APIs make sense
@@ -244,7 +250,10 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
             const orgMembers = await SynchronizeOrgMembers(installedGitHubClient, t, config);
 
             if(orgMembers.Succeeded == false) {
-                return false;
+                return {
+                    ...response,
+                    message: "Failed to sync org members"
+                };
             }
 
             await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers.OrgMembers, currentInvites);
@@ -267,7 +276,8 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
     if (!orgConfigResponse.successful) {
         return {
             ...response,
-            message: "Cannot access/fetch organization config"
+            message: "Cannot access/fetch organization config",
+            status:"no_config"
         }
     }
 
@@ -299,7 +309,10 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
         if(currentMembersResponse.Succeeded == false) {
             Log("Failed to sync members");
 
-            return false;
+            return {
+                ...response,
+                message: "Failed to sync org members"
+            };
         }
 
         currentMembers = currentMembersResponse.OrgMembers;
@@ -337,7 +350,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
         if(!teamMembers.successful) {
             return {
                 ...response,
-                successful: false                
+                status: "failed"                
             } 
         }
 
@@ -358,7 +371,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
 
     return {
         ...response,
-        successful: true
+        status: "completed"
     }
 }
 
@@ -368,7 +381,7 @@ export async function SyncTeam(teamName:string, client: InstalledClient, config:
     return response;
 }
 
-export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig, invitationsClient: IGitHubInvitations) : ReturnTypeOfSyncOrg {          
+export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig, invitationsClient: IGitHubInvitations) : Promise<ReturnTypeOfSyncOrg> {          
     const orgName = installedGitHubClient.GetCurrentOrgName();
     Log(JSON.stringify(
         {            
@@ -386,7 +399,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
                 data: response,
                 orgName: orgName,
                 operation: "OrgSync",
-                status: "Completed"
+                status: "completed"
             }
         ));        
 
@@ -395,10 +408,10 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
     catch(error) {
         LogError(error as any);
 
-        const response = {
+        const response:ReturnTypeOfSyncOrg = {
             orgName: orgName,
             message: "Failed to sync org. Please check logs.",
-            successful: false,
+            status: "failed",
             syncedSecurityManagerTeams: [],
             orgOwnersGroup: ""
         }
@@ -408,7 +421,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
                 data: response,
                 orgName: orgName,
                 operation: "OrgSync",
-                status: "Failed"
+                status: "failed"
             }
         )); 
 
