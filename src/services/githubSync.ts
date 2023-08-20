@@ -214,6 +214,8 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
         orgOwnersGroup: ""
     }
 
+    // TODO: add this back once these APIs make sense
+    // and function...
     // await CancelPendingOrgInvites(installedGitHubClient);
 
     const currentInvitesResponse = await invitationsClient.ListInvites();
