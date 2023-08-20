@@ -13,6 +13,10 @@ export class GitHubClientCache implements InstalledClient {
         this.logger = logger;
     }
     
+    ListPendingInvitesForTeam(teamName: string): Response<OrgInvite[]> {
+        return this.client.ListPendingInvitesForTeam(teamName);
+    }
+    
     CancelOrgInvite(invite: OrgInvite): Response<unknown> {
         return this.client.CancelOrgInvite(invite);
     }

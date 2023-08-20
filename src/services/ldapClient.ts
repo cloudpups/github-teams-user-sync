@@ -12,11 +12,12 @@ let client: ldap.Client;
 
 if (!process.env.SOURCE_PROXY) {
     client = ldap.createClient({
-        url: [config.LDAP.Server]
+        url: [config.LDAP.Server]        
     });
 
     client.bind(config.LDAP.User, config.LDAP.Password, (err, result) => {
         if (err) {
+            console.log("Failed to connect to LDAP Server");
             LogError(JSON.stringify(err) as any);
         }
 

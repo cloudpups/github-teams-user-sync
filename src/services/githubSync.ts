@@ -2,7 +2,8 @@
 
 import { Log, LogError } from "../logging";
 import { AppConfig } from "./appConfig";
-import { GitHubId, InstalledClient } from "./gitHubTypes";
+import { GitHubId, InstalledClient, OrgInvite } from "./gitHubTypes";
+import { IGitHubInvitations } from "./githubInvitations";
 import { SearchAllAsync } from "./ldapClient";
 
 const teamDescription = "🤖 This Team is controlled by the Groups to Teams Sync bot! Any changes will be overridden. For more information, please check out the following: https://github.com/cloudpups/groups-to-teams-sync-bot";
@@ -112,10 +113,12 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
     };
 }
 
-async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[], checkOrgMembers:boolean = true) {
+async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[], existingInvites:OrgInvite[], checkOrgMembers:boolean = true) {
     await installedGitHubClient.UpdateTeamDetails(teamName, teamDescription);
 
     const trueMembersListResponse = await GetGitHubIds(teamName, config);
+
+    const idsWithInvites = new Set(existingInvites.map(i => i.GitHubUser));
 
     if(trueMembersListResponse.Succeeded == false) {
         return false;
@@ -138,6 +141,14 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
                 successful: false,
                 gitHubId: gitHubId,
                 message: `User '${gitHubId}' does not exist in GitHub.`
+            };
+        }
+
+        if(idsWithInvites.has(gitHubId)) {
+            return {
+                successful: false,
+                gitHubId: gitHubId,
+                message: `User '${gitHubId} has a Pending Invite to ${orgName}`
             };
         }
 
@@ -193,7 +204,7 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
 
 type ReturnTypeOfSyncOrg = ReturnType<typeof syncOrg>
 
-async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig) {
+async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig, invitationsClient: IGitHubInvitations) {
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
     let response = {
@@ -203,7 +214,15 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
         orgOwnersGroup: ""
     }
 
-    await CancelPendingOrgInvites(installedGitHubClient);
+    // await CancelPendingOrgInvites(installedGitHubClient);
+
+    const currentInvitesResponse = await invitationsClient.ListInvites();
+
+    if(!currentInvitesResponse.successful) {
+        return response;
+    }
+
+    const currentInvites = currentInvitesResponse.data;
 
     const existingTeamsResponse = await installedGitHubClient.GetAllTeams();
     if (!existingTeamsResponse.successful) {
@@ -226,7 +245,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
                 return false;
             }
 
-            await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers.OrgMembers);
+            await SynchronizeGitHubTeam(installedGitHubClient, t, config, orgMembers.OrgMembers, currentInvites);
 
             Log(`Add Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
             const addResult = await installedGitHubClient.AddSecurityManagerTeam(t);
@@ -283,7 +302,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
 
         currentMembers = currentMembersResponse.OrgMembers;
 
-        await SynchronizeGitHubTeam(installedGitHubClient, orgConfig.OrganizationMembersGroup, config, currentMembers);
+        await SynchronizeGitHubTeam(installedGitHubClient, orgConfig.OrganizationMembersGroup, config, currentMembers, currentInvites);
     }
 
     if (currentMembers.length == 0) {
@@ -303,7 +322,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
 
     async function syncTeam(teamName: string) {
         Log(`Syncing Team Members for ${teamName} in ${installedGitHubClient.GetCurrentOrgName()}`)
-        await SynchronizeGitHubTeam(installedGitHubClient, teamName, config, currentMembers);
+        await SynchronizeGitHubTeam(installedGitHubClient, teamName, config, currentMembers, currentInvites);
     }
 
     const teamSyncPromises = orgConfig.GitHubTeamNames.map(t => syncTeam(t));
@@ -341,13 +360,13 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
     }
 }
 
-export async function SyncTeam(teamName:string, client: InstalledClient, config: AppConfig) {
-    const response = await SynchronizeGitHubTeam(client, teamName, config, [], false);
+export async function SyncTeam(teamName:string, client: InstalledClient, config: AppConfig, existingMembers: GitHubId[],invites:OrgInvite[]) {
+    const response = await SynchronizeGitHubTeam(client, teamName, config, existingMembers, invites, true);
 
     return response;
 }
 
-export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig) : ReturnTypeOfSyncOrg {          
+export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig, invitationsClient: IGitHubInvitations) : ReturnTypeOfSyncOrg {          
     const orgName = installedGitHubClient.GetCurrentOrgName();
     Log(JSON.stringify(
         {            
@@ -358,7 +377,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
     ));
     
     try {
-        const response = await syncOrg(installedGitHubClient, config);
+        const response = await syncOrg(installedGitHubClient, config, invitationsClient);
 
         Log(JSON.stringify(
             {                

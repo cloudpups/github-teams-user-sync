@@ -35,7 +35,8 @@ export interface InstalledClient {
     GetOrgMembers(): Response<GitHubId[]>
     SetOrgRole(id: GitHubId, role: OrgRoles): Response
     GetPendingOrgInvites():Response<OrgInvite[]>
-    CancelOrgInvite(invite:OrgInvite): Response
+    CancelOrgInvite(invite:OrgInvite): Response    
+    ListPendingInvitesForTeam(teamName: GitHubTeamName):Response<OrgInvite[]>
 }
 
 

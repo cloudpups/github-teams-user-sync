@@ -209,6 +209,29 @@ class InstalledGitHubClient implements InstalledClient {
         this.gitHubClient = gitHubClient;
         this.orgName = orgName;
     }
+
+    async ListPendingInvitesForTeam(teamName: string): Response<OrgInvite[]> {
+        const response = await this.gitHubClient.rest.teams.listPendingInvitationsInOrg({
+            org: this.orgName,
+            team_slug: teamName
+        })
+
+        if(response.status < 200 || response.status > 299) {
+            return {
+                successful: false
+            }
+        }
+
+        return {
+            successful: true,
+            data: response.data.map(i => {
+                return {
+                    GitHubUser: i.login!,
+                    InviteId: i.id!
+                }
+            })
+        }
+    }
     
     async CancelOrgInvite(invite: OrgInvite): Response<unknown> {
         const response = await this.gitHubClient.rest.orgs.cancelInvitation({
@@ -229,12 +252,6 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     async GetPendingOrgInvites(): Response<OrgInvite[]> {
-        // const response = await this.gitHubClient.request('GET /orgs/{org}/invitations', {
-        //     org: this.orgName,
-        //     headers: {
-        //       'X-GitHub-Api-Version': '2022-11-28'
-        //     }
-        //   })
         const response = await this.gitHubClient.paginate(this.gitHubClient.rest.orgs.listPendingInvitations, {
             org: this.orgName,
             role: "all",
