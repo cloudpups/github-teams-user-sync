@@ -2,7 +2,7 @@
 
 # group-to-teams-sync-bot
 
-![Supposedly a temporary icon](https://i.ibb.co/hYKCpQP/some-Icon-asdfasdfasdf.png)
+<img src="https://github.com/cloudpups/github-teams-user-sync/assets/4266541/3f278cdf-c9a8-4b2c-bb0f-ed22b8989d1e" alt="Billiam the Octocat helping folks get into teams." width="300" />
 
 Groups (currently Azure Active Directory Only) to GitHub Teams sync
 
