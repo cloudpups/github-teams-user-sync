@@ -6,7 +6,9 @@ import { GitHubId, InstalledClient, OrgInvite } from "./gitHubTypes";
 import { IGitHubInvitations } from "./githubInvitations";
 import { SearchAllAsync } from "./ldapClient";
 
-const teamDescription = "🤖 This Team is controlled by the Groups to Teams Sync bot! Any changes will be overridden. For more information, please check out the following: https://github.com/cloudpups/groups-to-teams-sync-bot";
+function teamDescription(shortLink:string, sourceTeam: string) {
+    return `🤖 Managed by GTTSB: ${shortLink}| Source Team: ${sourceTeam}`
+}
 
 const replaceAll = function (original: string, search: string, replacement: string) {
     const target = original;
@@ -113,8 +115,8 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
     };
 }
 
-async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[], existingInvites:OrgInvite[], checkOrgMembers:boolean = true) {
-    await installedGitHubClient.UpdateTeamDetails(teamName, teamDescription);
+async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[], existingInvites:OrgInvite[], checkOrgMembers:boolean = true) {        
+    await installedGitHubClient.UpdateTeamDetails(teamName, teamDescription(config.Description.ShortLink, teamName));
 
     const trueMembersListResponse = await GetGitHubIds(teamName, config);
 
@@ -242,7 +244,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
         for (let t of config.SecurityManagerTeams) {
             if (!setOfExistingTeams.has(t.toUpperCase())) {
                 Log(`Creating team '${orgName}/${t}'`)
-                await installedGitHubClient.CreateTeam(t, teamDescription);
+                await installedGitHubClient.CreateTeam(t, teamDescription(config.Description.ShortLink, t));
                 setOfExistingTeams.add(t);
             }
 
@@ -293,7 +295,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
     if (teamsToCreate.length > 0) {
         for (const t of teamsToCreate) {
             Log(`Creating team '${orgName}/${t}'`)
-            await installedGitHubClient.CreateTeam(t, teamDescription);
+            await installedGitHubClient.CreateTeam(t, teamDescription(config.Description.ShortLink, t));
         }
     }
 
