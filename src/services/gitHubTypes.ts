@@ -71,7 +71,7 @@ export type GitHubTeam = {
 
 export type ManagedGitHubTeam = {
     Name: string,
-    DisplayName: string
+    DisplayName?: string
 }
 
 export type GitHubTeamName = string;
