@@ -9,7 +9,7 @@ import { AsyncReturnType } from "../utility";
 import { Log, LoggerToUse } from "../logging";
 import { GitHubClientCache } from "./gitHubCache";
 import { redisClient } from "../app";
-import { GitHubTeamName, OrgConfiguration } from "./orgConfig";
+import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig";
 
 
 const config = Config();
@@ -523,7 +523,7 @@ class InstalledGitHubClient implements InstalledClient {
 
     }
 
-    public async GetConfigurationForInstallation(): Response<OrgConfiguration> {
+    public async GetConfigurationForInstallation(): Response<OrgConfig> {
         // TODO: this function doesn't really belong on this class...
         // i.e., it doesn't fit with a "GitHub Facade"
         const getContentRequest = {
@@ -576,11 +576,11 @@ class InstalledGitHubClient implements InstalledClient {
             }
         }
 
-        const configuration = yaml.load(Buffer.from(contentData.content, 'base64').toString()) as OrgConfiguration;
+        const configuration = yaml.load(Buffer.from(contentData.content, 'base64').toString()) as OrgConfigurationOptions;
 
         return {
             successful: true,
-            data: configuration
+            data: new OrgConfig(configuration)
         }
     }
 }
