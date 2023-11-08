@@ -283,11 +283,19 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
         }
     }
 
-    const teamsThatShouldExist = [
+    const orgConfig = orgConfigResponse.data;
+
+    Log(JSON.stringify(orgConfig));
+
+    const ownerGroupName = orgConfig.GetOrgOwnersGroupName();
+    const membersGroupName = orgConfig.GetOrganizationMembersGroupName();
+    const gitHubTeams = orgConfig.GetTeams();
+
+    const teamsThatShouldExist:string[] = [
         ...config.SecurityManagerTeams,
-        ...(orgConfigResponse.data.OrganizationOwnersGroup ? [orgConfigResponse.data.OrganizationOwnersGroup] : []),     
-        ...(orgConfigResponse.data.GitHubTeamNames ?? []),
-        ...(orgConfigResponse.data.OrganizationMembersGroup != undefined ? [orgConfigResponse.data.OrganizationMembersGroup] : [])
+        ...gitHubTeams,
+        ...(ownerGroupName != undefined ? [ownerGroupName] : []),     
+        ...(membersGroupName != undefined ? [membersGroupName] : [])
     ]
 
     const teamsToCreate = teamsThatShouldExist.filter(t => !setOfExistingTeams.has(t.toUpperCase()))
@@ -299,14 +307,10 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
         }
     }
 
-    const orgConfig = orgConfigResponse.data;
-
-    Log(JSON.stringify(orgConfig));
-
     let currentMembers: GitHubId[] = [];
-    if (orgConfig.OrganizationMembersGroup != undefined || orgConfig.OrganizationMembersGroup != null) {
-        Log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()}: ${orgConfig.OrganizationMembersGroup}`)
-        const currentMembersResponse = await SynchronizeOrgMembers(installedGitHubClient, orgConfig.OrganizationMembersGroup, config)
+    if (membersGroupName != undefined || membersGroupName != null) {
+        Log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()}: ${membersGroupName}`)
+        const currentMembersResponse = await SynchronizeOrgMembers(installedGitHubClient, membersGroupName, config)
 
         if(currentMembersResponse.Succeeded == false) {
             Log("Failed to sync members");
@@ -319,7 +323,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
 
         currentMembers = currentMembersResponse.OrgMembers;
 
-        await SynchronizeGitHubTeam(installedGitHubClient, orgConfig.OrganizationMembersGroup, config, currentMembers, currentInvites);
+        await SynchronizeGitHubTeam(installedGitHubClient, membersGroupName, config, currentMembers, currentInvites);
     }
 
     if (currentMembers.length == 0) {
@@ -332,7 +336,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
         currentMembers = getOrgMembersResponse.data;
     }
 
-    if (!orgConfig.GitHubTeamNames || orgConfig.GitHubTeamNames.length < 1) {
+    if (!gitHubTeams || gitHubTeams.length < 1) {
         // no teams to sync
         return response;
     }
@@ -342,12 +346,12 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
         await SynchronizeGitHubTeam(installedGitHubClient, teamName, config, currentMembers, currentInvites);
     }
 
-    const teamSyncPromises = orgConfig.GitHubTeamNames.map(t => syncTeam(t));
+    const teamSyncPromises = gitHubTeams.map(t => syncTeam(t));
 
     await Promise.all(teamSyncPromises);
     
-    if(orgConfig.OrganizationOwnersGroup) {
-        const teamMembers = await installedGitHubClient.ListCurrentMembersOfGitHubTeam(orgConfig.OrganizationOwnersGroup);
+    if(ownerGroupName) {
+        const teamMembers = await installedGitHubClient.ListCurrentMembersOfGitHubTeam(ownerGroupName);
 
         if(!teamMembers.successful) {
             return {
@@ -366,7 +370,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, config: AppConfig
 
             response = {
                 ...response,
-                orgOwnersGroup:  orgConfig.OrganizationOwnersGroup
+                orgOwnersGroup:  ownerGroupName
             }
         }
     }
