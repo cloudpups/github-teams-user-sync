@@ -1,4 +1,5 @@
 import { AppConfig } from "./appConfig"
+import { GitHubTeamName, OrgConfiguration } from "./orgConfig"
 
 export interface Org {
     id: number,
@@ -67,18 +68,4 @@ export type GitHubTeam = {
     Id: number,
     Name: string,
     Members: GitHubUser[]
-}
-
-export type ManagedGitHubTeam = {
-    Name: string,
-    DisplayName?: string
-}
-
-export type GitHubTeamName = string;
-
-export type OrgConfiguration = {
-    GitHubTeamNames?: string[]
-    Teams?: ManagedGitHubTeam[]
-    OrganizationMembersGroup?: string
-    OrganizationOwnersGroup?: string
 }

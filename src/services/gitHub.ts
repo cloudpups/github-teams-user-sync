@@ -1,7 +1,7 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
-import { GitHubClient, GitHubId, GitHubTeamId, GitHubTeamName, InstalledClient, Org, OrgConfiguration, OrgInvite, OrgRoles, Response } from "./gitHubTypes";
+import { GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgInvite, OrgRoles, Response } from "./gitHubTypes";
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
@@ -9,6 +9,7 @@ import { AsyncReturnType } from "../utility";
 import { Log, LoggerToUse } from "../logging";
 import { GitHubClientCache } from "./gitHubCache";
 import { redisClient } from "../app";
+import { GitHubTeamName, OrgConfiguration } from "./orgConfig";
 
 
 const config = Config();
