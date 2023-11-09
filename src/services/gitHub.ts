@@ -1,7 +1,7 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
-import { GitHubClient, GitHubId, GitHubTeamId, GitHubTeamName, InstalledClient, Org, OrgConfiguration, OrgInvite, OrgRoles, Response } from "./gitHubTypes";
+import { GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgInvite, OrgRoles, Response } from "./gitHubTypes";
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
@@ -9,10 +9,11 @@ import { AsyncReturnType } from "../utility";
 import { Log, LoggerToUse } from "../logging";
 import { GitHubClientCache } from "./gitHubCache";
 import { redisClient } from "../app";
-
+import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig";
 
 const config = Config();
 
+// TODO: split into decorator so as to not mix responsibilities
 function MakeTeamNameSafe(teamName: string) {
     // There are most likely much more than this...
     const specialCharacterRemoveRegexp = /[ &%#@!$]/g;
@@ -24,6 +25,11 @@ function MakeTeamNameSafe(teamName: string) {
     const withDuplicatesRemoved = saferName.replaceAll(multiReplaceRegexp, "-").replaceAll(removeTrailingDashesRegexp, "");
 
     return withDuplicatesRemoved;
+}
+
+// TODO: split into decorator so as to not mix responsibilities
+function MakeTeamNameSafeAndApiFriendly(teamName: string) {
+    return MakeTeamNameSafe(teamName).replace(" ", "-");
 }
 
 async function GetOrgClient(installationId: number): Promise<InstalledClient> {
@@ -211,12 +217,14 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     async ListPendingInvitesForTeam(teamName: string): Response<OrgInvite[]> {
+        const safeName = MakeTeamNameSafeAndApiFriendly(teamName);
+
         const response = await this.gitHubClient.rest.teams.listPendingInvitationsInOrg({
             org: this.orgName,
-            team_slug: teamName
+            team_slug: safeName
         })
 
-        if(response.status < 200 || response.status > 299) {
+        if (response.status < 200 || response.status > 299) {
             return {
                 successful: false
             }
@@ -232,14 +240,14 @@ class InstalledGitHubClient implements InstalledClient {
             })
         }
     }
-    
+
     async CancelOrgInvite(invite: OrgInvite): Response<unknown> {
         const response = await this.gitHubClient.rest.orgs.cancelInvitation({
             invitation_id: invite.InviteId,
             org: this.orgName
         })
 
-        if(response.status < 200 || response.status > 299) {
+        if (response.status < 200 || response.status > 299) {
             return {
                 successful: false
             }
@@ -256,16 +264,16 @@ class InstalledGitHubClient implements InstalledClient {
             org: this.orgName,
             role: "all",
             headers: {
-                "x-github-api-version":"2022-11-28"
-            }        
+                "x-github-api-version": "2022-11-28"
+            }
         })
 
         return {
             successful: true,
-            data: (response as any)?.map((d:any) => {
+            data: (response as any)?.map((d: any) => {
                 return {
-                    InviteId:d.id,
-                    GitHubUser:d.login!                   
+                    InviteId: d.id,
+                    GitHubUser: d.login!
                 }
             }) ?? []
         }
@@ -373,7 +381,7 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     public async AddTeamMember(team: GitHubTeamName, id: GitHubId): Response<unknown> {
-        const safeTeam = MakeTeamNameSafe(team);
+        const safeTeam = MakeTeamNameSafeAndApiFriendly(team);
 
         try {
             await this.gitHubClient.rest.teams.addOrUpdateMembershipForUserInOrg({
@@ -397,12 +405,21 @@ class InstalledGitHubClient implements InstalledClient {
 
     public async CreateTeam(team: GitHubTeamName, description: string): Response<unknown> {
         try {
-            await this.gitHubClient.rest.teams.create({
-                name: team,
+            // TODO: submit bug for the method I was using because
+            // it always creates a team with '-' instead of spaces...
+            // this is NOT an opinion for a client library to make!
+            await this.gitHubClient.request('POST /orgs/{org}/teams', {
                 org: this.orgName,
-                description,
-                privacy: "closed"
-            })
+                name: MakeTeamNameSafe(team),
+                description: description,
+                // TODO: enable configuration of this item                
+                notification_setting: 'notifications_enabled',
+                // TODO: enable configuration of this item
+                privacy: 'closed',
+                headers: {
+                  'X-GitHub-Api-Version': '2022-11-28'
+                }
+              });
         }
         catch {
             return {
@@ -436,7 +453,7 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     public async ListCurrentMembersOfGitHubTeam(team: GitHubTeamName): Response<GitHubId[]> {
-        const safeTeam = MakeTeamNameSafe(team);
+        const safeTeam = MakeTeamNameSafeAndApiFriendly(team);
 
         try {
             const response = await this.gitHubClient.paginate(this.gitHubClient.rest.teams.listMembersInOrg, {
@@ -459,7 +476,7 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     public async RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): Response<unknown> {
-        const safeTeam = MakeTeamNameSafe(team);
+        const safeTeam = MakeTeamNameSafeAndApiFriendly(team);
 
         try {
             await this.gitHubClient.rest.teams.removeMembershipForUserInOrg({
@@ -482,13 +499,12 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     public async UpdateTeamDetails(team: GitHubTeamName, description: string): Response<unknown> {
-        const safeTeam = MakeTeamNameSafe(team);
-
         try {
             await this.gitHubClient.rest.teams.updateInOrg({
                 org: this.orgName,
                 privacy: "closed",
-                team_slug: safeTeam,
+                team_slug: MakeTeamNameSafeAndApiFriendly(team),
+                name: MakeTeamNameSafe(team),
                 description: description
             })
 
@@ -506,7 +522,7 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     public async AddSecurityManagerTeam(team: GitHubTeamName) {
-        const safeTeam = MakeTeamNameSafe(team);
+        const safeTeam = MakeTeamNameSafeAndApiFriendly(team);
 
         try {
             await this.gitHubClient.rest.orgs.addSecurityManagerTeam({
@@ -522,7 +538,7 @@ class InstalledGitHubClient implements InstalledClient {
 
     }
 
-    public async GetConfigurationForInstallation(): Response<OrgConfiguration> {
+    public async GetConfigurationForInstallation(): Response<OrgConfig> {
         // TODO: this function doesn't really belong on this class...
         // i.e., it doesn't fit with a "GitHub Facade"
         const getContentRequest = {
@@ -575,11 +591,11 @@ class InstalledGitHubClient implements InstalledClient {
             }
         }
 
-        const configuration = yaml.load(Buffer.from(contentData.content, 'base64').toString()) as OrgConfiguration;
+        const configuration = yaml.load(Buffer.from(contentData.content, 'base64').toString()) as OrgConfigurationOptions;
 
         return {
             successful: true,
-            data: configuration
+            data: new OrgConfig(configuration)
         }
     }
 }

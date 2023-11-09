@@ -50,7 +50,17 @@ export async function syncSpecificTeamHandler(
 
     const invites = invitesResponse.data;
 
-    const response = await SyncTeam(teamName, orgClient, appConfig, existingOrgMembers.data, invites);
+    const orgConfig = await orgClient.GetConfigurationForInstallation();
+
+    if(!orgConfig.successful) {
+        return res.status(500).json({
+            Message: "Unable to fetch organization configuration."
+        })
+    }
+
+    const sourceTeamMap = orgConfig.data.DisplayNameToSourceMap;
+
+    const response = await SyncTeam(teamName, orgClient, appConfig, existingOrgMembers.data, invites, sourceTeamMap);
 
     return res.status(200).json(response);
 }

@@ -1,4 +1,5 @@
 import { AppConfig } from "./appConfig"
+import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig"
 
 export interface Org {
     id: number,
@@ -31,7 +32,7 @@ export interface InstalledClient {
     RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): Response
     UpdateTeamDetails(team: GitHubTeamName, description: string): Response
     AddSecurityManagerTeam(team: GitHubTeamName): Promise<unknown>
-    GetConfigurationForInstallation(): Response<OrgConfiguration>    
+    GetConfigurationForInstallation(): Response<OrgConfig>    
     GetOrgMembers(): Response<GitHubId[]>
     SetOrgRole(id: GitHubId, role: OrgRoles): Response
     GetPendingOrgInvites():Response<OrgInvite[]>
@@ -67,12 +68,4 @@ export type GitHubTeam = {
     Id: number,
     Name: string,
     Members: GitHubUser[]
-}
-
-export type GitHubTeamName = string;
-
-export type OrgConfiguration = {
-    GitHubTeamNames?: string[]
-    OrganizationMembersGroup?: string
-    OrganizationOwnersGroup?: string
 }
