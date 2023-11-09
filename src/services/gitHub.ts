@@ -410,7 +410,7 @@ class InstalledGitHubClient implements InstalledClient {
             // this is NOT an opinion for a client library to make!
             await this.gitHubClient.request('POST /orgs/{org}/teams', {
                 org: this.orgName,
-                name: MakeTeamNameSafe(team),
+                name: team,
                 description: description,
                 // TODO: enable configuration of this item                
                 notification_setting: 'notifications_enabled',
