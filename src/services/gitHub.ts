@@ -203,7 +203,7 @@ async function GetAppConfig(client: Octokit): Promise<AppConfig> {
     const configuration = yaml.load(Buffer.from(contentData.content, 'base64').toString()) as RawAppConfig;
 
     return {
-        Description: configuration.Description ?? {ShortLink:""},
+        Description: configuration.Description ?? {ShortLink:"https://github.com/cloudpups/github-teams-user-sync"},
         SecurityManagerTeams: configuration.SecurityManagerTeams ?? [],
         TeamsToIgnore: configuration.TeamsToIgnore ?? [],
         GitHubIdAppend: configuration.GitHubIdAppend ?? ""
