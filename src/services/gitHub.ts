@@ -417,9 +417,9 @@ class InstalledGitHubClient implements InstalledClient {
                 // TODO: enable configuration of this item
                 privacy: 'closed',
                 headers: {
-                  'X-GitHub-Api-Version': '2022-11-28'
+                    'X-GitHub-Api-Version': '2022-11-28'
                 }
-              });
+            });
         }
         catch {
             return {
@@ -504,7 +504,7 @@ class InstalledGitHubClient implements InstalledClient {
                 org: this.orgName,
                 privacy: "closed",
                 team_slug: MakeTeamNameSafeAndApiFriendly(team),
-                name: MakeTeamNameSafe(team),
+                name: team,
                 description: description
             })
 
