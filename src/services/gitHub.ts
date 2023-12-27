@@ -52,7 +52,7 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
         },
         throttle: {
             // TODO: remove use of ANY
-            onRateLimit: (retryAfter: number, options: any, octokit: any, retryCount: number) => {
+            onRateLimit: (retryAfter: number, options: options, octokit: any, retryCount: number) => {
                 octokit.log.warn(
                     `Request quota exhausted for request ${options.method} ${options.url}`
                 );
@@ -64,7 +64,7 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
                 }
             },
             // TODO: remove use of ANY
-            onSecondaryRateLimit: (retryAfter: number, options: any, octokit: any) => {
+            onSecondaryRateLimit: (retryAfter: number, options: options, octokit: any) => {
                 // does not retry, only logs a warning
                 octokit.log.warn(
                     `SecondaryRateLimit detected for request ${options.method} ${options.url}. Retry after ${retryAfter} seconds`
@@ -417,9 +417,9 @@ class InstalledGitHubClient implements InstalledClient {
                 // TODO: enable configuration of this item
                 privacy: 'closed',
                 headers: {
-                  'X-GitHub-Api-Version': '2022-11-28'
+                    'X-GitHub-Api-Version': '2022-11-28'
                 }
-              });
+            });
         }
         catch {
             return {
@@ -504,7 +504,7 @@ class InstalledGitHubClient implements InstalledClient {
                 org: this.orgName,
                 privacy: "closed",
                 team_slug: MakeTeamNameSafeAndApiFriendly(team),
-                name: MakeTeamNameSafe(team),
+                name: team,
                 description: description
             })
 
