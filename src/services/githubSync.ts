@@ -215,6 +215,7 @@ type ReturnTypeOfSyncOrg = {
     orgName: string;
     syncedSecurityManagerTeams: string[];
     orgOwnersGroup: string;
+    ignoredTeams: string[];
 }
 
 async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppConfig, invitationsClient: IGitHubInvitations): Promise<ReturnTypeOfSyncOrg> {
@@ -224,7 +225,8 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         orgName: orgName,
         status: "failed",
         syncedSecurityManagerTeams: [] as string[],
-        orgOwnersGroup: ""
+        orgOwnersGroup: "",
+        ignoredTeams: [] as string[]
     }
 
     // TODO: add this back once these APIs make sense
@@ -294,7 +296,9 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
 
     const ownerGroupName = orgConfig.OrgOwnersGroupName;
     const membersGroupName = orgConfig.OrgMembersGroupName;
-    const gitHubTeams = RemoveTeamsToIgnore(orgConfig.TeamsToManage, appConfig);    
+    const {teamsToManage:gitHubTeams, ignoredTeams} = RemoveTeamsToIgnore(orgConfig.TeamsToManage, appConfig);    
+
+    response.ignoredTeams = ignoredTeams;
 
     const teamsThatShouldExist: string[] = [
         ...appConfig.SecurityManagerTeams,
@@ -425,7 +429,8 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
             message: "Failed to sync org. Please check logs.",
             status: "failed",
             syncedSecurityManagerTeams: [],
-            orgOwnersGroup: ""
+            orgOwnersGroup: "",
+            ignoredTeams: []
         }
 
         Log(JSON.stringify(
@@ -441,13 +446,12 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
     }
 }
 
-function RemoveTeamsToIgnore(TeamsToManage: string[], appConfig: AppConfig): string[] {
-    const teamsToIgnore = new Set(appConfig.TeamsToIgnore ?? []);
+function RemoveTeamsToIgnore(TeamsToManage: string[], appConfig: AppConfig) {
+    const teamsToIgnore = new Set(appConfig.TeamsToIgnore.map(tti => tti.toLowerCase()) ?? []);        
 
-    const ignoredTeams = TeamsToManage.filter(t => teamsToIgnore.has(t));
-
-    Log(`Ignoring the following teams from sync: ${JSON.stringify(ignoredTeams)}`);
-
-    return TeamsToManage.filter(t => !teamsToIgnore.has(t));
+    return {
+        teamsToManage: TeamsToManage.filter(t => !teamsToIgnore.has(t.toLowerCase())),
+        ignoredTeams: TeamsToManage.filter(t => teamsToIgnore.has(t.toLowerCase()))
+    };
 }
 
