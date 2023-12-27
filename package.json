@@ -38,7 +38,7 @@
     "ldap-escape": "^2.0.6",
     "ldapjs": "^3.0.1",
     "nocache": "^4.0.0",
-    "octokit": "3.1.1",
+    "octokit": "3.1.2",
     "openapi-backend": "^5.9.1",
     "redis": "^4.6.7",
     "swagger-ui-express": "5.0.0"
