@@ -5,7 +5,6 @@ import { AppConfig } from "./appConfig";
 import { GitHubId, InstalledClient, OrgInvite } from "./gitHubTypes";
 import { IGitHubInvitations } from "./githubInvitations";
 import { SearchAllAsync } from "./ldapClient";
-import { OrgConfig } from "./orgConfig";
 
 function teamDescription(shortLink: string, sourceTeam: string) {
     return `🤖 Managed by GTTSB: ${shortLink} | Source Team: ${sourceTeam}`
@@ -248,7 +247,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
     const setOfExistingTeams = new Set(existingTeamsResponse.data.map(t => t.Name.toUpperCase()));
 
     if (appConfig.SecurityManagerTeams) {
-        for (let t of appConfig.SecurityManagerTeams) {
+        for (const t of appConfig.SecurityManagerTeams) {
             if (!setOfExistingTeams.has(t.toUpperCase())) {
                 Log(`Creating team '${orgName}/${t}'`)
                 await installedGitHubClient.CreateTeam(t, teamDescription(appConfig.Description.ShortLink, t));
