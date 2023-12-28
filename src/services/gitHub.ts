@@ -4,7 +4,7 @@ import { Config } from "../config";
 import { GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgInvite, OrgRoles, Response } from "./gitHubTypes";
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
-import { throttling } from "@octokit/plugin-throttling";
+import { throttling  } from "@octokit/plugin-throttling";
 import { AsyncReturnType } from "../utility";
 import { Log, LoggerToUse } from "../logging";
 import { GitHubClientCache } from "./gitHubCache";
@@ -33,15 +33,10 @@ function MakeTeamNameSafeAndApiFriendly(teamName: string) {
 }
 
 async function GetOrgClient(installationId: number): Promise<InstalledClient> {
-    interface options {
-        method: string
-        url: string
-    }
-
     // TODO: look further into this... it seems like it would be best if 
     // installation client was generated from the original client, and not
-    // created fresh.
-    const MyOctokit = Octokit.plugin(throttling);
+    // created fresh.    
+    const MyOctokit = Octokit.plugin(throttling);           
 
     const installedOctokit = new MyOctokit({
         authStrategy: createAppAuth,
@@ -50,9 +45,8 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
             privateKey: Config().GitHub.PrivateKey,
             installationId
         },
-        throttle: {
-            // TODO: remove use of ANY
-            onRateLimit: (retryAfter: number, options: options, octokit: any, retryCount: number) => {
+        throttle: {            
+            onRateLimit: (retryAfter, options, octokit, retryCount) => {
                 octokit.log.warn(
                     `Request quota exhausted for request ${options.method} ${options.url}`
                 );
@@ -62,9 +56,8 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
                     octokit.log.info(`Retrying after ${retryAfter} seconds!`);
                     return true;
                 }
-            },
-            // TODO: remove use of ANY
-            onSecondaryRateLimit: (retryAfter: number, options: options, octokit: any) => {
+            },            
+            onSecondaryRateLimit: (retryAfter, options, octokit) => {
                 // does not retry, only logs a warning
                 octokit.log.warn(
                     `SecondaryRateLimit detected for request ${options.method} ${options.url}. Retry after ${retryAfter} seconds`
@@ -75,16 +68,23 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
         }
     })
 
-    const orgName = await installedOctokit.rest.apps.getInstallation({ installation_id: installationId });
+    const orgName = await installedOctokit.rest.apps.getInstallation({ installation_id: installationId })!;
+
+    type thisShouldNotBeNeeded = {
+        // TODO: keep an eye on this as there is a good 
+        // chance login will be removed considering it
+        // is already not present on the type...
+        login:string
+    }
 
     // HACK: gross typing nonsense
-    if (!(orgName?.data?.account as any).login) {
+    if (!(orgName.data.account! as thisShouldNotBeNeeded).login) {
         // TODO: throw custom wrapped error...
         throw new Error("Login cannot be null for orgs")
     }
 
     // HACK: gross typing nonsense
-    const baseClient = new InstalledGitHubClient(installedOctokit, (orgName?.data?.account as any)?.login);
+    const baseClient = new InstalledGitHubClient(installedOctokit, (orgName.data.account as thisShouldNotBeNeeded).login);
 
     if (Config().AppOptions.RedisHost) {
         const cachedClient = new GitHubClientCache(baseClient, redisClient, LoggerToUse());
@@ -115,7 +115,7 @@ async function GetInstallations(client: Octokit): Promise<Org[]> {
         // TODO: this function is doing too much, it is not 
         // just a simple facade anymore...
         const mappedOrgs = installationList.map(i => {
-            const account = i.account as any; // HACK: gross typing nonsense
+            const account = i.account!;
 
             return {
                 id: i.id,
@@ -284,7 +284,7 @@ class InstalledGitHubClient implements InstalledClient {
 
         return {
             successful: true,
-            data: (response as any)?.map((d: any) => {
+            data: (response)?.map(d => {
                 return {
                     InviteId: d.id,
                     GitHubUser: d.login!
