@@ -62,6 +62,9 @@ Teams:
 - Name: Some_Team
 - Name: Some_Team_2
   DisplayName: Some Team 2
+  # An optional property that adds the given team to the list of those Copilot licenses are 
+  # granted to.
+  CopilotAccess: true
 ```
 
 ## Necessary configuration of the tool/service
