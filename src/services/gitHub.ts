@@ -33,11 +33,6 @@ function MakeTeamNameSafeAndApiFriendly(teamName: string) {
 }
 
 async function GetOrgClient(installationId: number): Promise<InstalledClient> {
-    interface options {
-        method: string
-        url: string
-    }
-
     // TODO: look further into this... it seems like it would be best if 
     // installation client was generated from the original client, and not
     // created fresh.    
