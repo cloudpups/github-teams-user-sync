@@ -46,7 +46,7 @@ export async function syncOrgHandler(
 
     const syncOrgResponses : AsyncReturnType<typeof SyncOrg>[] = [];
 
-    for (let i of distinctIds) {
+    for (const i of distinctIds) {
         const orgClient = await client.GetOrgClient(i);
         const appConfig = await client.GetAppConfig();
         const invitationsClient = GetInvitationsClient(orgClient);
