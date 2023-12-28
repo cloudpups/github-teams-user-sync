@@ -15,7 +15,7 @@ if (!process.env.SOURCE_PROXY) {
         url: [config.LDAP.Server]        
     });
 
-    client.bind(config.LDAP.User, config.LDAP.Password, (err, result) => {
+    client.bind(config.LDAP.User, config.LDAP.Password, (err, _) => {
         if (err) {
             console.log("Failed to connect to LDAP Server");
             LogError(JSON.stringify(err) as string);
