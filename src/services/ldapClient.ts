@@ -15,10 +15,10 @@ if (!process.env.SOURCE_PROXY) {
         url: [config.LDAP.Server]        
     });
 
-    client.bind(config.LDAP.User, config.LDAP.Password, (err, result) => {
+    client.bind(config.LDAP.User, config.LDAP.Password, (err) => {
         if (err) {
             console.log("Failed to connect to LDAP Server");
-            LogError(JSON.stringify(err) as any);
+            LogError(JSON.stringify(err) as string);
         }
 
         console.log("Connected to LDAP Server");
@@ -28,7 +28,7 @@ else {
     Log("Group Proxy is set. LDAP will not be configured for this instance.")
 }
 
-function SearchAsync(groupName: string): Promise<any> {
+function SearchAsync(groupName: string): Promise<ldap.SearchCallbackResponse> {
     const component = ldapEscape.filter`${groupName}`;
     const ldapSearchString = `(&(objectCategory=user)(memberOf=CN=${component},CN=Users,${config.LDAP.GroupBaseDN}))`
 
@@ -66,8 +66,7 @@ export type SearchAllFailed = {
 
 export type SearchAllSucceeded = {
     Succeeded: true,
-    entries: Entry[],
-    referrals: any[]
+    entries: Entry[]    
 }
 
 export type SearchAllResponse = Promise<SearchAllFailed | SearchAllSucceeded>
@@ -76,16 +75,20 @@ async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllRe
     // TODO: implement paging somehow!!
     const response = await SearchAsync(groupName);
 
-    const entries: Entry[] = [];
-    let referrals: any[] = [];
+    const entries: Entry[] = [];    
+
+    type rawEntry = {
+        pojo: {
+            attributes: {
+                type:string,
+                values:string[]
+            }[]
+        }
+    }
 
     return new Promise((resolve, reject) => {
-        // res.on('searchRequest', (searchRequest) => {
-        //     Log('searchRequest: ', searchRequest.messageId);
-        // });
-
-        response.on('searchEntry', (entry: any) => {
-            const attributes = entry.pojo.attributes.map((a: any) => {
+        response.on('searchEntry', (entry: rawEntry) => {
+            const attributes = entry.pojo.attributes.map((a) => {
                 return [
                     a.type,
                     a.values[0]
@@ -94,37 +97,27 @@ async function SearchAllAsyncNoExceptionHandling(groupName: string): SearchAllRe
             entries.push(Object.fromEntries(attributes) as Entry);
         });
 
-        response.on('searchReference', (referral: any) => {
-            referrals = referrals.concat(referral.uris);
-        });
+        type result = {
+            status:number
+        }
 
-        response.on('end', (result: any) => {
+        response.on('end', (result: result) => {
             Log(`Search Ended for Group '${groupName}' with result '${JSON.stringify(result)}'`)
 
-            if (result?.status !== 0 || result == null || result == undefined) {
+            if (result == null || result == undefined || result.status !== 0) {
                 return reject(result.status);
             }
 
             return resolve({
-                entries: entries,
-                referrals: referrals,
+                entries: entries,                
                 Succeeded: true
             });
         });
 
-        response.on('error', (err: any) => {
+        response.on('error', (err: unknown) => {
             LogError(`Search Errored for Group '${groupName}': ${JSON.stringify(err)}`);
             return reject();
         });
-
-        // response.on('error', (error:any) => {
-        //     if (error.name === 'SizeLimitExceededError' &&
-        //         options.sizeLimit && options.sizeLimit > 0) {
-        //         return resolve(entries);
-        //     } else {
-        //         return reject(error);
-        //     }
-        // })
     });
 }
 
@@ -165,8 +158,8 @@ async function PrivateSearchAllAsync(groupName: string): SearchAllResponse {
 
         return await SearchAllAsyncNoExceptionHandling(groupName);
     }
-    catch (ex: any) {
-        Log(ex);
+    catch (ex: unknown) {
+        Log(JSON.stringify(ex));
 
         return {
             Succeeded: false
@@ -183,7 +176,7 @@ axiosRetry(httpClient, {
         Log(`Retry attempt: ${retryCount}`);
         return retryCount * 2000;
     },
-    retryCondition: (error: any) => {
+    retryCondition: (error) => {
         if (error && error.response && error.response.status) {
             return error.response.status < 200 || error.response.status > 299;
         }
