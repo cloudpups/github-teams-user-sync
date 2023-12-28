@@ -300,9 +300,13 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
     }
     const setOfExistingTeams = new Set(existingTeamsResponse.data.map(t => t.Name.toUpperCase()));
 
+    const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();    
+
+    const orgConfig = orgConfigResponse.successful ? orgConfigResponse.data : undefined;    
+
     const securityManagerTeams = [
         ...appConfig.SecurityManagerTeams,
-        // TODO: add org security managers        
+        ...orgConfig?.AdditionalSecurityManagerGroups ?? [] 
     ];
 
     if (securityManagerTeams.length > 0) {
@@ -329,17 +333,13 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         }
     }
 
-    const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();
-
-    if (!orgConfigResponse.successful) {
+    if (orgConfig == undefined) {
         return {
             ...response,
             message: "Cannot access/fetch organization config",
             status: "no_config"
         }
     }
-
-    const orgConfig = orgConfigResponse.data;
 
     Log(JSON.stringify(orgConfig));
 
