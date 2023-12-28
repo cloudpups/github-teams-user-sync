@@ -246,8 +246,13 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
     }
     const setOfExistingTeams = new Set(existingTeamsResponse.data.map(t => t.Name.toUpperCase()));
 
-    if (appConfig.SecurityManagerTeams) {
-        for (const t of appConfig.SecurityManagerTeams) {
+    const securityManagerTeams = [
+        ...appConfig.SecurityManagerTeams,
+        // TODO: add org security managers        
+    ];
+
+    if (securityManagerTeams.length > 0) {
+        for (const t of securityManagerTeams) {
             if (!setOfExistingTeams.has(t.toUpperCase())) {
                 Log(`Creating team '${orgName}/${t}'`)
                 await installedGitHubClient.CreateTeam(t, teamDescription(appConfig.Description.ShortLink, t));
@@ -275,9 +280,9 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
 
         response = {
             ...response,
-            syncedSecurityManagerTeams: appConfig.SecurityManagerTeams
+            syncedSecurityManagerTeams: securityManagerTeams
         }
-    }
+    }    
 
     const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();
 
@@ -289,7 +294,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         }
     }
 
-    const orgConfig = orgConfigResponse.data;
+    const orgConfig = orgConfigResponse.data;    
 
     Log(JSON.stringify(orgConfig));
 

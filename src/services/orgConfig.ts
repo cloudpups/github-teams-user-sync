@@ -10,12 +10,14 @@ export type OrgConfigurationOptions = {
     Teams?: ManagedGitHubTeam[]
     OrganizationMembersGroup?: GitHubTeamName | ManagedGitHubTeam
     OrganizationOwnersGroup?: GitHubTeamName | ManagedGitHubTeam
+    AdditionalSecurityManagerGroups?:  ManagedGitHubTeam[] 
 }
 
 export class OrgConfig {
     private options: OrgConfigurationOptions;
 
     public OrgOwnersGroupName: string | undefined;
+    public AdditionalSecurityManagerGroups: string[];
     public OrgMembersGroupName: string | undefined;
     public TeamsToManage: string[];
     public DisplayNameToSourceMap: Map<string,string>;
@@ -26,6 +28,13 @@ export class OrgConfig {
         this.OrgMembersGroupName = this.GetOrganizationMembersGroupName();
         this.TeamsToManage = this.GetTeams();
         this.DisplayNameToSourceMap = this.GetSourceTeamMap();
+        this.AdditionalSecurityManagerGroups = this.GetAdditionalSecurityManagerGroupNames();
+    }
+
+    private GetAdditionalSecurityManagerGroupNames(): string[] {
+        return (this.options.AdditionalSecurityManagerGroups ?? []).map(t => {
+            return t.DisplayName ?? t.Name
+        });
     }
 
     private GetOrgOwnersGroupName(): string | undefined {
@@ -64,9 +73,12 @@ export class OrgConfig {
         const owners = this.GetOrgOwnersGroupName();
         const members = this.GetOrganizationMembersGroupName();
 
+        const allSecurityMembers = this.GetAdditionalSecurityManagerGroupNames();
+
         return [
             ...list1,
             ...list2,
+            ...allSecurityMembers,
             ...(owners != undefined ? [owners] : []),
             ...(members != undefined ? [members] : [])
         ];
@@ -76,6 +88,7 @@ export class OrgConfig {
         const owners = ConvertTeamToManagedTeam(this.options.OrganizationOwnersGroup);
         const members = ConvertTeamToManagedTeam(this.options.OrganizationMembersGroup);
         const allManaged = this.options.Teams ?? [];
+        const allSecurityMembers = this.options.AdditionalSecurityManagerGroups ?? [];
         const allOther = !this.options.GitHubTeamNames ? [] : this.options.GitHubTeamNames.map(t => {
             return {
                 Name: t,
@@ -87,7 +100,8 @@ export class OrgConfig {
             ...(owners != undefined ? [owners] : []),
             ...(members != undefined ? [members] : []),
             ...allManaged,
-            ...allOther
+            ...allOther,
+            ...allSecurityMembers
         ];
 
         type DefinitelyHasDisplayName = {
