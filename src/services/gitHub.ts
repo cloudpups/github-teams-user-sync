@@ -231,6 +231,7 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     async AddTeamsToCopilotSubscription(teamNames: string[]): Response<string[]> {
+        console.log("WHAT WHAT")
         // Such logic should not generally go in a facade, though the convenience
         // and lack of actual problems makes this violation of pattern more "okay."
         if(teamNames.length < 1) {
@@ -240,6 +241,7 @@ class InstalledGitHubClient implements InstalledClient {
                 data: []
             } 
         }
+        console.log("FOO FOO")
 
         const safeTeamNames = teamNames.map(t => MakeTeamNameSafeAndApiFriendly(t));
 
@@ -252,6 +254,9 @@ class InstalledGitHubClient implements InstalledClient {
                 }
             });
     
+            console.log("SYNC SYNC SYNC")
+            console.log(response);
+
             if (response.status < 200 || response.status > 299) {
                 return {
                     successful: false
@@ -263,7 +268,8 @@ class InstalledGitHubClient implements InstalledClient {
                 data: safeTeamNames
             }
         }
-        catch{
+        catch(e) {
+            console.log(e);
             // TODO: actually catch exception and investigate...            
             return {
                 successful: false
