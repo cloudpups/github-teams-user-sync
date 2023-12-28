@@ -1,7 +1,7 @@
 import { CacheClient } from "../app";
 import { ILogger } from "../logging";
 import { GitHubTeamId, InstalledClient, OrgInvite, OrgRoles, Response } from "./gitHubTypes";
-import { OrgConfig, OrgConfigurationOptions } from "./orgConfig";
+import { OrgConfig } from "./orgConfig";
 
 export class GitHubClientCache implements InstalledClient {
     client: InstalledClient;
@@ -12,6 +12,9 @@ export class GitHubClientCache implements InstalledClient {
         this.client = client;
         this.cacheClient = cacheClient;
         this.logger = logger;
+    }
+    AddTeamsToCopilotSubscription(teamNames: string[]): Response<unknown> {
+        return this.client.AddTeamsToCopilotSubscription(teamNames);
     }
     
     ListPendingInvitesForTeam(teamName: string): Response<OrgInvite[]> {
