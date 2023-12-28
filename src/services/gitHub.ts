@@ -230,7 +230,17 @@ class InstalledGitHubClient implements InstalledClient {
         this.orgName = orgName;
     }
 
-    async AddTeamsToCopilotSubscription(teamNames: string[]): Response<unknown> {
+    async AddTeamsToCopilotSubscription(teamNames: string[]): Response<string[]> {
+        // Such logic should not generally go in a facade, though the convenience
+        // and lack of actual problems makes this violation of pattern more "okay."
+        if(teamNames.length < 1) {
+            return {
+                // Should be "no op"
+                successful: true,
+                data: []
+            } 
+        }
+
         const safeTeamNames = teamNames.map(t => MakeTeamNameSafeAndApiFriendly(t));
 
         try {
@@ -250,7 +260,7 @@ class InstalledGitHubClient implements InstalledClient {
     
             return {
                 successful: true,
-                data: null
+                data: safeTeamNames
             }
         }
         catch{

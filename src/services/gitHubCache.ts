@@ -13,7 +13,7 @@ export class GitHubClientCache implements InstalledClient {
         this.cacheClient = cacheClient;
         this.logger = logger;
     }
-    AddTeamsToCopilotSubscription(teamNames: string[]): Response<unknown> {
+    AddTeamsToCopilotSubscription(teamNames: string[]): Response<string[]> {
         return this.client.AddTeamsToCopilotSubscription(teamNames);
     }
     

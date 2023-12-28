@@ -38,7 +38,7 @@ export interface InstalledClient {
     GetPendingOrgInvites():Response<OrgInvite[]>
     CancelOrgInvite(invite:OrgInvite): Response    
     ListPendingInvitesForTeam(teamName: GitHubTeamName):Response<OrgInvite[]>
-    AddTeamsToCopilotSubscription(teamNames: GitHubTeamName[]):Response
+    AddTeamsToCopilotSubscription(teamNames: GitHubTeamName[]):Response<string[]>
 }
 
 
