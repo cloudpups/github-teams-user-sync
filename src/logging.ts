@@ -6,8 +6,8 @@ import TelemetryClient from "applicationinsights/out/Library/TelemetryClient";
 
 type LogEvent = {
     Name: string,
-    properties?:{
-        [name: string]: any;
+    properties?: {
+        [name: string]: string;
     } | undefined
 }
 
@@ -24,18 +24,18 @@ class AiLogger implements ILogger {
         this.client = client;
     }
 
-    ReportEvent(event: LogEvent): void {           
+    ReportEvent(event: LogEvent): void {
         this.client.trackEvent({
-            name: event.Name,            
-            properties: event.properties        
+            name: event.Name,
+            properties: event.properties
         })
     }
-    Log(s: string): void {        
+    Log(s: string): void {
         this.client.trackTrace({
             message: s
         });
     }
-    LogError(ex: string): void {        
+    LogError(ex: string): void {
         this.client.trackTrace({
             message: ex,
             severity: SeverityLevel.Error
@@ -63,7 +63,7 @@ let logger: ILogger = new StdLogger();
 // as a function, eventually.
 export function LoggerToUse(): ILogger {
     return logger;
-} ; 
+}
 
 export function Log(s: string) {
     logger.Log(s);
@@ -74,9 +74,9 @@ export function LogError(ex: string) {
 }
 
 class LoggerComposite implements ILogger {
-    loggers:ILogger[]
+    loggers: ILogger[]
 
-    constructor(loggers:ILogger[]) {
+    constructor(loggers: ILogger[]) {
         this.loggers = loggers;
     }
 
@@ -93,7 +93,7 @@ class LoggerComposite implements ILogger {
 }
 
 export function SetupLogging() {
-    const loggers:ILogger[] = [];
+    const loggers: ILogger[] = [];
     loggers.push(new StdLogger());
 
     if (process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
@@ -103,7 +103,7 @@ export function SetupLogging() {
         const telemetryClient = appInsights.defaultClient;
 
         loggers.push(new AiLogger(telemetryClient));
-    }    
+    }
 
     logger = new LoggerComposite(loggers);
 }
