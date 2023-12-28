@@ -10,6 +10,8 @@ import nocache from "nocache";
 import { createClient } from 'redis';
 import { Config } from "./config";
 
+import {Request} from "openapi-backend";
+
 export const redisClient = createClient({
   url: `redis://${process.env.APP_OPTIONS_RedisHost}`
 });
@@ -46,8 +48,8 @@ async function Do() {
 
   app.use('/docs', swaggerUi.serve, swaggerUi.setup(doc as swaggerUi.JsonObject));
 
-  app.use((req: any, res: any) => {
-    api.handleRequest(req, req, res).catch((reason: any) => {
+  app.use((req, res) => {
+    api.handleRequest(req as Request, req, res).catch((reason) => {
       console.log(reason);
 
       res.status(500).json({ err: 'An internal error occurred :( Please ask the maintainers of the running application to check the logs.' })
