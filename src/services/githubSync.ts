@@ -115,11 +115,11 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
     };
 }
 
-async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[], existingInvites: OrgInvite[], sourceTeamMap: Map<string,string>, checkOrgMembers: boolean = true) {
-    function GetSourceOrReturn(teamName:string) {
+async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingMembers: GitHubId[], existingInvites: OrgInvite[], sourceTeamMap: Map<string, string>, checkOrgMembers: boolean = true) {
+    function GetSourceOrReturn(teamName: string) {
         return sourceTeamMap.get(teamName) ?? teamName;
     }
-    
+
     await installedGitHubClient.UpdateTeamDetails(teamName, teamDescription(config.Description.ShortLink, GetSourceOrReturn(teamName)));
 
     const trueMembersListResponse = await GetGitHubIds(GetSourceOrReturn(teamName), config);
@@ -217,6 +217,60 @@ type ReturnTypeOfSyncOrg = {
     ignoredTeams: string[];
 }
 
+type FailedSecSync = {
+    Success: false,
+    Message: string
+}
+
+type SuccessSync = {
+    Success: true,
+    SyncedSecurityManagerTeams: string[]
+}
+
+async function SyncSecurityManagers(opts: {
+    securityManagerTeams: string[]
+    setOfExistingTeams: Set<string>
+    shortLink: string
+    client: InstalledClient
+    appConfig: AppConfig
+    currentInvites: OrgInvite[]
+}): Promise<SuccessSync | FailedSecSync> {
+    const { securityManagerTeams, setOfExistingTeams, shortLink, client:installedGitHubClient, appConfig, currentInvites } = opts;
+
+    const orgName = installedGitHubClient.GetCurrentOrgName();
+
+    for (const t of securityManagerTeams) {
+        if (!setOfExistingTeams.has(t.toUpperCase())) {
+            Log(`Creating team '${orgName}/${t}'`)
+            await installedGitHubClient.CreateTeam(t, teamDescription(shortLink, t));
+            setOfExistingTeams.add(t);
+        }
+
+        Log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+        const orgMembers = await SynchronizeOrgMembers(installedGitHubClient, t, appConfig);
+
+        if (orgMembers.Succeeded == false) {
+            return {
+                Success: false,
+                Message: "Failed to sync org members"
+            };
+        }
+
+        await SynchronizeGitHubTeam(installedGitHubClient, t, appConfig, orgMembers.OrgMembers, currentInvites, new Map());
+
+        Log(`Add Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+        const addResult = await installedGitHubClient.AddSecurityManagerTeam(t);
+        if (addResult) {
+            Log(`Added Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+        }        
+    }
+
+    return {
+        Success:true,
+        SyncedSecurityManagerTeams: securityManagerTeams
+    }
+}
+
 async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppConfig, invitationsClient: IGitHubInvitations): Promise<ReturnTypeOfSyncOrg> {
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
@@ -252,37 +306,28 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
     ];
 
     if (securityManagerTeams.length > 0) {
-        for (const t of securityManagerTeams) {
-            if (!setOfExistingTeams.has(t.toUpperCase())) {
-                Log(`Creating team '${orgName}/${t}'`)
-                await installedGitHubClient.CreateTeam(t, teamDescription(appConfig.Description.ShortLink, t));
-                setOfExistingTeams.add(t);
-            }
+        const syncManagersResponse = await SyncSecurityManagers({
+            appConfig,
+            client: installedGitHubClient,
+            currentInvites,
+            securityManagerTeams,
+            setOfExistingTeams,
+            shortLink: appConfig.Description.ShortLink
+        });
 
-            Log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
-            const orgMembers = await SynchronizeOrgMembers(installedGitHubClient, t, appConfig);
-
-            if (orgMembers.Succeeded == false) {
-                return {
-                    ...response,
-                    message: "Failed to sync org members"
-                };
-            }
-
-            await SynchronizeGitHubTeam(installedGitHubClient, t, appConfig, orgMembers.OrgMembers, currentInvites, new Map());
-
-            Log(`Add Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
-            const addResult = await installedGitHubClient.AddSecurityManagerTeam(t);
-            if (addResult) {
-                Log(`Added Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+        if(!syncManagersResponse.Success) {
+            return {
+                ...response,
+                message: "Cannot sync security managers",
+                status: "failed"
             }
         }
 
         response = {
             ...response,
-            syncedSecurityManagerTeams: securityManagerTeams
+            syncedSecurityManagerTeams: syncManagersResponse.SyncedSecurityManagerTeams
         }
-    }    
+    }
 
     const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();
 
@@ -294,18 +339,18 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         }
     }
 
-    const orgConfig = orgConfigResponse.data;    
+    const orgConfig = orgConfigResponse.data;
 
     Log(JSON.stringify(orgConfig));
 
     const ownerGroupName = orgConfig.OrgOwnersGroupName;
     const membersGroupName = orgConfig.OrgMembersGroupName;
-    const {teamsToManage:gitHubTeams, ignoredTeams} = RemoveTeamsToIgnore(orgConfig.TeamsToManage, appConfig);    
+    const { teamsToManage: gitHubTeams, ignoredTeams } = RemoveTeamsToIgnore(orgConfig.TeamsToManage, appConfig);
 
     response.ignoredTeams = ignoredTeams;
 
     const teamsThatShouldExist: string[] = [
-        ...appConfig.SecurityManagerTeams,
+        ...securityManagerTeams,
         ...gitHubTeams,
         ...(ownerGroupName != undefined ? [ownerGroupName] : []),
         ...(membersGroupName != undefined ? [membersGroupName] : [])
@@ -395,7 +440,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
 }
 
 
-export async function SyncTeam(teamName: string, client: InstalledClient, config: AppConfig, existingMembers: GitHubId[], invites: OrgInvite[], sourceTeamMap:Map<string,string>) {
+export async function SyncTeam(teamName: string, client: InstalledClient, config: AppConfig, existingMembers: GitHubId[], invites: OrgInvite[], sourceTeamMap: Map<string, string>) {
     const response = await SynchronizeGitHubTeam(client, teamName, config, existingMembers, invites, sourceTeamMap, true);
 
     return response;
@@ -451,7 +496,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
 }
 
 function RemoveTeamsToIgnore(TeamsToManage: string[], appConfig: AppConfig) {
-    const teamsToIgnore = new Set(appConfig.TeamsToIgnore.map(tti => tti.toLowerCase()) ?? []);        
+    const teamsToIgnore = new Set(appConfig.TeamsToIgnore.map(tti => tti.toLowerCase()) ?? []);
 
     return {
         teamsToManage: TeamsToManage.filter(t => !teamsToIgnore.has(t.toLowerCase())),
