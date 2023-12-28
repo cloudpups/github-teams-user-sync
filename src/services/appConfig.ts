@@ -4,4 +4,5 @@ export type AppConfig = {
     Description: {
         ShortLink: string
     }
+    TeamsToIgnore:string[]
 }

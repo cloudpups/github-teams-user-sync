@@ -196,9 +196,23 @@ async function GetAppConfig(client: Octokit): Promise<AppConfig> {
         throw new Error("AppConfig not found!")
     }
 
-    const configuration = yaml.load(Buffer.from(contentData.content, 'base64').toString()) as AppConfig;
+    type RawAppConfig = {
+        GitHubIdAppend?:string
+        SecurityManagerTeams?:string[]
+        Description?: {
+            ShortLink: string
+        }
+        TeamsToIgnore?:string[]
+    }
 
-    return configuration;
+    const configuration = yaml.load(Buffer.from(contentData.content, 'base64').toString()) as RawAppConfig;
+
+    return {
+        Description: configuration.Description ?? {ShortLink:"https://github.com/cloudpups/github-teams-user-sync"},
+        SecurityManagerTeams: configuration.SecurityManagerTeams ?? [],
+        TeamsToIgnore: configuration.TeamsToIgnore ?? [],
+        GitHubIdAppend: configuration.GitHubIdAppend ?? ""
+    };
 }
 
 
