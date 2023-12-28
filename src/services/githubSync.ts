@@ -5,6 +5,7 @@ import { AppConfig } from "./appConfig";
 import { GitHubId, InstalledClient, OrgInvite } from "./gitHubTypes";
 import { IGitHubInvitations } from "./githubInvitations";
 import { SearchAllAsync } from "./ldapClient";
+import { OrgConfig } from "./orgConfig";
 
 function teamDescription(shortLink: string, sourceTeam: string) {
     return `🤖 Managed by GTTSB: ${shortLink} | Source Team: ${sourceTeam}`
@@ -399,12 +400,12 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         return response;
     }
 
-    async function syncTeam(teamName: string) {
+    async function syncTeam(teamName: string, orgConfig:OrgConfig) {
         Log(`Syncing Team Members for ${teamName} in ${installedGitHubClient.GetCurrentOrgName()}`)
         await SynchronizeGitHubTeam(installedGitHubClient, teamName, appConfig, currentMembers, currentInvites, orgConfig.DisplayNameToSourceMap);
     }
 
-    const teamSyncPromises = gitHubTeams.map(t => syncTeam(t));
+    const teamSyncPromises = gitHubTeams.map(t => syncTeam(t, orgConfig));
 
     await Promise.all(teamSyncPromises);
 
