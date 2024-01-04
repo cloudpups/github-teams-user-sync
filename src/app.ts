@@ -29,7 +29,7 @@ async function Do() {
   const app = express();
   app.use(nocache());
 
-  const port = process.env.PORT;
+  const port = process.env.PORT ?? 8080;
 
   // TODO: fix/determine why OpenAPIBackend is having issues loading files on its own...
   const doc = yaml.load(fs.readFileSync(path.resolve(__dirname, 'openapi.yaml'), 'utf8'));
