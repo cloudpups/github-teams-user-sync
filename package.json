@@ -1,5 +1,5 @@
 {
-  "name": "teams-sync-rewrite",
+  "name": "teams-sync",
   "version": "1.0.0",
   "description": "",
   "main": "app.ts",
