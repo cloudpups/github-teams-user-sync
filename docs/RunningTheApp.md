@@ -22,11 +22,24 @@ We strive to make successfully running and building this application fairly stra
 
 ## 2 GitHub App Registration
 
-See [./GitHubAppConfig.md](./GitHubAppConfig.md).
+See [./GitHubAppRegistration.md](./GitHubAppRegistration.md).
 
 ## 3 Source of Truth credentials
 
+At this point in time, the logic to fetch information from an LDAP system is baked into this application. Eventually it will be moved to a plugin to make running and developing this application simpler.
+
+At this point in time, you will need to provide 4 values in the application configuration for LDAP:
+
+```sh
+LDAP_SERVER=
+LDAP_USER=
+LDAP_PASSWORD=
+LDAP_GROUP_BASE_DN=
+```
+
 ## 4 Configure the App
+
+See [./ApplicationConfiguration.md](./ApplicationConfiguration.md).
 
 ## 5 Run the App
 
