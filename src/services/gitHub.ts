@@ -258,7 +258,7 @@ class InstalledGitHubClient implements InstalledClient {
     
             return {
                 successful: true,
-                data: safeTeamNames
+                data: teamNames
             }
         }
         catch(e) {

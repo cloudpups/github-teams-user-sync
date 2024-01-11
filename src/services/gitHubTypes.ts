@@ -1,5 +1,5 @@
 import { AppConfig } from "./appConfig"
-import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig"
+import { GitHubTeamName, OrgConfig } from "./orgConfig"
 
 export interface Org {
     id: number,
