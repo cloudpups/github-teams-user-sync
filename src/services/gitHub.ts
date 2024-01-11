@@ -230,8 +230,7 @@ class InstalledGitHubClient implements InstalledClient {
         this.orgName = orgName;
     }
 
-    async AddTeamsToCopilotSubscription(teamNames: string[]): Response<string[]> {
-        console.log("WHAT WHAT")
+    async AddTeamsToCopilotSubscription(teamNames: string[]): Response<string[]> {   
         // Such logic should not generally go in a facade, though the convenience
         // and lack of actual problems makes this violation of pattern more "okay."
         if(teamNames.length < 1) {
@@ -241,21 +240,15 @@ class InstalledGitHubClient implements InstalledClient {
                 data: []
             } 
         }
-        console.log("FOO FOO")
-
-        const safeTeamNames = teamNames.map(t => MakeTeamNameSafeAndApiFriendly(t));
 
         try {
             const response = await this.gitHubClient.request("POST /orgs/{org}/copilot/billing/selected_teams", {
                 org: this.orgName,
-                selected_teams: safeTeamNames,
+                selected_teams: teamNames,
                 headers: {
                     'X-GitHub-Api-Version': '2022-11-28'
                 }
             });
-    
-            console.log("SYNC SYNC SYNC")
-            console.log(response);
 
             if (response.status < 200 || response.status > 299) {
                 return {
