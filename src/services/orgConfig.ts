@@ -3,7 +3,7 @@ export type GitHubTeamName = string;
 export type ManagedGitHubTeam = {
     Name: GitHubTeamName,
     DisplayName?: string
-    CopilotAccess?: boolean
+    CopilotEnabled?: boolean
 }
 
 export type OrgConfigurationOptions = {
@@ -35,7 +35,7 @@ export class OrgConfig {
     }
     
     private GetCopilotTeams(): string[] {
-        return this.options.Teams?.filter(t => t.CopilotAccess == true).map(t => t.DisplayName ?? t.Name) ?? [];
+        return this.options.Teams?.filter(t => t.CopilotEnabled == true).map(t => t.DisplayName ?? t.Name) ?? [];
     }
 
     private GetAdditionalSecurityManagerGroupNames(): string[] {
