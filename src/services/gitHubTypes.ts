@@ -1,5 +1,5 @@
 import { AppConfig } from "./appConfig"
-import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig"
+import { GitHubTeamName, OrgConfig } from "./orgConfig"
 
 export interface Org {
     id: number,
@@ -38,6 +38,7 @@ export interface InstalledClient {
     GetPendingOrgInvites():Response<OrgInvite[]>
     CancelOrgInvite(invite:OrgInvite): Response    
     ListPendingInvitesForTeam(teamName: GitHubTeamName):Response<OrgInvite[]>
+    AddTeamsToCopilotSubscription(teamNames: GitHubTeamName[]):Response<string[]>
 }
 
 

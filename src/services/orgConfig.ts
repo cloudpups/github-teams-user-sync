@@ -3,6 +3,7 @@ export type GitHubTeamName = string;
 export type ManagedGitHubTeam = {
     Name: GitHubTeamName,
     DisplayName?: string
+    CopilotEnabled?: boolean
 }
 
 export type OrgConfigurationOptions = {
@@ -21,6 +22,7 @@ export class OrgConfig {
     public OrgMembersGroupName: string | undefined;
     public TeamsToManage: string[];
     public DisplayNameToSourceMap: Map<string,string>;
+    public CopilotTeams: string[];
 
     constructor(options: OrgConfigurationOptions) {
         this.options = options;
@@ -29,6 +31,11 @@ export class OrgConfig {
         this.TeamsToManage = this.GetTeams();
         this.DisplayNameToSourceMap = this.GetSourceTeamMap();
         this.AdditionalSecurityManagerGroups = this.GetAdditionalSecurityManagerGroupNames();
+        this.CopilotTeams = this.GetCopilotTeams();
+    }
+    
+    private GetCopilotTeams(): string[] {
+        return this.options.Teams?.filter(t => t.CopilotEnabled == true).map(t => t.DisplayName ?? t.Name) ?? [];
     }
 
     private GetAdditionalSecurityManagerGroupNames(): string[] {

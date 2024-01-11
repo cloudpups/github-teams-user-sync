@@ -216,6 +216,7 @@ type ReturnTypeOfSyncOrg = {
     syncedSecurityManagerTeams: string[];
     orgOwnersGroup: string;
     ignoredTeams: string[];
+    copilotTeams: string[];
 }
 
 type FailedSecSync = {
@@ -280,7 +281,8 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         status: "failed",
         syncedSecurityManagerTeams: [] as string[],
         orgOwnersGroup: "",
-        ignoredTeams: [] as string[]
+        ignoredTeams: [] as string[],
+        copilotTeams: [] as string[]
     }
 
     // TODO: add this back once these APIs make sense
@@ -434,9 +436,12 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         }
     }
 
+    const copilotResult = await installedGitHubClient.AddTeamsToCopilotSubscription(orgConfig.CopilotTeams);
+
     return {
         ...response,
-        status: "completed"
+        status: "completed",
+        copilotTeams: copilotResult.successful ? copilotResult.data : []
     }
 }
 
@@ -480,7 +485,8 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
             status: "failed",
             syncedSecurityManagerTeams: [],
             orgOwnersGroup: "",
-            ignoredTeams: []
+            ignoredTeams: [],
+            copilotTeams: []
         }
 
         Log(JSON.stringify(

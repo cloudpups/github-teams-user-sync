@@ -4,7 +4,7 @@ import { Config } from "../config";
 import { GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgInvite, OrgRoles, Response } from "./gitHubTypes";
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
-import { throttling  } from "@octokit/plugin-throttling";
+import { throttling } from "@octokit/plugin-throttling";
 import { AsyncReturnType } from "../utility";
 import { Log, LoggerToUse } from "../logging";
 import { GitHubClientCache } from "./gitHubCache";
@@ -36,7 +36,7 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
     // TODO: look further into this... it seems like it would be best if 
     // installation client was generated from the original client, and not
     // created fresh.    
-    const MyOctokit = Octokit.plugin(throttling);           
+    const MyOctokit = Octokit.plugin(throttling);
 
     const installedOctokit = new MyOctokit({
         authStrategy: createAppAuth,
@@ -45,7 +45,7 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
             privateKey: Config().GitHub.PrivateKey,
             installationId
         },
-        throttle: {            
+        throttle: {
             onRateLimit: (retryAfter, options, octokit, retryCount) => {
                 octokit.log.warn(
                     `Request quota exhausted for request ${options.method} ${options.url}`
@@ -56,7 +56,7 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
                     octokit.log.info(`Retrying after ${retryAfter} seconds!`);
                     return true;
                 }
-            },            
+            },
             onSecondaryRateLimit: (retryAfter, options, octokit) => {
                 // does not retry, only logs a warning
                 octokit.log.warn(
@@ -74,7 +74,7 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
         // TODO: keep an eye on this as there is a good 
         // chance login will be removed considering it
         // is already not present on the type...
-        login:string
+        login: string
     }
 
     // HACK: gross typing nonsense
@@ -192,18 +192,18 @@ async function GetAppConfig(client: Octokit): Promise<AppConfig> {
     }
 
     type RawAppConfig = {
-        GitHubIdAppend?:string
-        SecurityManagerTeams?:string[]
+        GitHubIdAppend?: string
+        SecurityManagerTeams?: string[]
         Description?: {
             ShortLink: string
         }
-        TeamsToIgnore?:string[]
+        TeamsToIgnore?: string[]
     }
 
     const configuration = yaml.load(Buffer.from(contentData.content, 'base64').toString()) as RawAppConfig;
 
     return {
-        Description: configuration.Description ?? {ShortLink:"https://github.com/cloudpups/github-teams-user-sync"},
+        Description: configuration.Description ?? { ShortLink: "https://github.com/cloudpups/github-teams-user-sync" },
         SecurityManagerTeams: configuration.SecurityManagerTeams ?? [],
         TeamsToIgnore: configuration.TeamsToIgnore ?? [],
         GitHubIdAppend: configuration.GitHubIdAppend ?? ""
@@ -228,6 +228,46 @@ class InstalledGitHubClient implements InstalledClient {
     constructor(gitHubClient: Octokit, orgName: string) {
         this.gitHubClient = gitHubClient;
         this.orgName = orgName;
+    }
+
+    async AddTeamsToCopilotSubscription(teamNames: string[]): Response<string[]> {   
+        // Such logic should not generally go in a facade, though the convenience
+        // and lack of actual problems makes this violation of pattern more "okay."
+        if(teamNames.length < 1) {
+            return {
+                // Should be "no op"
+                successful: true,
+                data: []
+            } 
+        }
+
+        try {
+            const response = await this.gitHubClient.request("POST /orgs/{org}/copilot/billing/selected_teams", {
+                org: this.orgName,
+                selected_teams: teamNames,
+                headers: {
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            });
+
+            if (response.status < 200 || response.status > 299) {
+                return {
+                    successful: false
+                }
+            }
+    
+            return {
+                successful: true,
+                data: teamNames
+            }
+        }
+        catch(e) {
+            console.log(e);
+            // TODO: actually catch exception and investigate...            
+            return {
+                successful: false
+            }
+        }
     }
 
     async ListPendingInvitesForTeam(teamName: string): Response<OrgInvite[]> {
