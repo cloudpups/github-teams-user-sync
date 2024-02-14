@@ -12,6 +12,7 @@ export type OrgConfigurationOptions = {
     OrganizationMembersGroup?: GitHubTeamName | ManagedGitHubTeam
     OrganizationOwnersGroup?: GitHubTeamName | ManagedGitHubTeam
     AdditionalSecurityManagerGroups?:  ManagedGitHubTeam[] 
+    AssumeMembershipViaTeams?: boolean
 }
 
 export class OrgConfig {
