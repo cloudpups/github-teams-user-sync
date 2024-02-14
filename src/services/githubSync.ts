@@ -67,39 +67,7 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
 
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
-    async function addOrgMember(gitHubId: GitHubId) {
-        const isUserReal = await installedGitHubClient.DoesUserExist(gitHubId);
-
-        if (!isUserReal.successful || !isUserReal.data) {
-            return {
-                successful: false,
-                user: gitHubId,
-                message: `User '${gitHubId}' does not exist in GitHub.`
-            }
-        }
-
-        const isUserMemberAsync = await installedGitHubClient.IsUserMember(gitHubId)
-
-        if (!isUserMemberAsync.successful) {
-            throw new Error("What");
-        }
-
-        if (isUserMemberAsync.data) {
-            return {
-                successful: true,
-                user: gitHubId
-            }
-        }
-
-        await installedGitHubClient.AddOrgMember(gitHubId)
-
-        return {
-            successful: true,
-            user: gitHubId
-        }
-    }
-
-    const orgMemberPromises = gitHubIds.map(g => addOrgMember(g));
+    const orgMemberPromises = gitHubIds.map(g => addOrgMember(g, installedGitHubClient));
 
     const responses = await Promise.all(orgMemberPromises);
 
@@ -140,47 +108,15 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
 
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
-    async function checkValidOrgMember(gitHubId: GitHubId) {
-        const isUserReal = await installedGitHubClient.DoesUserExist(gitHubId);
+    const validMemberCheckResults = await Promise.all(trueMembersList.map(tm => checkValidOrgMember({
+        gitHubId: tm,
+        checkOrgMembers: checkOrgMembers,
+        existingMembers: existingMembers,
+        idsWithInvites: idsWithInvites,
+        installedGitHubClient: installedGitHubClient,
+        orgName: orgName
+    })));
 
-        if (!isUserReal.successful || !isUserReal.data) {
-            return {
-                successful: false,
-                gitHubId: gitHubId,
-                message: `User '${gitHubId}' does not exist in GitHub.`
-            };
-        }
-
-        if (idsWithInvites.has(gitHubId)) {
-            return {
-                successful: false,
-                gitHubId: gitHubId,
-                message: `User '${gitHubId} has a Pending Invite to ${orgName}`
-            };
-        }
-
-        if (checkOrgMembers) {
-            const isMember = existingMembers.filter(em => em == gitHubId);
-
-            if (!isMember) {
-                return {
-                    successful: false,
-                    gitHubId: gitHubId,
-                    message: `User '${gitHubId} is not an Org Member of ${orgName}`
-                };
-            }
-        }
-        else {
-            Log(`Skipping Org Membership check for ${gitHubId}`);
-        }
-
-        return {
-            successful: true,
-            gitHubId: gitHubId
-        };
-    }
-
-    const validMemberCheckResults = await Promise.all(trueMembersList.map(tm => checkValidOrgMember(tm)));
     const trueValidTeamMembersList: string[] = validMemberCheckResults.filter(r => r.successful).map(r => r.gitHubId);
 
     const listMembersResponse = await installedGitHubClient.ListCurrentMembersOfGitHubTeam(teamName);
@@ -191,20 +127,20 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
 
     const currentTeamMembers = listMembersResponse.data;
 
-    const membersToRemove = currentTeamMembers.filter(m => !trueValidTeamMembersList.find((rm => rm == m)));
-    const membersToAdd = trueValidTeamMembersList.filter(m => !currentTeamMembers.find((rm) => rm == m));
+    const teamMembersToRemove = currentTeamMembers.filter(m => !trueValidTeamMembersList.find((rm => rm == m)));
+    const teamMembersToAdd = trueValidTeamMembersList.filter(m => !currentTeamMembers.find((rm) => rm == m));
 
     const teamSyncNotes = {
         teamSlug: `${orgName}/${teamName}`,
-        toRemove: membersToRemove,
-        toAdd: membersToAdd,
+        toRemove: teamMembersToRemove,
+        toAdd: teamMembersToAdd,
         issues: validMemberCheckResults.filter(r => !r.successful)
     }
 
     Log(JSON.stringify(teamSyncNotes));
 
-    await Promise.all(membersToRemove.map(mtr => installedGitHubClient.RemoveTeamMemberAsync(teamName, mtr)));
-    await Promise.all(membersToAdd.map(mta => installedGitHubClient.AddTeamMember(teamName, mta)));
+    await Promise.all(teamMembersToRemove.map(mtr => installedGitHubClient.RemoveTeamMemberAsync(teamName, mtr)));
+    await Promise.all(teamMembersToAdd.map(mta => installedGitHubClient.AddTeamMember(teamName, mta)));
 
     return teamSyncNotes;
 }
@@ -237,7 +173,7 @@ async function SyncSecurityManagers(opts: {
     appConfig: AppConfig
     currentInvites: OrgInvite[]
 }): Promise<SuccessSync | FailedSecSync> {
-    const { securityManagerTeams, setOfExistingTeams, shortLink, client:installedGitHubClient, appConfig, currentInvites } = opts;
+    const { securityManagerTeams, setOfExistingTeams, shortLink, client: installedGitHubClient, appConfig, currentInvites } = opts;
 
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
@@ -264,11 +200,11 @@ async function SyncSecurityManagers(opts: {
         const addResult = await installedGitHubClient.AddSecurityManagerTeam(t);
         if (addResult) {
             Log(`Added Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
-        }        
+        }
     }
 
     return {
-        Success:true,
+        Success: true,
         SyncedSecurityManagerTeams: securityManagerTeams
     }
 }
@@ -303,13 +239,13 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
     }
     const setOfExistingTeams = new Set(existingTeamsResponse.data.map(t => t.Name.toUpperCase()));
 
-    const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();    
+    const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();
 
-    const orgConfig = orgConfigResponse.successful ? orgConfigResponse.data : undefined;    
+    const orgConfig = orgConfigResponse.successful ? orgConfigResponse.data : undefined;
 
     const securityManagerTeams = [
         ...appConfig.SecurityManagerTeams,
-        ...orgConfig?.AdditionalSecurityManagerGroups ?? [] 
+        ...orgConfig?.AdditionalSecurityManagerGroups ?? []
     ];
 
     if (securityManagerTeams.length > 0) {
@@ -322,7 +258,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
             shortLink: appConfig.Description.ShortLink
         });
 
-        if(!syncManagersResponse.Success) {
+        if (!syncManagersResponse.Success) {
             return {
                 ...response,
                 message: "Cannot sync security managers",
@@ -368,6 +304,20 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         }
     }
 
+    async function syncOrgMembersByTeam(teamName: string, sourceTeamMap: Map<string, string>) {
+        const sourceTeamName = sourceTeamMap.get(teamName) ?? teamName;
+        Log(`Adding Org Members via ${sourceTeamName} membership in ${installedGitHubClient.GetCurrentOrgName()}`);        
+        await SynchronizeOrgMembers(installedGitHubClient, sourceTeamName, appConfig);
+    }
+
+    if (orgConfig.AssumeMembershipViaTeams) {
+        // TODO: this method is getting very busy, and most likely could benefit from a larger refactor.
+        // Benefits most likely include performance gains.
+        Log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()} by individual teams.`);       
+        const orgMembershipPromises = gitHubTeams.map(t => syncOrgMembersByTeam(t, orgConfig.DisplayNameToSourceMap));
+        await Promise.all(orgMembershipPromises);
+    }
+
     let currentMembers: GitHubId[] = [];
     if (membersGroupName != undefined || membersGroupName != null) {
         Log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()}: ${membersGroupName}`)
@@ -402,7 +352,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         return response;
     }
 
-    async function syncTeam(teamName: string, orgConfig:OrgConfig) {
+    async function syncTeam(teamName: string, orgConfig: OrgConfig) {
         Log(`Syncing Team Members for ${teamName} in ${installedGitHubClient.GetCurrentOrgName()}`)
         await SynchronizeGitHubTeam(installedGitHubClient, teamName, appConfig, currentMembers, currentInvites, orgConfig.DisplayNameToSourceMap);
     }
@@ -511,3 +461,83 @@ function RemoveTeamsToIgnore(TeamsToManage: string[], appConfig: AppConfig) {
     };
 }
 
+async function addOrgMember(gitHubId: GitHubId, installedGitHubClient: InstalledClient) {
+    const isUserReal = await installedGitHubClient.DoesUserExist(gitHubId);
+
+    if (!isUserReal.successful || !isUserReal.data) {
+        return {
+            successful: false,
+            user: gitHubId,
+            message: `User '${gitHubId}' does not exist in GitHub.`
+        }
+    }
+
+    const isUserMemberAsync = await installedGitHubClient.IsUserMember(gitHubId)
+
+    if (!isUserMemberAsync.successful) {
+        throw new Error("What");
+    }
+
+    if (isUserMemberAsync.data) {
+        return {
+            successful: true,
+            user: gitHubId
+        }
+    }
+
+    await installedGitHubClient.AddOrgMember(gitHubId)
+
+    return {
+        successful: true,
+        user: gitHubId
+    }
+}
+
+async function checkValidOrgMember(opts: {
+    gitHubId: GitHubId,
+    installedGitHubClient: InstalledClient,
+    checkOrgMembers: boolean,
+    orgName: string,
+    idsWithInvites: Set<string>,
+    existingMembers: GitHubId[]
+}) {
+    const { installedGitHubClient, gitHubId, checkOrgMembers, orgName, idsWithInvites, existingMembers } = opts;
+
+    const isUserReal = await installedGitHubClient.DoesUserExist(gitHubId);
+
+    if (!isUserReal.successful || !isUserReal.data) {
+        return {
+            successful: false,
+            gitHubId: gitHubId,
+            message: `User '${gitHubId}' does not exist in GitHub.`
+        };
+    }
+
+    if (idsWithInvites.has(gitHubId)) {
+        return {
+            successful: false,
+            gitHubId: gitHubId,
+            message: `User '${gitHubId} has a Pending Invite to ${orgName}`
+        };
+    }
+
+    if (checkOrgMembers) {
+        const isMember = existingMembers.filter(em => em == gitHubId);
+
+        if (!isMember) {
+            return {
+                successful: false,
+                gitHubId: gitHubId,
+                message: `User '${gitHubId} is not an Org Member of ${orgName}`
+            };
+        }
+    }
+    else {
+        Log(`Skipping Org Membership check for ${gitHubId}`);
+    }
+
+    return {
+        successful: true,
+        gitHubId: gitHubId
+    };
+}
