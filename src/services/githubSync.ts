@@ -304,6 +304,19 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         }
     }
 
+    async function syncOrgMembersByTeam(teamName: string, orgConfig:OrgConfig) {
+        Log(`Adding Org Members via ${teamName} membership in ${installedGitHubClient.GetCurrentOrgName()}`);
+        await SynchronizeOrgMembers(installedGitHubClient, teamName, appConfig);
+    }  
+
+    if(orgConfig.AssumeMembershipViaTeams) {
+        // TODO: this method is getting very busy, and most likely could benefit from a larger refactor.
+        // Benefits most likely include performance gains.
+        Log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()} by individual teams.`)
+        const orgMembershipPromises = gitHubTeams.map(t => syncOrgMembersByTeam(t, orgConfig));
+        await Promise.all(orgMembershipPromises);
+    }
+
     let currentMembers: GitHubId[] = [];
     if (membersGroupName != undefined || membersGroupName != null) {
         Log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()}: ${membersGroupName}`)
@@ -336,12 +349,12 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
     if (!gitHubTeams || gitHubTeams.length < 1) {
         // no teams to sync
         return response;
-    }
+    }    
 
     async function syncTeam(teamName: string, orgConfig:OrgConfig) {
         Log(`Syncing Team Members for ${teamName} in ${installedGitHubClient.GetCurrentOrgName()}`)
         await SynchronizeGitHubTeam(installedGitHubClient, teamName, appConfig, currentMembers, currentInvites, orgConfig.DisplayNameToSourceMap);
-    }
+    }  
 
     const teamSyncPromises = gitHubTeams.map(t => syncTeam(t, orgConfig));
 

@@ -24,6 +24,7 @@ export class OrgConfig {
     public TeamsToManage: string[];
     public DisplayNameToSourceMap: Map<string,string>;
     public CopilotTeams: string[];
+    public AssumeMembershipViaTeams: boolean
 
     constructor(options: OrgConfigurationOptions) {
         this.options = options;
@@ -33,6 +34,7 @@ export class OrgConfig {
         this.DisplayNameToSourceMap = this.GetSourceTeamMap();
         this.AdditionalSecurityManagerGroups = this.GetAdditionalSecurityManagerGroupNames();
         this.CopilotTeams = this.GetCopilotTeams();
+        this.AssumeMembershipViaTeams = options.AssumeMembershipViaTeams ?? false;
     }
     
     private GetCopilotTeams(): string[] {
