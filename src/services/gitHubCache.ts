@@ -1,6 +1,6 @@
 import { CacheClient } from "../app";
 import { ILogger } from "../logging";
-import { GitHubTeamId, InstalledClient, OrgInvite, OrgRoles, Response } from "./gitHubTypes";
+import { AddMemberResponse, GitHubId, GitHubTeamId, InstalledClient, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
 import { OrgConfig } from "./orgConfig";
 
 export class GitHubClientCache implements InstalledClient {
@@ -81,7 +81,7 @@ export class GitHubClientCache implements InstalledClient {
         return this.client.GetAllTeams();
     }
 
-    AddTeamMember(team: string, id: string): Response<unknown> {
+    AddTeamMember(team: string, id: string): AddMemberResponse {
         return this.client.AddTeamMember(team, id);
     }
 
@@ -134,7 +134,7 @@ export class GitHubClientCache implements InstalledClient {
         return this.client.ListCurrentMembersOfGitHubTeam(team);
     }
 
-    RemoveTeamMemberAsync(team: string, user: string): Response<unknown> {
+    RemoveTeamMemberAsync(team: string, user: string): RemoveMemberResponse {
         return this.client.RemoveTeamMemberAsync(team, user);
     }
 

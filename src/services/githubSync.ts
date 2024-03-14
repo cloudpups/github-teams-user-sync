@@ -2,7 +2,7 @@
 
 import { Log, LogError } from "../logging";
 import { AppConfig } from "./appConfig";
-import { GitHubId, InstalledClient, OrgInvite } from "./gitHubTypes";
+import { FailedResponse, GitHubId, InstalledClient, OrgInvite } from "./gitHubTypes";
 import { IGitHubInvitations } from "./githubInvitations";
 import { SearchAllAsync } from "./ldapClient";
 import { OrgConfig } from "./orgConfig";
@@ -131,6 +131,7 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
     const teamMembersToAdd = trueValidTeamMembersList.filter(m => !currentTeamMembers.find((rm) => rm == m));
 
     const teamSyncNotes = {
+        operation: "TeamSync:Prepared",
         teamSlug: `${orgName}/${teamName}`,
         toRemove: teamMembersToRemove,
         toAdd: teamMembersToAdd,
@@ -139,10 +140,21 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
 
     Log(JSON.stringify(teamSyncNotes));
 
-    await Promise.all(teamMembersToRemove.map(mtr => installedGitHubClient.RemoveTeamMemberAsync(teamName, mtr)));
-    await Promise.all(teamMembersToAdd.map(mta => installedGitHubClient.AddTeamMember(teamName, mta)));
+    const deleteResponses = await Promise.all(teamMembersToRemove.map(mtr => installedGitHubClient.RemoveTeamMemberAsync(teamName, mtr)));
+    const addResponses = await Promise.all(teamMembersToAdd.map(mta => installedGitHubClient.AddTeamMember(teamName, mta)));
 
-    return teamSyncNotes;
+    const teamSyncCompleteNotes = {
+        operation: "TeamSync:Completed",
+        teamSlug: `${orgName}/${teamName}`,
+        toRemove: teamMembersToRemove,
+        toAdd: teamMembersToAdd,
+        // TODO: improve clarity of issues        
+        issues: [...deleteResponses.filter(t => !t.successful), ...addResponses.filter(t => !t.successful)]
+    }
+
+    Log(JSON.stringify(teamSyncCompleteNotes));
+
+    return teamSyncCompleteNotes;
 }
 
 type ReturnTypeOfSyncOrg = {
@@ -306,14 +318,14 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
 
     async function syncOrgMembersByTeam(teamName: string, sourceTeamMap: Map<string, string>) {
         const sourceTeamName = sourceTeamMap.get(teamName) ?? teamName;
-        Log(`Adding Org Members via ${sourceTeamName} membership in ${installedGitHubClient.GetCurrentOrgName()}`);        
+        Log(`Adding Org Members via ${sourceTeamName} membership in ${installedGitHubClient.GetCurrentOrgName()}`);
         await SynchronizeOrgMembers(installedGitHubClient, sourceTeamName, appConfig);
     }
 
     if (orgConfig.AssumeMembershipViaTeams) {
         // TODO: this method is getting very busy, and most likely could benefit from a larger refactor.
         // Benefits most likely include performance gains.
-        Log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()} by individual teams.`);       
+        Log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()} by individual teams.`);
         const orgMembershipPromises = gitHubTeams.map(t => syncOrgMembersByTeam(t, orgConfig.DisplayNameToSourceMap));
         await Promise.all(orgMembershipPromises);
     }
