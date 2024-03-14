@@ -1,7 +1,7 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
-import { GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgInvite, OrgRoles, Response } from "./gitHubTypes";
+import { AddMemberResponse, GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
@@ -230,15 +230,15 @@ class InstalledGitHubClient implements InstalledClient {
         this.orgName = orgName;
     }
 
-    async AddTeamsToCopilotSubscription(teamNames: string[]): Response<string[]> {   
+    async AddTeamsToCopilotSubscription(teamNames: string[]): Response<string[]> {
         // Such logic should not generally go in a facade, though the convenience
         // and lack of actual problems makes this violation of pattern more "okay."
-        if(teamNames.length < 1) {
+        if (teamNames.length < 1) {
             return {
                 // Should be "no op"
                 successful: true,
                 data: []
-            } 
+            }
         }
 
         try {
@@ -255,13 +255,13 @@ class InstalledGitHubClient implements InstalledClient {
                     successful: false
                 }
             }
-    
+
             return {
                 successful: true,
                 data: teamNames
             }
         }
-        catch(e) {
+        catch (e) {
             console.log(e);
             // TODO: actually catch exception and investigate...            
             return {
@@ -434,7 +434,7 @@ class InstalledGitHubClient implements InstalledClient {
         }
     }
 
-    public async AddTeamMember(team: GitHubTeamName, id: GitHubId): Response<unknown> {
+    public async AddTeamMember(team: GitHubTeamName, id: GitHubId): AddMemberResponse {
         const safeTeam = MakeTeamNameSafeAndApiFriendly(team);
 
         try {
@@ -446,13 +446,25 @@ class InstalledGitHubClient implements InstalledClient {
 
             return {
                 successful: true,
-                // TODO: make this type better to avoid nulls...
-                data: null
+                team: team,
+                user: id
             }
         }
-        catch {
+        catch (e) {
+            if (e instanceof Error) {
+                return {
+                    successful: false,
+                    team: team,
+                    user: id,
+                    message: e.message
+                }
+            }
+
             return {
-                successful: false
+                successful: false,
+                team: team,
+                user: id,
+                message: JSON.stringify(e)
             }
         }
     }
@@ -529,7 +541,7 @@ class InstalledGitHubClient implements InstalledClient {
         }
     }
 
-    public async RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): Response<unknown> {
+    public async RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): RemoveMemberResponse {
         const safeTeam = MakeTeamNameSafeAndApiFriendly(team);
 
         try {
@@ -541,13 +553,25 @@ class InstalledGitHubClient implements InstalledClient {
 
             return {
                 successful: true,
-                // TODO: make this type better to avoid nulls...
-                data: null
+                team: team,
+                user: user
             }
         }
-        catch {
+        catch (e) {
+            if (e instanceof Error) {
+                return {
+                    successful: false,
+                    team: team,
+                    user: user,
+                    message: e.message
+                }
+            }
+
             return {
-                successful: false
+                successful: false,
+                team: team,
+                user: user,
+                message: JSON.stringify(e)
             }
         }
     }

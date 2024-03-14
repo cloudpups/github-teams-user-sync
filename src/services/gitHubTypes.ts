@@ -25,11 +25,11 @@ export interface InstalledClient {
     AddOrgMember(id: GitHubId): Response
     IsUserMember(id: GitHubId): Response<boolean>
     GetAllTeams(): Response<GitHubTeamId[]>
-    AddTeamMember(team: GitHubTeamName, id: GitHubId): Response
+    AddTeamMember(team: GitHubTeamName, id: GitHubId): AddMemberResponse
     CreateTeam(teamName: GitHubTeamName, description:string): Response
     DoesUserExist(gitHubId: string): Response<GitHubId>
     ListCurrentMembersOfGitHubTeam(team: GitHubTeamName): Response<GitHubId[]>
-    RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): Response
+    RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): RemoveMemberResponse
     UpdateTeamDetails(team: GitHubTeamName, description: string): Response
     AddSecurityManagerTeam(team: GitHubTeamName): Promise<unknown>
     GetConfigurationForInstallation(): Response<OrgConfig>    
@@ -41,6 +41,37 @@ export interface InstalledClient {
     AddTeamsToCopilotSubscription(teamNames: GitHubTeamName[]):Response<string[]>
 }
 
+export type AddMemberResponse = Promise<AddMemberSucceeded | AddMemberFailed>
+
+export type AddMemberSucceeded = {
+    successful: true,
+    user: GitHubId,
+    team: GitHubTeamName
+}
+
+export type AddMemberFailed = {
+    successful: false,
+    user: GitHubId,
+    team: GitHubTeamName,
+    message: string
+}
+
+export type RemoveMemberResponse = Promise<RemoveMemberSucceeded | RemoveMemberFailed>
+
+export type RemoveMemberSucceeded = {
+    successful: true,
+    user: GitHubId,
+    team: GitHubTeamName
+}
+
+export type RemoveMemberFailed = {
+    successful: false,
+    user: GitHubId,
+    team: GitHubTeamName,
+    message: string
+}
+
+
 
 export type GenericSucceededResponse<T> = {
     successful: true,
@@ -48,7 +79,8 @@ export type GenericSucceededResponse<T> = {
 }
 
 export type FailedResponse = {
-    successful: false
+    successful: false,
+    message?:string
 }
 
 export type Response<T = unknown> = Promise<GenericSucceededResponse<T> | FailedResponse>;
