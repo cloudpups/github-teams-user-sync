@@ -11,10 +11,13 @@ import { createClient } from 'redis';
 import { Config } from "./config";
 
 import {Request} from "openapi-backend";
+import { BuildPublisher, IPublisher } from "./services/queueManager";
 
 export const redisClient = createClient({
   url: `redis://${process.env.APP_OPTIONS_RedisHost}`
 });
+
+export let globalPublisher:IPublisher;
 
 export type CacheClient = typeof redisClient;
 Do();
@@ -22,6 +25,7 @@ Do();
 async function Do() {
   if (Config().AppOptions.RedisHost) {
     await redisClient.connect();
+    globalPublisher = await BuildPublisher(redisClient);
   }
 
   SetupLogging();

@@ -6,6 +6,7 @@ import { FailedResponse, GitHubId, InstalledClient, OrgInvite } from "./gitHubTy
 import { IGitHubInvitations } from "./githubInvitations";
 import { SearchAllAsync } from "./ldapClient";
 import { OrgConfig } from "./orgConfig";
+import { IPublisher } from "./queueManager";
 
 function teamDescription(shortLink: string, sourceTeam: string) {
     return `🤖 Managed by GTTSB: ${shortLink} | Source Team: ${sourceTeam}`
@@ -221,7 +222,7 @@ async function SyncSecurityManagers(opts: {
     }
 }
 
-async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppConfig, invitationsClient: IGitHubInvitations): Promise<ReturnTypeOfSyncOrg> {
+async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppConfig, invitationsClient: IGitHubInvitations, publisher: IPublisher): Promise<ReturnTypeOfSyncOrg> {
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
     let response: ReturnTypeOfSyncOrg = {
@@ -253,7 +254,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
 
     const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();
 
-    const orgConfig = orgConfigResponse.successful ? orgConfigResponse.data : undefined;
+    const orgConfig = orgConfigResponse.successful ? orgConfigResponse.data : undefined;    
 
     const securityManagerTeams = [
         ...appConfig.SecurityManagerTeams,
@@ -293,6 +294,16 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
     }
 
     Log(JSON.stringify(orgConfig));
+
+    // Raise copilot team sync requests    
+    // const copilotResult = await installedGitHubClient.AddTeamsToCopilotSubscription(orgConfig.CopilotTeams);
+    for(const team of orgConfig.CopilotTeams) {
+        await publisher.Publish("CopilotTeamChanged", {
+            org: orgName,
+            team: team
+        });
+    }    
+    //
 
     const ownerGroupName = orgConfig.OrgOwnersGroupName;
     const membersGroupName = orgConfig.OrgMembersGroupName;
@@ -396,14 +407,11 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
                 orgOwnersGroup: ownerGroupName
             }
         }
-    }
-
-    const copilotResult = await installedGitHubClient.AddTeamsToCopilotSubscription(orgConfig.CopilotTeams);
+    }        
 
     return {
         ...response,
-        status: "completed",
-        copilotTeams: copilotResult.successful ? copilotResult.data : []
+        status: "completed"        
     }
 }
 
@@ -414,7 +422,7 @@ export async function SyncTeam(teamName: string, client: InstalledClient, config
     return response;
 }
 
-export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig, invitationsClient: IGitHubInvitations): Promise<ReturnTypeOfSyncOrg> {
+export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig, invitationsClient: IGitHubInvitations, publisher: IPublisher): Promise<ReturnTypeOfSyncOrg> {
     const orgName = installedGitHubClient.GetCurrentOrgName();
     Log(JSON.stringify(
         {
@@ -425,7 +433,7 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
     ));
 
     try {
-        const response = await syncOrg(installedGitHubClient, config, invitationsClient);
+        const response = await syncOrg(installedGitHubClient, config, invitationsClient, publisher);
 
         Log(JSON.stringify(
             {

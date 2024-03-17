@@ -35,6 +35,12 @@ export class QueueManager implements ISubscriber, IPublisher {
     }
 
     public async Publish<T extends QueueIds>(queue:T, event:EventForQueueMap[T]) {
-        await this.client.publish(queue, JSON.stringify(event));
+        await this.client.publish(queue, JSON.stringify(event));        
     }
+}
+
+export async function BuildPublisher(client:CacheClient):Promise<IPublisher> {
+    const singlePublisherClient = client.duplicate();
+    await singlePublisherClient.connect();
+    return new QueueManager(singlePublisherClient);
 }
