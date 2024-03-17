@@ -6,14 +6,16 @@ import { GitHubClient } from "../services/gitHubTypes";
 import axios from 'axios';
 import { Log } from "../logging";
 import { GetInvitationsClient } from "../services/githubInvitations";
+import { IPublisher } from "../services/queueManager";
+import { globalPublisher } from "../app";
 
-async function syncOrgLocal(installationId: number, client: GitHubClient) {
+async function syncOrgLocal(installationId: number, client: GitHubClient, publisher: IPublisher) {
     const orgClient = await client.GetOrgClient(installationId);
     const appConfig = await client.GetAppConfig();
 
     const invitationsClient = GetInvitationsClient(orgClient);
 
-    return await SyncOrg(orgClient, appConfig, invitationsClient)
+    return await SyncOrg(orgClient, appConfig, invitationsClient, publisher)
 }
 
 export async function syncAllHandler(
@@ -24,7 +26,7 @@ export async function syncAllHandler(
     const start = Date.now();
 
     const client = GetClient();
-    const installations = await client.GetInstallations();
+    const installations = await client.GetInstallations();    
 
     Log(`Syncing the following orgs: ${JSON.stringify(installations)}`)
     
@@ -47,7 +49,7 @@ export async function syncAllHandler(
         return res.status(200).json(resultObject);
     }
     else {
-        const orgSyncPromises = installations.map(i => syncOrgLocal(i.id, client))
+        const orgSyncPromises = installations.map(i => syncOrgLocal(i.id, client, globalPublisher))
         const results = await Promise.allSettled(orgSyncPromises);
 
         const end = Date.now();
