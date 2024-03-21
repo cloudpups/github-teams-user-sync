@@ -265,7 +265,8 @@ class InstalledGitHubClient implements InstalledClient {
             console.log(e);
             // TODO: actually catch exception and investigate...            
             return {
-                successful: false
+                successful: false,
+                message: JSON.stringify(e)
             }
         }
     }

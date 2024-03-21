@@ -424,14 +424,36 @@ export async function SyncCopilotTeams(client: InstalledClient, config: AppConfi
 
     const copilotTeams = clientConfigResponse.data.CopilotTeams;
 
+    Log(JSON.stringify({
+        operation: "CopilotSync",
+        status: "Started",
+        org: client.GetCurrentOrgName(),
+        copilotTeams: copilotTeams
+    }));
+
     const response = await client.AddTeamsToCopilotSubscription(copilotTeams);
 
     if (!response.successful) {
+        Log(JSON.stringify({
+            operation: "CopilotSync",
+            status: "Failed",
+            org: client.GetCurrentOrgName(),
+            copilotTeams: copilotTeams,
+            error: response.message
+        }));
+
         return {
             successful: false,
             message: "Failed to add Teams to Copilot subscription"
         }
     }
+
+    Log(JSON.stringify({
+        operation: "CopilotSync",
+        status: "Completed",
+        org: client.GetCurrentOrgName(),
+        copilotTeams: copilotTeams        
+    }));
 
     return {
         successful: true

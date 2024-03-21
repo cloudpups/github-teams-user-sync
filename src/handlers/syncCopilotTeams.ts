@@ -1,12 +1,9 @@
 import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
 import { GetClient } from "../services/gitHub";
-import { SyncCopilotTeams, SyncOrg } from "../services/githubSync";
-import { AsyncReturnType } from "../utility";
+import { SyncCopilotTeams } from "../services/githubSync";
 import axios from 'axios';
 import { Log } from "../logging";
-import { GetInvitationsClient } from "../services/githubInvitations";
-import { globalPublisher, redisClient } from "../app";
 
 async function forwardToProxy(orgId: number) {    
     Log(`Forwarding request to '${process.env.GITHUB_PROXY}'`);
