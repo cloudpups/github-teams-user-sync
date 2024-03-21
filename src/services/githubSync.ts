@@ -254,7 +254,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
 
     const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();
 
-    const orgConfig = orgConfigResponse.successful ? orgConfigResponse.data : undefined;    
+    const orgConfig = orgConfigResponse.successful ? orgConfigResponse.data : undefined;
 
     const securityManagerTeams = [
         ...appConfig.SecurityManagerTeams,
@@ -297,12 +297,9 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
 
     // Raise copilot team sync requests    
     // const copilotResult = await installedGitHubClient.AddTeamsToCopilotSubscription(orgConfig.CopilotTeams);
-    for(const team of orgConfig.CopilotTeams) {
-        await publisher.Publish("CopilotTeamChanged", {
-            org: orgName,
-            team: team
-        });
-    }    
+    await publisher.Publish("CopilotTeamChanged", {
+        org: orgName
+    });
     //
 
     const ownerGroupName = orgConfig.OrgOwnersGroupName;
@@ -407,14 +404,39 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
                 orgOwnersGroup: ownerGroupName
             }
         }
-    }        
+    }
 
     return {
         ...response,
-        status: "completed"        
+        status: "completed"
     }
 }
 
+export async function SyncCopilotTeams(client: InstalledClient, config: AppConfig) {
+    const clientConfigResponse = await client.GetConfigurationForInstallation();
+
+    if (!clientConfigResponse.successful) {
+        return {
+            successful: false,
+            message: clientConfigResponse.message
+        }
+    }
+
+    const copilotTeams = clientConfigResponse.data.CopilotTeams;
+
+    const response = await client.AddTeamsToCopilotSubscription(copilotTeams);
+
+    if (!response.successful) {
+        return {
+            successful: false,
+            message: "Failed to add Teams to Copilot subscription"
+        }
+    }
+
+    return {
+        successful: true
+    }
+}
 
 export async function SyncTeam(teamName: string, client: InstalledClient, config: AppConfig, existingMembers: GitHubId[], invites: OrgInvite[], sourceTeamMap: Map<string, string>) {
     const response = await SynchronizeGitHubTeam(client, teamName, config, existingMembers, invites, sourceTeamMap, true);

@@ -1,7 +1,10 @@
 import { CacheClient } from "../app";
 
-export type CopilotEvent = {
-    team:string,
+/**
+ * @classdesc As we don't want to be "too leaky" with what we expose, the only data that will currently be included in the CopilotEvent
+ * is the OrgId itself. This done, for now, to keep the Copilot Teams sync simple- it will be triggered for the entire Org, or not at all.
+ */
+export type CopilotEvent = {    
     org:string
 }
 

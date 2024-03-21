@@ -103,6 +103,22 @@ paths:
       responses:
         "200":
           description: A successful response
+  /api/sync/SynchronizeCopilotTeams:
+    post:
+      operationId: syncCopilotTeams
+      description: Triggers a synchronization job for copilot teams for a specific GitHub Organization
+      tags:
+        - sync
+      parameters:
+        - in: query
+          name: orgId
+          description: This value can be retrieved from the `/metadata/getInstalledOrgs` endpoint
+          schema:
+            type: number                          
+          required: true
+      responses:
+        "200":
+          description: A successful response
 components:
   schemas:
     OrgModel:
