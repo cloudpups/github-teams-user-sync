@@ -2,6 +2,7 @@ import { getCurrentRateLimitHandler } from "./handlers/getCurrentRateLimit";
 import { getInstalledOrgsHandler } from "./handlers/getInstalledOrgs";
 import { getSourceTeamHandler } from "./handlers/getSourceTeam";
 import { syncAllHandler } from "./handlers/syncAll";
+import { syncCopilotTeamsHandler } from "./handlers/syncCopilotTeams";
 import { syncOrgHandler } from "./handlers/syncOrg";
 import { syncSpecificTeamHandler } from "./handlers/syncSpecificTeamHandler";
 
@@ -18,5 +19,6 @@ export const routes = {
     syncAllOrgs: syncAllHandler,
     notImplemented: notImplementedHandler,
     getSourceTeam: getSourceTeamHandler,
-    syncSpecificTeam: syncSpecificTeamHandler
+    syncSpecificTeam: syncSpecificTeamHandler,
+    syncCopilotTeams: syncCopilotTeamsHandler
 }
