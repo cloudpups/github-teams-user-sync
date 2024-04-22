@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@octokit/auth-app": "^6.0.0",
-    "applicationinsights": "^2.7.0",
+    "applicationinsights": "^3.0.0",
     "axios": "^1.4.0",
     "axios-retry": "^4.0.0",
     "dotenv": "^16.0.3",
