@@ -38,7 +38,19 @@ export interface InstalledClient {
     GetPendingOrgInvites():Response<OrgInvite[]>
     CancelOrgInvite(invite:OrgInvite): Response    
     ListPendingInvitesForTeam(teamName: GitHubTeamName):Response<OrgInvite[]>
-    AddTeamsToCopilotSubscription(teamNames: GitHubTeamName[]):Response<string[]>
+    AddTeamsToCopilotSubscription(teamNames: GitHubTeamName[]):Response<CopilotAddResponse[]>
+}
+
+export type CopilotAddResponse = CopilotAddSucceeded | CopilotAddFailed
+
+export type CopilotAddSucceeded = {
+    successful: true,
+    team: GitHubTeamName
+}
+
+export type CopilotAddFailed = {
+    successful: false,
+    team: GitHubTeamName
 }
 
 export type AddMemberResponse = Promise<AddMemberSucceeded | AddMemberFailed>

@@ -1,6 +1,6 @@
 import { CacheClient } from "../app";
 import { ILogger } from "../logging";
-import { AddMemberResponse, GitHubId, GitHubTeamId, InstalledClient, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
+import { AddMemberResponse, CopilotAddResponse, GitHubId, GitHubTeamId, InstalledClient, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
 import { OrgConfig } from "./orgConfig";
 
 export class GitHubClientCache implements InstalledClient {
@@ -13,7 +13,7 @@ export class GitHubClientCache implements InstalledClient {
         this.cacheClient = cacheClient;
         this.logger = logger;
     }
-    AddTeamsToCopilotSubscription(teamNames: string[]): Response<string[]> {
+    AddTeamsToCopilotSubscription(teamNames: string[]): Response<CopilotAddResponse[]> {
         return this.client.AddTeamsToCopilotSubscription(teamNames);
     }
     

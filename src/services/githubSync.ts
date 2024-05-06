@@ -2,7 +2,7 @@
 
 import { Log, LogError } from "../logging";
 import { AppConfig } from "./appConfig";
-import { FailedResponse, GitHubId, InstalledClient, OrgInvite } from "./gitHubTypes";
+import { CopilotAddResponse, FailedResponse, GitHubId, InstalledClient, OrgInvite } from "./gitHubTypes";
 import { IGitHubInvitations } from "./githubInvitations";
 import { SearchAllAsync } from "./ldapClient";
 import { OrgConfig } from "./orgConfig";
@@ -164,7 +164,7 @@ type ReturnTypeOfSyncOrg = {
     syncedSecurityManagerTeams: string[];
     orgOwnersGroup: string;
     ignoredTeams: string[];
-    copilotTeams: string[];
+    copilotTeams: CopilotAddResponse[];
 }
 
 type FailedSecSync = {
@@ -230,7 +230,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         syncedSecurityManagerTeams: [] as string[],
         orgOwnersGroup: "",
         ignoredTeams: [] as string[],
-        copilotTeams: [] as string[]
+        copilotTeams: [] as CopilotAddResponse[]
     }
 
     // TODO: add this back once these APIs make sense
