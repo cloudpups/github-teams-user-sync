@@ -34,7 +34,7 @@
     "express": "^4.18.2",
     "js-yaml": "^4.1.0",        
     "nocache": "^4.0.0",
-    "octokit": "3.2.0",
+    "octokit": "3.2.1",
     "openapi-backend": "^5.9.1",
     "redis": "^4.6.7",
     "swagger-ui-express": "5.0.0"
