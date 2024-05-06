@@ -50,6 +50,7 @@ export type CopilotAddSucceeded = {
 
 export type CopilotAddFailed = {
     successful: false,
+    message: string,
     team: GitHubTeamName
 }
 

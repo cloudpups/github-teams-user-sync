@@ -256,7 +256,8 @@ class InstalledGitHubClient implements InstalledClient {
                 if (response.status < 200 || response.status > 299) {
                     responses.push({
                         successful: false,
-                        team: team
+                        team: team,
+                        message: response.status.toString()
                     });
                 }
 
@@ -266,11 +267,11 @@ class InstalledGitHubClient implements InstalledClient {
                 });
             }
             catch (e) {
-                console.log(e);
-                // TODO: actually catch exception and investigate...            
+                console.log(e);                                
                 responses.push({
                     successful: false,
-                    team: team
+                    team: team,
+                    message: JSON.stringify(e)
                 });
             }
         }
