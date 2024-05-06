@@ -247,7 +247,7 @@ class InstalledGitHubClient implements InstalledClient {
             try {
                 const response = await this.gitHubClient.request("POST /orgs/{org}/copilot/billing/selected_teams", {
                     org: this.orgName,
-                    selected_teams: teamNames,
+                    selected_teams: [team],
                     headers: {
                         'X-GitHub-Api-Version': '2022-11-28'
                     }
