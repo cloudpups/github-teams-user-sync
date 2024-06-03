@@ -37,7 +37,7 @@
     "octokit": "3.2.1",
     "openapi-backend": "^5.9.1",
     "redis": "^4.6.7",
-    "swagger-ui-express": "5.0.0"
+    "swagger-ui-express": "5.0.1"
   },
   "nodemonConfig": {
     "watch": [
