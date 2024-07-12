@@ -17,15 +17,13 @@ APP_OPTIONS_AppConfigOrg=
 # The GitHub Repository to look towards for additional application configuration
 APP_OPTIONS_AppConfigRepo=team-sync-bot-ops
 
-# The LDAP Configuration. Eventually this will be moved to a plugin
-LDAP_SERVER=
-LDAP_USER=
-LDAP_PASSWORD=
-LDAP_GROUP_BASE_DN=
+# The URL for the application that exposes the source of teams for consumption by this application.
+SOURCE_PROXY=
 
 # Optional
 APP_OPTIONS_RedisHost=
 GITHUB_PROXY=
-SOURCE_PROXY=
 PORT=
 ```
+
+📝 All possible environment variables can be found in the [`config.ts`](https://github.com/cloudpups/github-teams-user-sync/blob/main/src/config.ts) file as well.
