@@ -136,8 +136,8 @@ async function GetInstallations(client: Octokit): Promise<Org[]> {
             }
         });
     }
-    catch {
-        // TODO: log error
+    catch(e) {
+        console.log(e);
         return [] as Org[]
     }
 }

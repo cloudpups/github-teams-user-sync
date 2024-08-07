@@ -12,5 +12,7 @@ export async function getInstalledOrgsHandler(
 
     const installations = await client.GetInstallations();
 
+    console.log(installations);
+
     return res.status(200).json(installations as OrgModel[]);
 }
