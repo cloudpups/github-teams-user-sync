@@ -2,10 +2,10 @@ FROM node:20 AS Build
 ARG NPM_REGISTRY="https://registry.npmjs.org"
 WORKDIR /usr/src/app
 COPY . .
-RUN npm config set registry ${NPM_REGISTRY} && \
-    npm install && \
-    npm run build && \
-    npm ci --omit=dev
+RUN npm config set registry ${NPM_REGISTRY}
+RUN npm install
+RUN npm run build
+RUN npm ci --omit=dev
 
 FROM node:20-alpine
 
