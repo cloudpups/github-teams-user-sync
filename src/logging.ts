@@ -1,7 +1,5 @@
-const appInsights = require("applicationinsights");
-
-import { SeverityLevel } from "applicationinsights/out/Declarations/Contracts";
-import TelemetryClient from "applicationinsights/out/Library/TelemetryClient";
+import appInsights from "applicationinsights";
+import {KnownSeverityLevel, TelemetryClient} from "applicationinsights";
 
 
 type LogEvent = {
@@ -38,7 +36,7 @@ class AiLogger implements ILogger {
     LogError(ex: string): void {
         this.client.trackTrace({
             message: ex,
-            severity: SeverityLevel.Error
+            severity: KnownSeverityLevel.Error
         });
     }
 }
