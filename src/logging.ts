@@ -1,4 +1,4 @@
-const appInsights = require("applicationinsights");
+import appInsights from "applicationinsights";
 
 import { SeverityLevel } from "applicationinsights/out/Declarations/Contracts";
 import TelemetryClient from "applicationinsights/out/Library/TelemetryClient";
