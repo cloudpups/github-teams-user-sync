@@ -335,8 +335,9 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         await Promise.all(orgMembershipPromises);
     }
 
-    let currentMembers: GitHubId[] = [];
-    if (membersGroupName != undefined || membersGroupName != null) {
+    let currentMembers: GitHubId[] = [];    
+    // TODO: add log message to explain group being skipped if it is included in TeamsToIgnore
+    if (membersGroupName != undefined && membersGroupName != null && !appConfig.TeamsToIgnore.includes(membersGroupName)) {
         Log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()}: ${membersGroupName}`)
         const currentMembersResponse = await SynchronizeOrgMembers(installedGitHubClient, membersGroupName, appConfig, orgConfig.DisplayNameToSourceMap)
 
