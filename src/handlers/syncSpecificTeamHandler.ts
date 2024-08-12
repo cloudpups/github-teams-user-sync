@@ -36,12 +36,6 @@ export async function syncSpecificTeamHandler(
 
     const invitationsClient = GetInvitationsClient(orgClient);
 
-    const existingOrgMembers = await orgClient.GetOrgMembers();
-
-    if(!existingOrgMembers.successful) {
-        return res.status(500).json("Unable to fetch org members");    
-    }
-
     const invitesResponse = await invitationsClient.ListInvites();
 
     if(!invitesResponse.successful) {
@@ -60,7 +54,7 @@ export async function syncSpecificTeamHandler(
 
     const sourceTeamMap = orgConfig.data.DisplayNameToSourceMap;
 
-    const response = await SyncTeam(teamName, orgClient, appConfig, existingOrgMembers.data, invites, sourceTeamMap);
+    const response = await SyncTeam(teamName, orgClient, appConfig, invites, sourceTeamMap);
 
     return res.status(200).json(response);
 }

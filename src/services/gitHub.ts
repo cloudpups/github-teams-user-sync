@@ -364,19 +364,6 @@ class InstalledGitHubClient implements InstalledClient {
         }
     }
 
-    public async GetOrgMembers(): Response<GitHubId[]> {
-        const response = await this.gitHubClient.paginate(this.gitHubClient.rest.orgs.listMembers, {
-            org: this.orgName
-        })
-
-        return {
-            successful: true,
-            data: response.map(i => {
-                return i.login
-            })
-        }
-    }
-
     public GetCurrentOrgName(): string {
         return this.orgName;
     }

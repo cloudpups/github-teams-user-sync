@@ -32,8 +32,7 @@ export interface InstalledClient {
     RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): RemoveMemberResponse
     UpdateTeamDetails(team: GitHubTeamName, description: string): Response
     AddSecurityManagerTeam(team: GitHubTeamName): Promise<unknown>
-    GetConfigurationForInstallation(): Response<OrgConfig>    
-    GetOrgMembers(): Response<GitHubId[]>
+    GetConfigurationForInstallation(): Response<OrgConfig>        
     SetOrgRole(id: GitHubId, role: OrgRoles): Response
     GetPendingOrgInvites():Response<OrgInvite[]>
     CancelOrgInvite(invite:OrgInvite): Response    
