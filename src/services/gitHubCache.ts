@@ -1,6 +1,6 @@
 import { CacheClient } from "../app";
 import { ILogger } from "../logging";
-import { AddMemberResponse, CopilotAddResponse, GitHubId, GitHubTeamId, InstalledClient, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
+import { AddMemberResponse, CopilotAddResponse, GitHubId, GitHubTeamId, InstalledClient, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
 import { OrgConfig } from "./orgConfig";
 
 export class GitHubClientCache implements InstalledClient {
@@ -146,7 +146,7 @@ export class GitHubClientCache implements InstalledClient {
         return this.client.AddSecurityManagerTeam(team);
     }
 
-    GetConfigurationForInstallation(): Response<OrgConfig> {
+    GetConfigurationForInstallation(): OrgConfigResponse {
         return this.client.GetConfigurationForInstallation();
     }    
 }

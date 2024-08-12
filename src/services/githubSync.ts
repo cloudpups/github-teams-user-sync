@@ -1,5 +1,6 @@
 // REMEMBER TO REPLACE '_' with '-' for GitHub Names! 🤦‍♂️
 
+import e from "express";
 import { Log, LogError } from "../logging";
 import { AppConfig } from "./appConfig";
 import { CopilotAddResponse, FailedResponse, GitHubId, InstalledClient, OrgInvite } from "./gitHubTypes";
@@ -167,7 +168,7 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
 
 type ReturnTypeOfSyncOrg = {
     message?: string;
-    status: "failed" | "completed" | "no_config";
+    status: "failed" | "completed" | "no_config" | "bad_config";
     orgName: string;
     syncedSecurityManagerTeams: string[];
     orgOwnersGroup: string;
@@ -261,13 +262,14 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
     }
     const setOfExistingTeams = new Set(existingTeamsResponse.data.map(t => t.Name.toUpperCase()));
 
-    const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();
+    const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();    
 
-    const orgConfig = orgConfigResponse.successful ? orgConfigResponse.data : undefined;    
+    const securityManagersFromOrgConfig = orgConfigResponse.successful ? orgConfigResponse.data.AdditionalSecurityManagerGroups : [];
+    const securityManagersDisplayNameSourceMap = orgConfigResponse.successful ? orgConfigResponse.data.DisplayNameToSourceMap : new Map<string,string>();
 
     const securityManagerTeams = [
         ...appConfig.SecurityManagerTeams,
-        ...orgConfig?.AdditionalSecurityManagerGroups ?? []
+        ...securityManagersFromOrgConfig
     ];        
 
     if (securityManagerTeams.length > 0) {
@@ -278,7 +280,7 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
             securityManagerTeams,            
             setOfExistingTeams,            
             shortLink: appConfig.Description.ShortLink,
-            displayNameToSourceMap: orgConfig?.DisplayNameToSourceMap ?? new Map<string,string>()
+            displayNameToSourceMap: securityManagersDisplayNameSourceMap
         });
 
         if (!syncManagersResponse.Success) {
@@ -293,15 +295,31 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
             ...response,
             syncedSecurityManagerTeams: syncManagersResponse.SyncedSecurityManagerTeams
         }
-    }
+    }    
 
-    if (orgConfig == undefined) {
+    if (!orgConfigResponse.successful && orgConfigResponse.state == "NoConfig") {
         return {
             ...response,
             message: "Cannot access/fetch organization config",
             status: "no_config"
         }
     }
+    else if(!orgConfigResponse.successful && orgConfigResponse.state == "BadConfig") {
+        return {
+            ...response,
+            message: orgConfigResponse.message,
+            status: "bad_config"
+        }
+    } 
+    else if (!orgConfigResponse.successful) {
+        return {
+            ...response,
+            message: orgConfigResponse.message,
+            status: "bad_config"
+        }
+    }
+
+    const orgConfig = orgConfigResponse.data;
 
     Log(JSON.stringify(orgConfig));
 
