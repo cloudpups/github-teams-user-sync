@@ -19,6 +19,19 @@ export type OrgInvite = {
     GitHubUser: string
 }
 
+export type OrgConfigResponseSuccess = {
+    successful: true,
+    data: OrgConfig
+}
+
+export type OrgConfigResponseBad = {
+    successful: false,
+    state: "NoConfig" | "BadConfig",
+    message?: string
+}
+
+export type OrgConfigResponse = Promise<OrgConfigResponseSuccess | OrgConfigResponseBad>;
+
 export interface InstalledClient {
     GetCurrentOrgName(): string
     GetCurrentRateLimit(): Promise<{ remaining: number }>
@@ -32,7 +45,7 @@ export interface InstalledClient {
     RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): RemoveMemberResponse
     UpdateTeamDetails(team: GitHubTeamName, description: string): Response
     AddSecurityManagerTeam(team: GitHubTeamName): Promise<unknown>
-    GetConfigurationForInstallation(): Response<OrgConfig>        
+    GetConfigurationForInstallation(): OrgConfigResponse        
     SetOrgRole(id: GitHubId, role: OrgRoles): Response
     GetPendingOrgInvites():Response<OrgInvite[]>
     CancelOrgInvite(invite:OrgInvite): Response    

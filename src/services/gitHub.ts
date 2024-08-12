@@ -1,7 +1,7 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
-import { AddMemberResponse, CopilotAddResponse, GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
+import { AddMemberResponse, CopilotAddResponse, GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
@@ -615,7 +615,7 @@ class InstalledGitHubClient implements InstalledClient {
 
     }
 
-    public async GetConfigurationForInstallation(): Response<OrgConfig> {
+    public async GetConfigurationForInstallation(): OrgConfigResponse {
         // TODO: this function doesn't really belong on this class...
         // i.e., it doesn't fit with a "GitHub Facade"
         const getContentRequest = {
@@ -631,7 +631,8 @@ class InstalledGitHubClient implements InstalledClient {
         }
         catch {
             return {
-                successful: false
+                successful: false,
+                state: "NoConfig"            
             }
         }
 
@@ -639,7 +640,8 @@ class InstalledGitHubClient implements InstalledClient {
 
         if (!Array.isArray(potentialFiles)) {
             return {
-                successful: false
+                successful: false,
+                state: "NoConfig"                
             }
         }
 
@@ -649,7 +651,9 @@ class InstalledGitHubClient implements InstalledClient {
 
         if (onlyConfigFiles.length != 1) {
             return {
-                successful: false
+                successful: false,
+                state: "BadConfig",
+                message: "Multiple configuration files are not supported at this point in time."
             }
         }
 
@@ -664,15 +668,24 @@ class InstalledGitHubClient implements InstalledClient {
 
         if (Array.isArray(contentData) || contentData.type != "file") {
             return {
-                successful: false
+                successful: false,
+                state: "BadConfig"                
             }
         }
 
-        const configuration = yaml.load(Buffer.from(contentData.content, 'base64').toString()) as OrgConfigurationOptions;
-
-        return {
-            successful: true,
-            data: new OrgConfig(configuration)
+        try {
+            const configuration = yaml.load(Buffer.from(contentData.content, 'base64').toString()) as OrgConfigurationOptions;
+            return {
+                successful: true,
+                data: new OrgConfig(configuration)
+            }
+        }     
+        catch {
+            return {
+                successful: false,
+                state: "BadConfig",
+                message: "Error parsing configuration- check configuration file for validity: https://github.com/cloudpups/github-teams-user-sync/blob/main/docs/OrganizationConfiguration.md"
+            }
         }
     }
 }
