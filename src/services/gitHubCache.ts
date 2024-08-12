@@ -148,9 +148,5 @@ export class GitHubClientCache implements InstalledClient {
 
     GetConfigurationForInstallation(): Response<OrgConfig> {
         return this.client.GetConfigurationForInstallation();
-    }
-
-    GetOrgMembers(): Response<string[]> {
-        return this.client.GetOrgMembers();
-    }
+    }    
 }
