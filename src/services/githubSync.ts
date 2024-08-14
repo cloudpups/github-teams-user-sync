@@ -32,6 +32,13 @@ async function GetGitHubIds(teamName: string, config: AppConfig): Promise<GitHub
     const membersFromSourceOfTruth = await SearchAllAsync(teamName);
 
     if (membersFromSourceOfTruth.Succeeded == false) {
+        if(membersFromSourceOfTruth.Reason == "team_not_found") {
+            return {
+                Succeeded: false,
+                Reason: "team_not_found"
+            }
+        }
+        
         return {
             Succeeded: false,
             Reason: "unknown"
@@ -66,6 +73,13 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
     const gitHubIdsResponse = await GetGitHubIds(actualTeamName, config);
 
     if (gitHubIdsResponse.Succeeded == false) {
+        if(gitHubIdsResponse.Reason == "team_not_found") {
+            return {
+                Succeeded: false,
+                Reason: "team_not_found"
+            }
+        }
+
         return {
             Succeeded: false,
             Reason: "unknown"
