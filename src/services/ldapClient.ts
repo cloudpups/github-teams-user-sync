@@ -78,14 +78,7 @@ async function ForwardSearch(groupName: string): SearchAllResponse {
     Log(`Retrieving group (${groupName}) information from '${requestUrl}'`);
     try {
         const httpResponse = await httpClient.get(requestUrl);
-        Log(`Results for ${groupName}: ${JSON.stringify(httpResponse.data)}`);
-
-        if (httpResponse.status == 404) {
-            return {
-                Succeeded: false,
-                Reason: "team_not_found"
-            }
-        }
+        Log(`Results for ${groupName}: ${JSON.stringify(httpResponse.data)}`);      
 
         if (httpResponse.status < 200 || httpResponse.status > 299) {
             return {
