@@ -388,6 +388,14 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         if (currentMembersResponse.Succeeded == false) {
             Log("Failed to sync members");
 
+            if(currentMembersResponse.Reason == "team_not_found") {
+                return {
+                    ...response,
+                    message: "Org Membership Group does not appear to exist in source of truth.",
+                    status: "bad_config"
+                };
+            }            
+
             return {
                 ...response,
                 message: "Failed to sync org members"

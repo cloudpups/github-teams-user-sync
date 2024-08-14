@@ -1,5 +1,5 @@
 import { Config } from "../config";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import axiosRetry from "axios-retry";
 import { Log, LoggerToUse } from "../logging";
 import { redisClient } from "../app";
@@ -17,7 +17,7 @@ export type SearchAllFailed = {
 
 export type SearchAllSucceeded = {
     Succeeded: true,
-    entries: Entry[]    
+    entries: Entry[]
 }
 
 export type SearchAllResponse = Promise<SearchAllFailed | SearchAllSucceeded>
@@ -80,22 +80,22 @@ async function ForwardSearch(groupName: string): SearchAllResponse {
         const httpResponse = await httpClient.get(requestUrl);
         Log(`Results for ${groupName}: ${JSON.stringify(httpResponse.data)}`);
 
-        if(httpResponse.status == 404) {
+        if (httpResponse.status == 404) {
             return {
                 Succeeded: false,
                 Reason: "team_not_found"
             }
         }
 
-        if(httpResponse.status < 200 || httpResponse.status > 299) {
+        if (httpResponse.status < 200 || httpResponse.status > 299) {
             return {
                 Succeeded: false,
                 Reason: "unknown"
             }
-        }        
+        }
 
         const response = httpResponse.data as SuccessResponse;
-        
+
         return {
             Succeeded: true,
             entries: response.users.map(u => {
@@ -108,6 +108,16 @@ async function ForwardSearch(groupName: string): SearchAllResponse {
     }
     catch (e) {
         Log(`Error when retrieving results for ${groupName}: ${e}`);
+
+        if (e instanceof (AxiosError)) {
+            const axiosError = e as AxiosError;
+            if (axiosError.response?.status == 404) {
+                return {
+                    Succeeded: false,
+                    Reason: "team_not_found"
+                }
+            }
+        }
     }
 
     return {
@@ -121,12 +131,12 @@ export interface User {
     email: string
 }
 
-export interface SuccessResponse {    
-    users: User[]    
+export interface SuccessResponse {
+    users: User[]
 }
 
-export interface FailedResponse {    
+export interface FailedResponse {
     Message: string
 }
 
-export type SearchResponse = SuccessResponse | FailedResponse
+export type SearchResponse = SuccessResponse | FailedResponse;
