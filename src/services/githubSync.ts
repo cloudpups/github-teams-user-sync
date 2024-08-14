@@ -19,6 +19,7 @@ const replaceAll = function (original: string, search: string, replacement: stri
 
 type GitHubIdsFailed = {
     Succeeded: false
+    Reason: "unknown" | "team_not_found"
 }
 
 type GitHubIdsSucceeded = {
@@ -31,8 +32,16 @@ async function GetGitHubIds(teamName: string, config: AppConfig): Promise<GitHub
     const membersFromSourceOfTruth = await SearchAllAsync(teamName);
 
     if (membersFromSourceOfTruth.Succeeded == false) {
+        if(membersFromSourceOfTruth.Reason == "team_not_found") {
+            return {
+                Succeeded: false,
+                Reason: "team_not_found"
+            }
+        }
+        
         return {
-            Succeeded: false
+            Succeeded: false,
+            Reason: "unknown"
         }
     }
 
@@ -46,23 +55,34 @@ async function GetGitHubIds(teamName: string, config: AppConfig): Promise<GitHub
     }
 }
 
-type SyncFailed = {
+type SyncMembersFailed = {
     Succeeded: false
+    Reason: "unknown" | "team_not_found"
 }
 
-type SyncSucceeded = {
+type SyncMembersSucceeded = {
     Succeeded: true
     OrgMembers: string[]
 }
 
-async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, sourceTeamMap: Map<string, string>): Promise<SyncFailed | SyncSucceeded> {
+type SyncMembersResponse = Promise<SyncMembersFailed | SyncMembersSucceeded>
+
+async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, sourceTeamMap: Map<string, string>): SyncMembersResponse {
     const actualTeamName = sourceTeamMap.get(teamName) ?? teamName;
     
     const gitHubIdsResponse = await GetGitHubIds(actualTeamName, config);
 
     if (gitHubIdsResponse.Succeeded == false) {
+        if(gitHubIdsResponse.Reason == "team_not_found") {
+            return {
+                Succeeded: false,
+                Reason: "team_not_found"
+            }
+        }
+
         return {
-            Succeeded: false
+            Succeeded: false,
+            Reason: "unknown"
         };
     }
 
@@ -367,6 +387,14 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
 
         if (currentMembersResponse.Succeeded == false) {
             Log("Failed to sync members");
+
+            if(currentMembersResponse.Reason == "team_not_found") {
+                return {
+                    ...response,
+                    message: "Org Membership Group does not appear to exist in source of truth.",
+                    status: "bad_config"
+                };
+            }            
 
             return {
                 ...response,
