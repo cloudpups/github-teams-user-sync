@@ -649,11 +649,19 @@ class InstalledGitHubClient implements InstalledClient {
             .filter(i => i.type == "file")
             .filter(i => i.name == "team-sync-options.yml" || i.name == "team-sync-options.yaml");
 
-        if (onlyConfigFiles.length != 1) {
+        if (onlyConfigFiles.length > 1) {
             return {
                 successful: false,
                 state: "BadConfig",
                 message: "Multiple configuration files are not supported at this point in time."
+            }
+        }
+
+        if(onlyConfigFiles.length < 1) {
+            return {
+                successful: false,
+                state: "NoConfig",
+                message: "No configuration file exists in the configuration repository (typically the .github repository)."
             }
         }
 
