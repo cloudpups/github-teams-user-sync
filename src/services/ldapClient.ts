@@ -11,7 +11,8 @@ export interface Entry {
 }
 
 export type SearchAllFailed = {
-    Succeeded: false
+    Succeeded: false,
+    Reason: "unknown" | "team_not_found"
 }
 
 export type SearchAllSucceeded = {
@@ -79,9 +80,17 @@ async function ForwardSearch(groupName: string): SearchAllResponse {
         const httpResponse = await httpClient.get(requestUrl);
         Log(`Results for ${groupName}: ${JSON.stringify(httpResponse.data)}`);
 
+        if(httpResponse.status == 404) {
+            return {
+                Succeeded: false,
+                Reason: "team_not_found"
+            }
+        }
+
         if(httpResponse.status < 200 || httpResponse.status > 299) {
             return {
-                Succeeded: false
+                Succeeded: false,
+                Reason: "unknown"
             }
         }        
 
@@ -102,7 +111,8 @@ async function ForwardSearch(groupName: string): SearchAllResponse {
     }
 
     return {
-        Succeeded: false
+        Succeeded: false,
+        Reason: "unknown"
     }
 }
 
