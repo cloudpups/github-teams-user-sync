@@ -117,7 +117,8 @@ export class GitHubClientCache implements InstalledClient {
                 properties: {
                     "Data": gitHubId,
                     "Operation": "DoesUserExist",
-                    "Group": "GitHub"
+                    "Group": "GitHub",
+                    "Value": result
                 }
             })
 
