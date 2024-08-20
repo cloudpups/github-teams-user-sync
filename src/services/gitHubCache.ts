@@ -1,7 +1,6 @@
 import { CacheClient } from "../app";
 import { ILogger } from "../logging";
-import { AddMemberResponse, CopilotAddResponse, GitHubId, GitHubTeamId, InstalledClient, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
-import { OrgConfig } from "./orgConfig";
+import { AddMemberResponse, CopilotAddResponse, GitHubTeamId, InstalledClient, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
 
 export class GitHubClientCache implements InstalledClient {
     client: InstalledClient;
@@ -13,6 +12,7 @@ export class GitHubClientCache implements InstalledClient {
         this.cacheClient = cacheClient;
         this.logger = logger;
     }
+
     AddTeamsToCopilotSubscription(teamNames: string[]): Response<CopilotAddResponse[]> {
         return this.client.AddTeamsToCopilotSubscription(teamNames);
     }
@@ -46,20 +46,17 @@ export class GitHubClientCache implements InstalledClient {
     }
 
     async IsUserMember(id: string): Response<boolean> {        
-        const cacheKey = `github-member:${id}-${this.GetCurrentOrgName()}`;
+        const cacheKey = `github-member-1:${id}-${this.GetCurrentOrgName()}`;
 
         const result = await this.cacheClient.get(cacheKey);        
 
         if (result) {
-            this.logger.ReportEvent({
-                Name:"CacheHit",
-                properties: {
-                    "Data": id,
-                    "Operation": "IsUserMember",
-                    "Group": "GitHub",
-                    "Value": result
-                }
-            })
+            this.ReportCacheHit({
+                cacheKey: cacheKey,
+                operation: "IsUserMember",
+                value: result,
+                user: id
+            });
 
             return {
                 successful: true,
@@ -111,16 +108,13 @@ export class GitHubClientCache implements InstalledClient {
 
         const result = await this.cacheClient.get(cacheKey);        
 
-        if (result) {            
-            this.logger.ReportEvent({
-                Name:"CacheHit",
-                properties: {
-                    "Data": gitHubId,
-                    "Operation": "DoesUserExist",
-                    "Group": "GitHub",
-                    "Value": result
-                }
-            })
+        if (result) {
+            this.ReportCacheHit({
+                operation: "DoesUserExist",
+                user: gitHubId,
+                value: result,
+                cacheKey: cacheKey
+            }); 
 
             return JSON.parse(result);
         }        
@@ -167,4 +161,27 @@ export class GitHubClientCache implements InstalledClient {
     GetConfigurationForInstallation(): OrgConfigResponse {
         return this.client.GetConfigurationForInstallation();
     }    
+
+    private ReportCacheHit(props: {operation: string, user?: string, team?:string, value: string, cacheKey:string}) {
+        const properties:any = {
+            "Group": "GitHub",
+            "Operation": props.operation,
+            "Org": this.GetCurrentOrgName(),                        
+            "Value": props.value,
+            "CacheKey": props.cacheKey
+        };
+
+        if(props.user) {
+            properties["User"] = props.user;
+        }
+
+        if(props.team) {
+            properties["Team"] = props.team;
+        }
+
+        this.logger.ReportEvent({
+            Name:"CacheHit",
+            properties: properties
+        });
+    }
 }
