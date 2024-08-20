@@ -56,7 +56,8 @@ export class GitHubClientCache implements InstalledClient {
                 properties: {
                     "Data": id,
                     "Operation": "IsUserMember",
-                    "Group": "GitHub"
+                    "Group": "GitHub",
+                    "Value": result
                 }
             })
 
@@ -68,10 +69,26 @@ export class GitHubClientCache implements InstalledClient {
 
         const actualResult = await this.client.IsUserMember(id);
         
-        if (actualResult.successful) {            
-            await this.cacheClient.set(cacheKey, actualResult.data.toString(), {
-                EX: 172800 // Expire every 2 days
-            });            
+        if (actualResult.successful) {          
+            // TODO: switch all cache expirations to application configuration values.  
+            
+            const userIsMember = actualResult.data;
+
+            if(userIsMember) {
+                await this.cacheClient.set(cacheKey, userIsMember.toString(), {
+                    EX: 172800 // Expire every 2 days                    
+                });   
+            }
+            else {
+                // If membership check comes back as "not a member," we still want to cache
+                // the value so that we aren't hitting GitHub's APIs "too much."      
+                // With that being said, we don't want to cache it for "too long" as then 
+                // it will start to cause user abrasion.          
+                await this.cacheClient.set(cacheKey, userIsMember.toString(), {
+                    EX: 1800 // Expire every 30 minutes
+                    // It is unlikely that 30 minutes will cause much pain
+                });   
+            }              
         }
 
         return actualResult;    
