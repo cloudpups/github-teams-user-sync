@@ -464,11 +464,17 @@ export async function SyncTeam(teamName: string, client: InstalledClient, config
 
 export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig, invitationsClient: IGitHubInvitations): Promise<ReturnTypeOfSyncOrg> {
     const orgName = installedGitHubClient.GetCurrentOrgName();
+
+    // For more context since this repo doesn't fully 
+    // follow OpenTelemetry, yet: https://opentelemetry.io/docs/concepts/signals/traces/
+    const traceKey = crypto.randomUUID();
+
     Log(JSON.stringify(
         {
             orgName: orgName,
             operation: "OrgSync",
-            status: "Started"
+            status: "Started",
+            trace_id: traceKey
         }
     ));
 
@@ -480,18 +486,23 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
                 data: response,
                 orgName: orgName,
                 operation: "OrgSync",
-                status: "completed"
+                status: "completed",
+                trace_id: traceKey
             }
         ));
 
         return response;
     }
     catch (error) {
-        LogError(error as any);
+        LogError(JSON.stringify({
+            error: error as any,
+            orgName: orgName,
+            trace_id: traceKey    
+        }));
 
         const response: ReturnTypeOfSyncOrg = {
             orgName: orgName,
-            message: "Failed to sync org. Please check logs.",
+            message: `Failed to sync org. Please check logs for Trace ID == ${traceKey}`,
             status: "failed",
             syncedSecurityManagerTeams: [],
             orgOwnersGroup: "",
@@ -504,7 +515,8 @@ export async function SyncOrg(installedGitHubClient: InstalledClient, config: Ap
                 data: response,
                 orgName: orgName,
                 operation: "OrgSync",
-                status: "failed"
+                status: "failed",
+                trace_id: traceKey
             }
         ));
 
