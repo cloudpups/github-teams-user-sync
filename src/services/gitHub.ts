@@ -6,7 +6,7 @@ import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
 import { AsyncReturnType } from "../utility";
-import { Log, LoggerToUse } from "../logging";
+import { Log, LogError, LoggerToUse } from "../logging";
 import { GitHubClientCache } from "./gitHubCache";
 import { redisClient } from "../app";
 import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig";
@@ -377,19 +377,28 @@ class InstalledGitHubClient implements InstalledClient {
     }
 
     public async AddOrgMember(id: string): Response<boolean> {
-        const response = await this.gitHubClient.rest.orgs.setMembershipForUser({
-            org: this.orgName,
-            username: id
-        })
-
-        if (response.status != 200) {
+        try {
+            const response = await this.gitHubClient.rest.orgs.setMembershipForUser({
+                org: this.orgName,
+                username: id
+            })
+    
+            if (response.status != 200) {
+                return {
+                    successful: false
+                }
+            }
+    
             return {
                 successful: false
             }
         }
+        catch (e) {            
+            LogError(`Error adding Org Member ${id}: ${JSON.stringify(e)}`)
 
-        return {
-            successful: false
+            return {
+                successful: false
+            }
         }
     }
 
