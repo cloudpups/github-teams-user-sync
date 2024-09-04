@@ -69,7 +69,7 @@ type SyncMembersResponse = Promise<SyncMembersFailed | SyncMembersSucceeded>
 
 async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, sourceTeamMap: Map<string, string>): SyncMembersResponse {
     const actualTeamName = sourceTeamMap.get(teamName) ?? teamName;
-    
+        
     const gitHubIdsResponse = await GetGitHubIds(actualTeamName, config);
 
     if (gitHubIdsResponse.Succeeded == false) {
@@ -90,9 +90,10 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
 
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
+    Log("Adding Org Members to " + orgName + " via " + actualTeamName + ": Started");
     const orgMemberPromises = gitHubIds.map(g => addOrgMember(g, installedGitHubClient));
-
     const responses = await Promise.all(orgMemberPromises);
+    Log("Adding Org Members to " + orgName + " via " + actualTeamName + ": Completed");
 
     const orgMembers = responses.filter(r => r.successful).map(r => r.user);
     const problematicGitHubIds = responses.filter(r => !r.successful);
@@ -293,9 +294,9 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
         ...securityManagersFromOrgConfig
     ];        
     log("", "GetConfiguration", "Completed");
-
-    log("", "SyncSecurityManagers", "Started");
+    
     if (securityManagerTeams.length > 0) {
+        log("", "SyncSecurityManagers", "Started");
         const syncManagersResponse = await SyncSecurityManagers({
             appConfig,
             client: installedGitHubClient,
@@ -318,8 +319,8 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
             ...response,
             syncedSecurityManagerTeams: syncManagersResponse.SyncedSecurityManagerTeams
         }
-    }    
-    log("", "SyncSecurityManagers", "Completed");
+        log("", "SyncSecurityManagers", "Completed");
+    }        
 
     if (!orgConfigResponse.successful && orgConfigResponse.state == "NoConfig") {
         return {
