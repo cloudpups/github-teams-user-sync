@@ -14,7 +14,7 @@ import {Request} from "openapi-backend";
 
 export const redisClient = createClient({
   url: `redis://${process.env.APP_OPTIONS_RedisHost}`
-});
+}).on('error', err => console.log('Redis Client Error: ', err));
 
 export type CacheClient = typeof redisClient;
 Do();
