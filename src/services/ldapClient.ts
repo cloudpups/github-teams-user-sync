@@ -44,9 +44,14 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
 
     // Slightly complex for caching logic, but we don't want to cache useless results
     if (actualResult.Succeeded && actualResult.entries.length > 0) {
-        await redisClient.set(cacheKey, JSON.stringify(actualResult), {
-            EX: 600 // Expire after 10 minutes
-        });
+        try {
+            await redisClient.set(cacheKey, JSON.stringify(actualResult), {
+                EX: 600 // Expire after 10 minutes
+            });
+        }
+        catch(e) {
+            Log(`Error when caching results for ${groupName}: ${JSON.stringify(e)}`);
+        }
     }
 
     return actualResult;
