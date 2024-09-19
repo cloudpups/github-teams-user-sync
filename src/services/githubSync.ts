@@ -172,7 +172,7 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
 
     Log(JSON.stringify(teamSyncNotes));
 
-    if(dryRun) {
+    if(dryRun === true) {
         return teamSyncNotes;
     }
 
