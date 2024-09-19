@@ -50,7 +50,9 @@ async function GetGitHubIds(teamName: string, config: AppConfig): Promise<GitHub
     return {
         Succeeded: true,
         Ids: membersFromSourceOfTruth.entries.map(e => {
-            return replaceAll(e.cn, '_', '-') + config.GitHubIdAppend;
+            const replace1 = replaceAll(e.cn, '_', '-');
+            const replace2 = replace1.replaceAll(".", "-");
+            return replace2 + config.GitHubIdAppend;
         })
     }
 }
@@ -108,7 +110,7 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
     };
 }
 
-async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingInvites: OrgInvite[], sourceTeamMap: Map<string, string>, checkOrgMembers: boolean = true) {
+async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingInvites: OrgInvite[], sourceTeamMap: Map<string, string>, checkOrgMembers: boolean = true, dryRun: boolean = false) {
     function GetSourceOrReturn(teamName: string) {
         return sourceTeamMap.get(teamName) ?? teamName;
     }
@@ -169,6 +171,10 @@ async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, tea
     }
 
     Log(JSON.stringify(teamSyncNotes));
+
+    if(dryRun === true) {
+        return teamSyncNotes;
+    }
 
     const deleteResponses = await Promise.all(teamMembersToRemove.map(mtr => installedGitHubClient.RemoveTeamMemberAsync(teamName, mtr)));
     const addResponses = await Promise.all(teamMembersToAdd.map(mta => installedGitHubClient.AddTeamMember(teamName, mta)));
@@ -473,8 +479,8 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
 }
 
 
-export async function SyncTeam(teamName: string, client: InstalledClient, config: AppConfig, invites: OrgInvite[], sourceTeamMap: Map<string, string>) {
-    const response = await SynchronizeGitHubTeam(client, teamName, config, invites, sourceTeamMap, true);
+export async function SyncTeam(teamName: string, client: InstalledClient, config: AppConfig, invites: OrgInvite[], sourceTeamMap: Map<string, string>, dryRun: boolean = false) {
+    const response = await SynchronizeGitHubTeam(client, teamName, config, invites, sourceTeamMap, true, dryRun);
 
     return response;
 }
