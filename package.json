@@ -36,7 +36,7 @@
     "nocache": "^4.0.0",
     "octokit": "3.2.1",
     "openapi-backend": "^5.9.1",
-    "redis": "^4.6.7",
+    "redis": "^4.7.0",
     "swagger-ui-express": "5.0.0"
   },
   "nodemonConfig": {
