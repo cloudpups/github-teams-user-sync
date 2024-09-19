@@ -50,9 +50,9 @@ async function GetGitHubIds(teamName: string, config: AppConfig): Promise<GitHub
     return {
         Succeeded: true,
         Ids: membersFromSourceOfTruth.entries.map(e => {
-            // const replace1 = replaceAll(e.cn, '_', '-');
-            // const replace2 = replaceAll(replace1, ".", "-")
-            return replaceAll(e.cn, '_', '-') + config.GitHubIdAppend;
+            const replace1 = replaceAll(e.cn, '_', '-');
+            const replace2 = replace1.replaceAll(".", "-");
+            return replace2 + config.GitHubIdAppend;
         })
     }
 }
