@@ -32,6 +32,11 @@ export type OrgConfigResponseBad = {
 
 export type OrgConfigResponse = Promise<OrgConfigResponseSuccess | OrgConfigResponseBad>;
 
+export interface IRawInstalledGitHubClient {
+    GetCurrentOrgName(): string
+    RawListCurrentMembersOfGitHubTeam(team: GitHubTeamName, eTag:string): RawResponse<GitHubId[]>
+}
+
 export interface InstalledClient {
     GetCurrentOrgName(): string
     GetCurrentRateLimit(): Promise<{ remaining: number }>
@@ -96,17 +101,27 @@ export type RemoveMemberFailed = {
     message: string
 }
 
-
+export type RawGenericSucceededResponse<T> = {
+    successful: true,
+    data: T
+    eTag: string
+}
 
 export type GenericSucceededResponse<T> = {
     successful: true,
     data: T
 }
 
+export type NoChangesResponse = {
+    successful: "no_changes"    
+}
+
 export type FailedResponse = {
     successful: false,
     message?:string
 }
+
+export type RawResponse<T = unknown> = Promise<RawGenericSucceededResponse<T> | FailedResponse | NoChangesResponse>;
 
 export type Response<T = unknown> = Promise<GenericSucceededResponse<T> | FailedResponse>;
 

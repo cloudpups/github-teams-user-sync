@@ -34,6 +34,8 @@
   },
   "dependencies": {
     "@octokit/auth-app": "6.1.1",
+    "@octokit/plugin-paginate-graphql": "^5.2.4",
+    "@octokit/plugin-throttling": "^9.3.2",
     "applicationinsights": "^3.2.1",
     "axios": "^1.4.0",
     "axios-retry": "^4.0.0",
@@ -55,5 +57,9 @@
       "src/**/*.spec.ts"
     ],
     "exec": "ts-node ./src/app.ts"
+  },
+  "graphql": {
+    "schema": "https://api.github.com/graphql",
+    "documents": "**/*.{graphql,js,ts,jsx,tsx}"
   }
 }

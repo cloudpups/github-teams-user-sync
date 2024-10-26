@@ -116,7 +116,7 @@ async function GetInstallations(client: Octokit): Promise<Org[]> {
             }
         });
     }
-    catch(e) {
+    catch (e) {
         console.log(e);
         return [] as Org[]
     }
@@ -199,4 +199,3 @@ export function GetClient(): GitHubClient {
         GetAppConfig: () => GetAppConfig(client)
     }
 }
-

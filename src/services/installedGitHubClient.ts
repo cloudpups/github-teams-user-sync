@@ -1,5 +1,5 @@
 import { Octokit } from "octokit";
-import { AddMemberResponse, CopilotAddResponse, GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
+import { AddMemberResponse, CopilotAddResponse, GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgConfigResponse, OrgInvite, OrgRoles, RawResponse, RemoveMemberResponse, Response } from "./gitHubTypes";
 import yaml from "js-yaml";
 import { AsyncReturnType, MakeTeamNameSafeAndApiFriendly } from "../utility";
 import { Log, LogError } from "../logging";
@@ -486,6 +486,54 @@ export class InstalledGitHubClient implements InstalledClient {
                 successful: false,
                 state: "BadConfig",
                 message: "Error parsing configuration- check configuration file for validity: https://github.com/cloudpups/github-teams-user-sync/blob/main/docs/OrganizationConfiguration.md"
+            }
+        }
+    }
+
+    public async RawListCurrentMembersOfGitHubTeam(team: string, eTag: string): RawResponse<string[]> {
+        const safeTeam = MakeTeamNameSafeAndApiFriendly(team);
+
+        try {
+            /* Unfortunately the GitHub GraphQL API doesn't support eTags, and the REST API for listing
+            members of a team lists all members of all teams, including child teams.
+            As such, a change to any child team will result in the re-fetching of the parent team.                                    
+            
+            per_page is set to 1 to minimize the amount of data returned, as we only need to know if 
+            there are changes with this call (which is determined by a 304 status code, which results 
+            in an exception). While one may want to consider saving some API calls by leveraging the 
+            `link` header to determine if there are more pages, this is not done here as the REST API
+            for teams will return members from child teams, which is not what we want... It is only via
+            the GraphQL API that we can get the members of a specific team. */
+            await this.gitHubClient.rest.teams.listMembersInOrg({
+                org: this.orgName,
+                team_slug: safeTeam,
+                per_page: 1,
+                headers: {
+                    'If-None-Match': eTag
+                }
+            });
+
+            // if the above completes successfully, then there are changes and we must leverage the 
+            // GraphQL API to get the members of JUST the team in question (see comment above about the REST API).                            
+            const response = await this.gitHubClient.graphql.paginate()
+
+            return {
+                successful: true,
+                data: response.data.map(i => i.login),
+                eTag: response.headers.etag! // This call will always result in an eTag if successful
+            }
+        }
+        catch (error) {
+            const typedError = error as { status: number };
+
+            if (typedError.status == 304) {
+                return {
+                    successful: "no_changes"
+                }
+            }
+
+            return {
+                successful: false
             }
         }
     }

@@ -35,3 +35,7 @@ See [./docs/OrganizationConfiguration.md](./docs/OrganizationConfiguration.md) f
 ## Running the sync bot
 
 See [./docs/RunningTheApp.md](./docs/RunningTheApp.md) for further details!
+
+## Useful Tools
+
+* [GraphQL Explorer App](https://altairgraphql.dev/)
