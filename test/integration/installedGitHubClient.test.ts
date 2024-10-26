@@ -113,13 +113,13 @@ describe('InstalledGitHubClient Class', () => {
     try {
       await client.rest.teams.deleteInOrg({
         org: testConfig.orgName,
-        team_slug: testConfig.team1.name
+        team_slug: testConfig.team2.name
       });
 
       await client.rest.teams.deleteInOrg({
         org: testConfig.orgName,
-        team_slug: testConfig.team2.name
-      })
+        team_slug: testConfig.team1.name
+      });      
     }
     catch (e) {
       console.log(e);
