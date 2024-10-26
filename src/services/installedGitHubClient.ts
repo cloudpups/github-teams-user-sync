@@ -315,7 +315,7 @@ export class InstalledGitHubClient implements InstalledClient {
         const safeTeam = MakeTeamNameSafeAndApiFriendly(team);
 
         try {
-            const response = await this.gitHubClient.graphql.paginate<MembersResponseType>(membersQuery.loc?.source.body!, {
+            const response = await this.gitHubClient.graphql.paginate<MembersResponseType>(membersQuery, {
                 org: this.GetCurrentOrgName(),
                 team: safeTeam
             });
@@ -491,7 +491,7 @@ export class InstalledGitHubClient implements InstalledClient {
     }
 }
 
-const membersQuery = gql`query($org:String!, $team:String!, $cursor:String) {
+const membersQuerySource = gql`query($org:String!, $team:String!, $cursor:String) {
     organization(login:$org) {
         team(slug:$team) {
             members(first:100, membership:IMMEDIATE, after:$cursor) {
@@ -505,7 +505,8 @@ const membersQuery = gql`query($org:String!, $team:String!, $cursor:String) {
             }
         }
     }
-}`
+}`;
+const membersQuery = membersQuerySource.loc!.source.body!
 
 type Member = {
     login: string;
