@@ -2,11 +2,13 @@
 
 For the tests in this folder to run, a .env file must be present in the root of the repo so that a GitHub Client can be initialized for testing against GitHub's actual APIs.
 
-The `.env` file must be located at the following path, and must have the following shape:
+The `.env` file must be located at the following path, must have the following shape, and must be named in a particular way (as the name is hardcoded into the integration tests):
 
 ## Path
 
-Path: `tests/integrations/.env`
+Path: `test/integration/.env.sync-bot.tests`
+
+This can seen in use via a GitHub Action Workflow present within this repo (check for the `Prep .env file for integration tests` step): [build.yml](../../.github/workflows/build.yml)
 
 ## Shape
 
