@@ -137,34 +137,34 @@ describe('InstalledGitHubClient Class', () => {
     expect(actualMembers2[0]).toEqual(expectedUser2);
   });
 
-  // test('ListMembersOfTeamEtagCheck returns expected eTag results', async () => {
-  //   // Arrange         
-  //   const installedGitHubClient = new InstalledGitHubClient(client, testConfig.orgName);
+  test('ListMembersOfTeamEtagCheck returns expected eTag results', async () => {
+    // Arrange         
+    const installedGitHubClient = new InstalledGitHubClient(client, testConfig.orgName);
 
-  //   const expectedTeam1 = testConfig.team1.name;
+    const expectedTeam1 = testConfig.team1.name;
 
-  //   // Act
-  //   const response = await installedGitHubClient.ListMembersOfTeamEtagCheck(expectedTeam1, "");
+    // Act
+    const response = await installedGitHubClient.ListMembersOfTeamEtagCheck(expectedTeam1, "");
 
-  //   let eTag = "";
-  //   if (response.successful == true) {
-  //     eTag = response.data;
-  //   }
-  //   else {
-  //     fail('Etag should have been fetched');
-  //   }
+    let eTag = "";
+    if (response.successful == true) {
+      eTag = response.data;
+    }
+    else {
+      fail('Etag should have been fetched');
+    }
 
-  //   // Since we know no changes have been made to the team since the first call above, we can 
-  //   // expect ListMembersOfTeamEtagCheck to return a response of "no_changes" with the same
-  //   // eTag that was passed to it.
-  //   const response2 = await installedGitHubClient.ListMembersOfTeamEtagCheck(expectedTeam1, eTag);
+    // Since we know no changes have been made to the team since the first call above, we can 
+    // expect ListMembersOfTeamEtagCheck to return a response of "no_changes" with the same
+    // eTag that was passed to it.
+    const response2 = await installedGitHubClient.ListMembersOfTeamEtagCheck(expectedTeam1, eTag);
 
-  //   // Assert     
-  //   expect(response.successful).toBeTruthy();
-  //   expect(eTag).toBeDefined();
+    // Assert     
+    expect(response.successful).toBeTruthy();
+    expect(eTag).toBeDefined();
 
-  //   const actualResponse2Etag = response2.successful == "no_changes" ? response2.eTag : "asdf";
-  //   expect(response2.successful).toStrictEqual("no_changes");
-  //   expect(actualResponse2Etag).toStrictEqual(eTag);
-  // });
+    const actualResponse2Etag = response2.successful == "no_changes" ? response2.eTag : "asdf";
+    expect(response2.successful).toStrictEqual("no_changes");
+    expect(actualResponse2Etag).toStrictEqual(eTag);
+  });
 });
