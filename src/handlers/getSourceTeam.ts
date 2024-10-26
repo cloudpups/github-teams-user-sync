@@ -1,7 +1,7 @@
 import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
-import { SearchAllAsync } from "../services/ldapClient";
-import { Log } from "../logging";
+import { SearchAllAsync } from "../services/ldapClient.ts";
+import { Log } from "../logging.ts";
 
 export async function getSourceTeamHandler(
     c: Context,

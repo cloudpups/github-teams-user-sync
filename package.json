@@ -2,8 +2,8 @@
   "name": "teams-sync",
   "version": "1.0.0",
   "description": "",
-  "main": "app.ts",
-  "module": "es2015",
+  "main": "app.ts", 
+  "type":"module", 
   "scripts": {
     "test": "jest --coverage --reporters=jest-junit",
     "dev": "nodemon",
@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@octokit/auth-app": "6.1.1",
+    "@octokit/plugin-throttling": "^9.3.2",
     "applicationinsights": "^3.2.1",
     "axios": "^1.4.0",
     "axios-retry": "^4.0.0",

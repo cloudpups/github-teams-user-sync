@@ -1,11 +1,11 @@
 import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
-import { GetClient } from "../services/gitHub";
-import { SyncOrg } from "../services/githubSync";
-import { AsyncReturnType } from "../utility";
+import { GetClient } from "../services/gitHub.ts";
+import { SyncOrg } from "../services/githubSync.ts";
+import { AsyncReturnType } from "../utility.ts";
 import axios from 'axios';
-import { Log } from "../logging";
-import { GetInvitationsClient } from "../services/githubInvitations";
+import { Log } from "../logging.ts";
+import { GetInvitationsClient } from "../services/githubInvitations.ts";
 
 async function forwardToProxy(installationId: number) {    
     Log(`Forwarding request to '${process.env.GITHUB_PROXY}'`);

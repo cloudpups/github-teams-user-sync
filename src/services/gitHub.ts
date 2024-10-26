@@ -1,15 +1,15 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
-import { Config } from "../config";
-import { AddMemberResponse, CopilotAddResponse, GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
-import { AppConfig } from "./appConfig";
+import { Config } from "../config.ts";
+import { AddMemberResponse, CopilotAddResponse, GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes.ts";
+import { AppConfig } from "./appConfig.ts";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
-import { AsyncReturnType } from "../utility";
-import { Log, LogError, LoggerToUse } from "../logging";
-import { GitHubClientCache } from "./gitHubCache";
-import { redisClient } from "../app";
-import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig";
+import { AsyncReturnType } from "../utility.ts";
+import { Log, LogError, LoggerToUse } from "../logging.ts";
+import { GitHubClientCache } from "./gitHubCache.ts";
+import { redisClient } from "../app.ts";
+import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig.ts";
 
 const config = Config();
 

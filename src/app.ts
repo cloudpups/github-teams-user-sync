@@ -4,11 +4,11 @@ import yaml from "js-yaml";
 import fs from "fs";
 import path from "node:path";
 import swaggerUi from "swagger-ui-express";
-import { routes } from "./routes";
-import { SetupLogging } from "./logging";
+import { routes } from "./routes.ts";
+import { SetupLogging } from "./logging.ts";
 import nocache from "nocache";
 import { createClient } from 'redis';
-import { Config } from "./config";
+import { Config } from "./config.ts";
 
 import {Request} from "openapi-backend";
 

@@ -1,12 +1,12 @@
 // REMEMBER TO REPLACE '_' with '-' for GitHub Names! 🤦‍♂️
 
 import e from "express";
-import { Log, LogError } from "../logging";
-import { AppConfig } from "./appConfig";
-import { CopilotAddResponse, FailedResponse, GitHubId, InstalledClient, OrgInvite } from "./gitHubTypes";
-import { IGitHubInvitations } from "./githubInvitations";
-import { SearchAllAsync } from "./ldapClient";
-import { OrgConfig } from "./orgConfig";
+import { Log, LogError } from "../logging.ts";
+import { AppConfig } from "./appConfig.ts";
+import { CopilotAddResponse, FailedResponse, GitHubId, InstalledClient, OrgInvite } from "./gitHubTypes.ts";
+import { IGitHubInvitations } from "./githubInvitations.ts";
+import { SearchAllAsync } from "./ldapClient.ts";
+import { OrgConfig } from "./orgConfig.ts";
 
 function teamDescription(shortLink: string, sourceTeam: string) {
     return `🤖 Managed by GTTSB: ${shortLink} | Source Team: ${sourceTeam}`

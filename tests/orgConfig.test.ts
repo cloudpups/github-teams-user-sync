@@ -1,5 +1,5 @@
 import {describe, expect, test} from '@jest/globals';
-import { ManagedGitHubTeam, OrgConfig, OrgConfigurationOptions } from '../src/services/orgConfig';
+import { ManagedGitHubTeam, OrgConfig, OrgConfigurationOptions } from '../src/services/orgConfig.ts';
 
 describe('OrgConfigClass', () => {
   test('Sets proper defaults', () => {
