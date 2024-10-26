@@ -1,4 +1,4 @@
-import { GenericSucceededResponse, InstalledClient, OrgInvite,Response } from "./gitHubTypes";
+import { GenericSucceededResponse, InstalledClient, OrgInvite,Response } from "./gitHubTypes.ts";
 
 export interface IGitHubInvitations {
     ListInvites():Response<OrgInvite[]>

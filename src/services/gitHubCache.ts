@@ -1,6 +1,6 @@
-import { CacheClient } from "../app";
-import { ILogger } from "../logging";
-import { AddMemberResponse, CopilotAddResponse, GitHubTeamId, InstalledClient, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
+import { CacheClient } from "../app.ts";
+import { ILogger } from "../logging.ts";
+import { AddMemberResponse, CopilotAddResponse, GitHubTeamId, InstalledClient, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes.ts";
 
 export class GitHubClientCache implements InstalledClient {
     client: InstalledClient;

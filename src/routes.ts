@@ -1,9 +1,9 @@
-import { getCurrentRateLimitHandler } from "./handlers/getCurrentRateLimit";
-import { getInstalledOrgsHandler } from "./handlers/getInstalledOrgs";
-import { getSourceTeamHandler } from "./handlers/getSourceTeam";
-import { syncAllHandler } from "./handlers/syncAll";
-import { syncOrgHandler } from "./handlers/syncOrg";
-import { syncSpecificTeamHandler } from "./handlers/syncSpecificTeamHandler";
+import { getCurrentRateLimitHandler } from "./handlers/getCurrentRateLimit.ts";
+import { getInstalledOrgsHandler } from "./handlers/getInstalledOrgs.ts";
+import { getSourceTeamHandler } from "./handlers/getSourceTeam.ts";
+import { syncAllHandler } from "./handlers/syncAll.ts";
+import { syncOrgHandler } from "./handlers/syncOrg.ts";
+import { syncSpecificTeamHandler } from "./handlers/syncSpecificTeamHandler.ts";
 
 function notImplementedHandler(c: any, req: any, res: any) {
     return res

@@ -1,5 +1,5 @@
-import { AppConfig } from "./appConfig"
-import { GitHubTeamName, OrgConfig } from "./orgConfig"
+import { AppConfig } from "./appConfig.ts"
+import { GitHubTeamName, OrgConfig } from "./orgConfig.ts"
 
 export interface Org {
     id: number,

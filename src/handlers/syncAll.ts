@@ -1,11 +1,11 @@
 import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
-import { GetClient } from "../services/gitHub";
-import { SyncOrg } from "../services/githubSync";
-import { GitHubClient } from "../services/gitHubTypes";
+import { GetClient } from "../services/gitHub.ts";
+import { SyncOrg } from "../services/githubSync.ts";
+import { GitHubClient } from "../services/gitHubTypes.ts";
 import axios from 'axios';
-import { Log } from "../logging";
-import { GetInvitationsClient } from "../services/githubInvitations";
+import { Log } from "../logging.ts";
+import { GetInvitationsClient } from "../services/githubInvitations.ts";
 
 async function syncOrgLocal(installationId: number, client: GitHubClient) {
     const orgClient = await client.GetOrgClient(installationId);

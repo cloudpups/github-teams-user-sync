@@ -1,8 +1,8 @@
-import { Config } from "../config";
+import { Config } from "../config.ts";
 import axios, { AxiosError } from "axios";
 import axiosRetry from "axios-retry";
-import { Log, LoggerToUse } from "../logging";
-import { redisClient } from "../app";
+import { Log, LoggerToUse } from "../logging.ts";
+import { redisClient } from "../app.ts";
 
 const config = Config()
 export interface Entry {
