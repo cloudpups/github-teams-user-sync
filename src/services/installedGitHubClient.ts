@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 import { Octokit, PageInfoForward } from "octokit";
 import { AddMemberResponse, CopilotAddResponse, GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgConfigResponse, OrgInvite, OrgRoles, RawResponse, RemoveMemberResponse, Response } from "./gitHubTypes";
-=======
-import { Octokit } from "octokit";
-import { AddMemberResponse, CopilotAddResponse, GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgConfigResponse, OrgInvite, OrgRoles, RawResponse, RemoveMemberResponse, Response } from "./gitHubTypes";
->>>>>>> 5e27be7 (Backup)
 import yaml from "js-yaml";
 import { AsyncReturnType, MakeTeamNameSafeAndApiFriendly } from "../utility";
 import { Log, LogError } from "../logging";
