@@ -2,19 +2,6 @@ import { CacheClient } from "../app";
 import { ILogger } from "../logging";
 import { AddMemberResponse, CopilotAddResponse, GitHubTeamId, InstalledClient, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
 
-/**
- * This class decorates the InstalledClient with additional caching logic. In general, 
- * this logic should be kept simple. However, in an effort to reduce the bleeding of
- * complex logic into the concrete InstalledClient implementations, some complexity
- * may be acceptable here (such as checking for eTag and then retrying a call).
- * 
- * Chain of responsibility:
- * 
- * eTag checker
- * if there are no changes, check cache and return
-    * if cache has nothing, call client, cache value, then return
- * if there are changes, check client, cache changes and etag, return
- */
 export class GitHubClientCache implements InstalledClient {
     client: InstalledClient;
     cacheClient: CacheClient;
