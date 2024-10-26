@@ -515,11 +515,11 @@ export class InstalledGitHubClient implements InstalledClient {
 
             // if the above completes successfully, then there are changes and we must leverage the 
             // GraphQL API to get the members of JUST the team in question (see comment above about the REST API).                            
-            const response = await this.gitHubClient.graphql.paginate()
+            const response = await this.gitHubClient.graphql.paginate("")
 
             return {
                 successful: true,
-                data: response.data.map(i => i.login),
+                data: [], //response.data.map(i => i.login),
                 eTag: response.headers.etag! // This call will always result in an eTag if successful
             }
         }
