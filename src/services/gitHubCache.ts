@@ -1,6 +1,6 @@
-import { CacheClient } from "../app";
 import { ILogger } from "../logging";
 import { AddMemberResponse, CopilotAddResponse, GitHubTeamId, IInstalledClient as IInstalledClient, IRawInstalledGitHubClient, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
+import { ICacheClient } from "./CacheClient";
 
 /**
  * This class decorates the InstalledClient with additional caching logic. In general, 
@@ -17,10 +17,10 @@ import { AddMemberResponse, CopilotAddResponse, GitHubTeamId, IInstalledClient a
  */
 export class GitHubClientCache implements IInstalledClient {
     client: IInstalledClient;
-    cacheClient: CacheClient;
+    cacheClient: ICacheClient;
     logger:ILogger;
 
-    constructor(client: IInstalledClient & IRawInstalledGitHubClient, cacheClient: CacheClient, logger:ILogger) {
+    constructor(client: IInstalledClient & IRawInstalledGitHubClient, cacheClient: ICacheClient, logger:ILogger) {
         this.client = client;
         this.cacheClient = cacheClient;
         this.logger = logger;
@@ -67,7 +67,7 @@ export class GitHubClientCache implements IInstalledClient {
             this.ReportCacheHit({
                 cacheKey: cacheKey,
                 operation: "IsUserMember",
-                value: result,
+                value: JSON.stringify(result),
                 user: id
             });
 

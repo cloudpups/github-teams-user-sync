@@ -9,6 +9,7 @@ import { Log, LoggerToUse } from "../logging";
 import { GitHubClientCache } from "./gitHubCache";
 import { redisClient } from "../app";
 import { InstalledGitHubClient } from "./installedGitHubClient";
+import { RedisCacheClient } from "../integrations/redisCacheClient";
 
 const config = Config();
 
@@ -65,9 +66,10 @@ async function GetOrgClient(installationId: number): Promise<IInstalledClient> {
 
     // HACK: gross typing nonsense
     const baseClient = new InstalledGitHubClient(installedOctokit, (orgName.data.account as thisShouldNotBeNeeded).login);
+    const redisCacheClient = new RedisCacheClient(redisClient);
 
     if (Config().AppOptions.RedisHost) {
-        const cachedClient = new GitHubClientCache(baseClient, redisClient, LoggerToUse());
+        const cachedClient = new GitHubClientCache(baseClient, redisCacheClient, LoggerToUse());
         return cachedClient;
     }
 
