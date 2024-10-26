@@ -24,17 +24,51 @@ We strive to make successfully running and building this application fairly stra
 
 See [./GitHubAppRegistration.md](./GitHubAppRegistration.md).
 
-## 3 Source of Truth credentials
+## 3 Source of Truth Setup
 
-At this point in time, the logic to fetch information from an LDAP system is baked into this application. Eventually it will be moved to a plugin to make running and developing this application simpler.
+At this point in time, the logic to fetch information from an external source of truth system has been removed from this codebase! As such, for this application to run you must configure the `SOURCE_PROXY=` to point towards an API that exposes an endpoint that matches the following configuration:
 
-At this point in time, you will need to provide 4 values in the application configuration for LDAP:
-
-```sh
-LDAP_SERVER=
-LDAP_USER=
-LDAP_PASSWORD=
-LDAP_GROUP_BASE_DN=
+```yml
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Users Source of Truth  
+paths:
+  /search/{groupName}:
+    post:            
+      parameters:
+        - in: path
+          name: groupName
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: A successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserList"
+        "404":
+          description: A response where the group is not found.
+        "500":
+          description: An internal server error has occurred.
+components:
+  schemas:    
+    UserModel:
+      type: object
+      properties:
+        name:
+          type: number
+        email:
+          type: string
+      required:
+        - name
+        - email
+    UserList:      
+      type: array
+      items:
+        $ref: '#/components/schemas/UserModel'
 ```
 
 ## 4 Configure the App

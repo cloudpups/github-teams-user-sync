@@ -26,7 +26,7 @@ npm run openapi
 
 ## Application Configuration
 
-🚧 Coming soon...
+See [./docs/ApplicationConfiguration.md](./docs/ApplicationConfiguration.md) for further details!
 
 ## Per-Organization Configuration
 
