@@ -22,8 +22,13 @@ jobs:
         uses: actions/setup-node@v4
       - name: Install dependencies
         run: npm install
-      - name: Run tests
-        run: npm test
+      - name: Prep .env file for integration tests
+        env:
+          envFileContents: ${{ secrets.INTEGRATION_ENV }}   
+        run: | 
+          echo $envFileContents >> test/integration/.env.sync-bot.tests          
+      - name: Run tests                       
+        run: npm run test:all
       - name: Upload results to Codecov
         uses: codecov/codecov-action@v4
         with:
