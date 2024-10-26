@@ -26,7 +26,7 @@ jobs:
         env:
           envFileContents: ${{ secrets.INTEGRATION_ENV }}   
         run: | 
-          echo $envFileContents >> test/integration/.env.sync-bot.tests          
+          echo "$envFileContents" >> test/integration/.env.sync-bot.tests          
       - name: Run tests                       
         run: npm run test:all
       - name: Upload results to Codecov
