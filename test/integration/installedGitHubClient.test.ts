@@ -57,9 +57,10 @@ describe('InstalledGitHubClient Class', () => {
 
     // Setup test org
     try {
-      await client.rest.teams.create({
+      const team1 = await client.rest.teams.create({
         name: testConfig.team1.name,
-        org: testConfig.orgName
+        org: testConfig.orgName,
+        privacy: "closed"
       });
 
       await client.rest.teams.addOrUpdateMembershipForUserInOrg({
@@ -70,7 +71,9 @@ describe('InstalledGitHubClient Class', () => {
 
       await client.rest.teams.create({
         name: testConfig.team2.name,
-        org: testConfig.orgName
+        org: testConfig.orgName,
+        parent_team_id: team1.data.id,
+        privacy: "closed"
       });
 
       await client.rest.teams.addOrUpdateMembershipForUserInOrg({
@@ -86,19 +89,19 @@ describe('InstalledGitHubClient Class', () => {
 
     const timeOutToAllowGitHubCacheToUpdateInMillis = 2000;
     await new Promise((r) => setTimeout(r, timeOutToAllowGitHubCacheToUpdateInMillis));
-  });
+  }, 10000);
 
   afterAll(async () => {
     try {
       await client.rest.teams.deleteInOrg({
         org: testConfig.orgName,
-        team_slug: testConfig.team1.name
+        team_slug: testConfig.team2.name
       });
 
       await client.rest.teams.deleteInOrg({
         org: testConfig.orgName,
-        team_slug: testConfig.team2.name
-      })
+        team_slug: testConfig.team1.name
+      });      
     }
     catch (e) {
       console.log(e);
