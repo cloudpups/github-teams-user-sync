@@ -1,9 +1,8 @@
 // REMEMBER TO REPLACE '_' with '-' for GitHub Names! 🤦‍♂️
 
-import e from "express";
 import { Log, LogError } from "../logging";
 import { AppConfig } from "./appConfig";
-import { CopilotAddResponse, FailedResponse, GitHubId, InstalledClient, OrgInvite } from "./gitHubTypes";
+import { CopilotAddResponse, GitHubId, IInstalledClient, OrgInvite } from "./gitHubTypes";
 import { IGitHubInvitations } from "./githubInvitations";
 import { SearchAllAsync } from "./ldapClient";
 import { OrgConfig } from "./orgConfig";
@@ -69,7 +68,7 @@ type SyncMembersSucceeded = {
 
 type SyncMembersResponse = Promise<SyncMembersFailed | SyncMembersSucceeded>
 
-async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, sourceTeamMap: Map<string, string>): SyncMembersResponse {
+async function SynchronizeOrgMembers(installedGitHubClient: IInstalledClient, teamName: string, config: AppConfig, sourceTeamMap: Map<string, string>): SyncMembersResponse {
     const actualTeamName = sourceTeamMap.get(teamName) ?? teamName;
         
     const gitHubIdsResponse = await GetGitHubIds(actualTeamName, config);
@@ -110,7 +109,7 @@ async function SynchronizeOrgMembers(installedGitHubClient: InstalledClient, tea
     };
 }
 
-async function SynchronizeGitHubTeam(installedGitHubClient: InstalledClient, teamName: string, config: AppConfig, existingInvites: OrgInvite[], sourceTeamMap: Map<string, string>, checkOrgMembers: boolean = true, dryRun: boolean = false) {
+async function SynchronizeGitHubTeam(installedGitHubClient: IInstalledClient, teamName: string, config: AppConfig, existingInvites: OrgInvite[], sourceTeamMap: Map<string, string>, checkOrgMembers: boolean = true, dryRun: boolean = false) {
     function GetSourceOrReturn(teamName: string) {
         return sourceTeamMap.get(teamName) ?? teamName;
     }
@@ -217,7 +216,7 @@ async function SyncSecurityManagers(opts: {
     securityManagerTeams: string[]
     setOfExistingTeams: Set<string>
     shortLink: string
-    client: InstalledClient
+    client: IInstalledClient
     appConfig: AppConfig
     currentInvites: OrgInvite[],
     displayNameToSourceMap: Map<string,string>
@@ -259,7 +258,7 @@ async function SyncSecurityManagers(opts: {
     }
 }
 
-async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppConfig, invitationsClient: IGitHubInvitations, log:(message: string, operation:string, status:string)=>void): Promise<ReturnTypeOfSyncOrg> {
+async function syncOrg(installedGitHubClient: IInstalledClient, appConfig: AppConfig, invitationsClient: IGitHubInvitations, log:(message: string, operation:string, status:string)=>void): Promise<ReturnTypeOfSyncOrg> {
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
     let response: ReturnTypeOfSyncOrg = {
@@ -479,13 +478,13 @@ async function syncOrg(installedGitHubClient: InstalledClient, appConfig: AppCon
 }
 
 
-export async function SyncTeam(teamName: string, client: InstalledClient, config: AppConfig, invites: OrgInvite[], sourceTeamMap: Map<string, string>, dryRun: boolean = false) {
+export async function SyncTeam(teamName: string, client: IInstalledClient, config: AppConfig, invites: OrgInvite[], sourceTeamMap: Map<string, string>, dryRun: boolean = false) {
     const response = await SynchronizeGitHubTeam(client, teamName, config, invites, sourceTeamMap, true, dryRun);
 
     return response;
 }
 
-export async function SyncOrg(installedGitHubClient: InstalledClient, config: AppConfig, invitationsClient: IGitHubInvitations): Promise<ReturnTypeOfSyncOrg> {
+export async function SyncOrg(installedGitHubClient: IInstalledClient, config: AppConfig, invitationsClient: IGitHubInvitations): Promise<ReturnTypeOfSyncOrg> {
     const orgName = installedGitHubClient.GetCurrentOrgName();
 
     // For more context since this repo doesn't fully 
@@ -568,7 +567,7 @@ function RemoveTeamsToIgnore(TeamsToManage: string[], appConfig: AppConfig) {
     };
 }
 
-async function addOrgMember(gitHubId: GitHubId, installedGitHubClient: InstalledClient) {
+async function addOrgMember(gitHubId: GitHubId, installedGitHubClient: IInstalledClient) {
     const isUserReal = await installedGitHubClient.DoesUserExist(gitHubId);
 
     if (!isUserReal.successful || !isUserReal.data) {
@@ -602,7 +601,7 @@ async function addOrgMember(gitHubId: GitHubId, installedGitHubClient: Installed
 
 async function checkValidOrgMember(opts: {
     gitHubId: GitHubId,
-    installedGitHubClient: InstalledClient,
+    installedGitHubClient: IInstalledClient,
     checkOrgMembers: boolean,
     orgName: string,
     idsWithInvites: Set<string>,

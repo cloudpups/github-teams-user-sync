@@ -8,7 +8,7 @@ export interface Org {
 
 export interface GitHubClient {
     GetInstallations(): Promise<Org[]>
-    GetOrgClient(installationId: number): Promise<InstalledClient>
+    GetOrgClient(installationId: number): Promise<IInstalledClient>
     GetAppConfig(): Promise<AppConfig>
 }
 
@@ -32,25 +32,29 @@ export type OrgConfigResponseBad = {
 
 export type OrgConfigResponse = Promise<OrgConfigResponseSuccess | OrgConfigResponseBad>;
 
-export interface InstalledClient {
+export interface IRawInstalledGitHubClient extends IInstalledClient {    
+    ListMembersOfTeamEtagCheck(team: string, eTag: string): EtagResponse
+}
+
+export interface IInstalledClient {
     GetCurrentOrgName(): string
     GetCurrentRateLimit(): Promise<{ remaining: number }>
     AddOrgMember(id: GitHubId): Response
     IsUserMember(id: GitHubId): Response<boolean>
     GetAllTeams(): Response<GitHubTeamId[]>
     AddTeamMember(team: GitHubTeamName, id: GitHubId): AddMemberResponse
-    CreateTeam(teamName: GitHubTeamName, description:string): Response
+    CreateTeam(teamName: GitHubTeamName, description: string): Response
     DoesUserExist(gitHubId: string): Response<GitHubId>
     ListCurrentMembersOfGitHubTeam(team: GitHubTeamName): Response<GitHubId[]>
     RemoveTeamMemberAsync(team: GitHubTeamName, user: GitHubId): RemoveMemberResponse
     UpdateTeamDetails(team: GitHubTeamName, description: string): Response
     AddSecurityManagerTeam(team: GitHubTeamName): Promise<unknown>
-    GetConfigurationForInstallation(): OrgConfigResponse        
+    GetConfigurationForInstallation(): OrgConfigResponse
     SetOrgRole(id: GitHubId, role: OrgRoles): Response
-    GetPendingOrgInvites():Response<OrgInvite[]>
-    CancelOrgInvite(invite:OrgInvite): Response    
-    ListPendingInvitesForTeam(teamName: GitHubTeamName):Response<OrgInvite[]>
-    AddTeamsToCopilotSubscription(teamNames: GitHubTeamName[]):Response<CopilotAddResponse[]>
+    GetPendingOrgInvites(): Response<OrgInvite[]>
+    CancelOrgInvite(invite: OrgInvite): Response
+    ListPendingInvitesForTeam(teamName: GitHubTeamName): Response<OrgInvite[]>
+    AddTeamsToCopilotSubscription(teamNames: GitHubTeamName[]): Response<CopilotAddResponse[]>
 }
 
 export type CopilotAddResponse = CopilotAddSucceeded | CopilotAddFailed
@@ -101,10 +105,17 @@ export type GenericSucceededResponse<T> = {
     data: T
 }
 
+export type NoChangesResponse = {
+    successful: "no_changes",
+    eTag: string
+}
+
 export type FailedResponse = {
     successful: false,
-    message?:string
+    message?: string
 }
+
+export type EtagResponse = Promise<GenericSucceededResponse<string> | FailedResponse | NoChangesResponse>
 
 export type Response<T = unknown> = Promise<GenericSucceededResponse<T> | FailedResponse>;
 
@@ -117,7 +128,7 @@ export type GitHubUser = {
 
 export type GitHubTeamId = {
     Id: number,
-    Name: string    
+    Name: string
 }
 
 export type GitHubTeam = {

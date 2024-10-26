@@ -1,7 +1,7 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
-import { GitHubClient, InstalledClient, Org } from "./gitHubTypes";
+import { GitHubClient, IInstalledClient, Org } from "./gitHubTypes";
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
@@ -9,10 +9,11 @@ import { Log, LoggerToUse } from "../logging";
 import { GitHubClientCache } from "./gitHubCache";
 import { redisClient } from "../app";
 import { InstalledGitHubClient } from "./installedGitHubClient";
+import { RedisCacheClient } from "../integrations/redisCacheClient";
 
 const config = Config();
 
-async function GetOrgClient(installationId: number): Promise<InstalledClient> {
+async function GetOrgClient(installationId: number): Promise<IInstalledClient> {
     // TODO: look further into this... it seems like it would be best if 
     // installation client was generated from the original client, and not
     // created fresh.    
@@ -65,9 +66,10 @@ async function GetOrgClient(installationId: number): Promise<InstalledClient> {
 
     // HACK: gross typing nonsense
     const baseClient = new InstalledGitHubClient(installedOctokit, (orgName.data.account as thisShouldNotBeNeeded).login);
+    const redisCacheClient = new RedisCacheClient(redisClient);
 
     if (Config().AppOptions.RedisHost) {
-        const cachedClient = new GitHubClientCache(baseClient, redisClient, LoggerToUse());
+        const cachedClient = new GitHubClientCache(baseClient, redisCacheClient, LoggerToUse());
         return cachedClient;
     }
 

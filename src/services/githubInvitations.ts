@@ -1,17 +1,17 @@
-import { GenericSucceededResponse, InstalledClient, OrgInvite,Response } from "./gitHubTypes";
+import { GenericSucceededResponse, IInstalledClient, OrgInvite,Response } from "./gitHubTypes";
 
 export interface IGitHubInvitations {
     ListInvites():Response<OrgInvite[]>
 }
 
-export function GetInvitationsClient(client:InstalledClient) {
+export function GetInvitationsClient(client:IInstalledClient) {
     return new GitHubInvitations(client);
 }
 
 class GitHubInvitations implements IGitHubInvitations {
-    client:InstalledClient;
+    client:IInstalledClient;
 
-    constructor(client:InstalledClient) {
+    constructor(client:IInstalledClient) {
         this.client = client;
     }
 
