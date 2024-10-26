@@ -1,12 +1,12 @@
 import { Octokit, PageInfoForward } from "octokit";
-import { AddMemberResponse, CopilotAddResponse, EtagResponse, GitHubId, GitHubTeamId, IInstalledClient, IRawInstalledGitHubClient, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
+import { AddMemberResponse, CopilotAddResponse, EtagResponse, GitHubId, GitHubTeamId, IRawInstalledGitHubClient, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
 import yaml from "js-yaml";
 import { AsyncReturnType, MakeTeamNameSafeAndApiFriendly } from "../utility";
 import { Log, LogError } from "../logging";
 import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig";
 import gql from 'graphql-tag';
 
-export class InstalledGitHubClient implements IInstalledClient, IRawInstalledGitHubClient {
+export class InstalledGitHubClient implements IRawInstalledGitHubClient {
     gitHubClient: Octokit;
     orgName: string;
 

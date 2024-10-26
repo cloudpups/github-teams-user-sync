@@ -1,9 +1,8 @@
 // REMEMBER TO REPLACE '_' with '-' for GitHub Names! 🤦‍♂️
 
-import e from "express";
 import { Log, LogError } from "../logging";
 import { AppConfig } from "./appConfig";
-import { CopilotAddResponse, FailedResponse, GitHubId, IInstalledClient, OrgInvite } from "./gitHubTypes";
+import { CopilotAddResponse, GitHubId, IInstalledClient, OrgInvite } from "./gitHubTypes";
 import { IGitHubInvitations } from "./githubInvitations";
 import { SearchAllAsync } from "./ldapClient";
 import { OrgConfig } from "./orgConfig";

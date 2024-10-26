@@ -32,7 +32,7 @@ export type OrgConfigResponseBad = {
 
 export type OrgConfigResponse = Promise<OrgConfigResponseSuccess | OrgConfigResponseBad>;
 
-export interface IRawInstalledGitHubClient {    
+export interface IRawInstalledGitHubClient extends IInstalledClient {    
     ListMembersOfTeamEtagCheck(team: string, eTag: string): EtagResponse
 }
 

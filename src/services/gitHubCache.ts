@@ -16,7 +16,7 @@ import { ICacheClient } from "./CacheClient";
  * if there are changes, check client, cache changes and etag, return
  */
 export class GitHubClientCache implements IInstalledClient {
-    constructor(private client: IInstalledClient & IRawInstalledGitHubClient, private cacheClient: ICacheClient, private logger: ILogger) { }
+    constructor(private client: IRawInstalledGitHubClient, private cacheClient: ICacheClient, private logger: ILogger) { }
 
     AddTeamsToCopilotSubscription(teamNames: string[]): Response<CopilotAddResponse[]> {
         return this.client.AddTeamsToCopilotSubscription(teamNames);
