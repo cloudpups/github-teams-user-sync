@@ -1,12 +1,12 @@
 import { Octokit, PageInfoForward } from "octokit";
-import { AddMemberResponse, CopilotAddResponse, GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgConfigResponse, OrgInvite, OrgRoles, RawResponse, RemoveMemberResponse, Response } from "./gitHubTypes";
+import { AddMemberResponse, CopilotAddResponse, EtagResponse, GitHubId, GitHubTeamId, InstalledClient, IRawInstalledGitHubClient, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
 import yaml from "js-yaml";
 import { AsyncReturnType, MakeTeamNameSafeAndApiFriendly } from "../utility";
 import { Log, LogError } from "../logging";
 import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig";
 import gql from 'graphql-tag';
 
-export class InstalledGitHubClient implements InstalledClient {
+export class InstalledGitHubClient implements InstalledClient, IRawInstalledGitHubClient {
     gitHubClient: Octokit;
     orgName: string;
 
@@ -490,7 +490,7 @@ export class InstalledGitHubClient implements InstalledClient {
         }
     }
 
-    public async RawListCurrentMembersOfGitHubTeam(team: string, eTag: string): RawResponse<string[]> {
+    public async ListMembersOfTeamEtagCheck(team: string, eTag: string): EtagResponse {
         const safeTeam = MakeTeamNameSafeAndApiFriendly(team);
 
         try {
@@ -504,23 +504,21 @@ export class InstalledGitHubClient implements InstalledClient {
             `link` header to determine if there are more pages, this is not done here as the REST API
             for teams will return members from child teams, which is not what we want... It is only via
             the GraphQL API that we can get the members of a specific team. */
-            await this.gitHubClient.rest.teams.listMembersInOrg({
+            const response = await this.gitHubClient.rest.teams.listMembersInOrg({
                 org: this.orgName,
                 team_slug: safeTeam,
                 per_page: 1,
                 headers: {
                     'If-None-Match': eTag
                 }
-            });
+            });            
 
             // if the above completes successfully, then there are changes and we must leverage the 
-            // GraphQL API to get the members of JUST the team in question (see comment above about the REST API).                            
-            // const response = await this.gitHubClient.graphql.paginate()
+            // GraphQL API to get the members of JUST the team in question (see comment above about the REST API).                                        
 
             return {
-                successful: true,
-                data: [], // response.data.map(i => i.login),
-                eTag: "" // response.headers.etag! // This call will always result in an eTag if successful
+                successful: true,                
+                data: response.headers.etag! // This response will always have an etag
             }
         }
         catch (error) {
@@ -528,7 +526,8 @@ export class InstalledGitHubClient implements InstalledClient {
 
             if (typedError.status == 304) {
                 return {
-                    successful: "no_changes"
+                    successful: "no_changes",
+                    eTag: eTag
                 }
             }
 
