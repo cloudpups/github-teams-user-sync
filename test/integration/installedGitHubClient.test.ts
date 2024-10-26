@@ -113,17 +113,28 @@ describe('InstalledGitHubClient Class', () => {
     // Arrange         
     const installedGitHubClient = new InstalledGitHubClient(client, testConfig.orgName);
 
-    const expectedTeam = testConfig.team1.name;
-    const expectedUser = testConfig.team1.member;
+    const expectedTeam1 = testConfig.team1.name;
+    const expectedUser1 = testConfig.team1.member;
+    const expectedTeam2 = testConfig.team2.name;
+    const expectedUser2 = testConfig.team2.member;
 
     // Act
-    const response = await installedGitHubClient.ListCurrentMembersOfGitHubTeam(expectedTeam);
+    const response = await installedGitHubClient.ListCurrentMembersOfGitHubTeam(expectedTeam1);
+    const response2 = await installedGitHubClient.ListCurrentMembersOfGitHubTeam(expectedTeam2);
 
     const actualMembers = response.successful ? response.data : [];
+    const actualMembers2 = response2.successful ? response2.data : [];
 
     // Assert     
-    expect(response.successful).toBeTruthy();
+    // By testing both teams, we can validate that we have solved the "child team members" problem
+    // as the `beforeAll` step configures team2 to be a child of team1. For more information, refer 
+    // to the following GitHub Issue: https://github.com/cloudpups/github-teams-user-sync/issues/96
+    expect(response.successful).toBeTruthy();    
     expect(actualMembers).toHaveLength(1);
-    expect(actualMembers[0]).toEqual(expectedUser);
+    expect(actualMembers[0]).toEqual(expectedUser1);
+
+    expect(response2.successful).toBeTruthy();    
+    expect(actualMembers2).toHaveLength(1);
+    expect(actualMembers2[0]).toEqual(expectedUser2);
   });
 });

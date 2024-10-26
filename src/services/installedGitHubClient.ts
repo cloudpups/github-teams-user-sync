@@ -4,7 +4,7 @@ import yaml from "js-yaml";
 import { AsyncReturnType, MakeTeamNameSafeAndApiFriendly } from "../utility";
 import { Log, LogError } from "../logging";
 import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig";
-// import * as query from "./teamMembers.gql";
+import gql from 'graphql-tag';
 
 export class InstalledGitHubClient implements InstalledClient {
     gitHubClient: Octokit;
@@ -315,13 +315,11 @@ export class InstalledGitHubClient implements InstalledClient {
         const safeTeam = MakeTeamNameSafeAndApiFriendly(team);
 
         try {
-            const response = await this.gitHubClient.graphql.paginate<MembersResponseType>(actualQuery, {
+            const response = await this.gitHubClient.graphql.paginate<MembersResponseType>(membersQuery.loc?.source.body!, {
                 org: this.GetCurrentOrgName(),
                 team: safeTeam
             });
-
-            console.log(response);
-
+            
             return {
                 successful: true,
                 data: response.organization.team.members.nodes.map(i => i.login)
@@ -493,7 +491,7 @@ export class InstalledGitHubClient implements InstalledClient {
     }
 }
 
-const actualQuery = `query($org:String!, $team:String!, $cursor:String) {
+const membersQuery = gql`query($org:String!, $team:String!, $cursor:String) {
     organization(login:$org) {
         team(slug:$team) {
             members(first:100, membership:IMMEDIATE, after:$cursor) {
