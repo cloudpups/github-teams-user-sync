@@ -7,5 +7,9 @@ module.exports = {
   collectCoverageFrom: ['src/**/*.ts'],
   setupFiles: [
     "dotenv/config"
+  ],
+  testPathIgnorePatterns: [
+    "node_modules",
+    "out"
   ]
 };
