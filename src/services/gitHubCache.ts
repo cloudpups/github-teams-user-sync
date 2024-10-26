@@ -154,29 +154,35 @@ export class GitHubClientCache implements IInstalledClient {
 
         const cachedEtag = await this.cacheClient.get(eTagCacheKey) ?? "";
 
-        const eTagResponse = await this.client.ListMembersOfTeamEtagCheck(team, cachedEtag);
+        const eTagResponse = await this.client.ListMembersOfTeamEtagCheck(team, cachedEtag);        
 
-        if (eTagResponse.successful == false) {
+        if (eTagResponse.successful == false) {            
             return {
                 successful: false
             }
-        }
+        }        
 
         let newETag = "";
         let teamMembers: string[] | undefined = undefined;
 
+        console.log("HELLO");
+
         if (eTagResponse.successful == "no_changes") {
             newETag = eTagResponse.eTag;
 
-            const cachedTeamMembers = await this.cacheClient.get(teamCacheKey);
+            console.log("NO CHANGES");
 
+            const cachedTeamMembers = await this.cacheClient.get(teamCacheKey);            
+            
             if (cachedTeamMembers) {
+                console.log("Found cached team members");
                 teamMembers = JSON.parse(cachedTeamMembers);
             }
             else {
+                console.log("Did not find cached team members");
                 const newTeamMembersResponse = await this.client.ListCurrentMembersOfGitHubTeam(team);
 
-                if (newTeamMembersResponse.successful == false) {
+                if (newTeamMembersResponse.successful == false) {                    
                     return {
                         successful: false
                     }
@@ -191,7 +197,7 @@ export class GitHubClientCache implements IInstalledClient {
             newETag = eTagResponse.data;
             const newTeamMembersResponse = await this.client.ListCurrentMembersOfGitHubTeam(team);
 
-            if (newTeamMembersResponse.successful == false) {
+            if (newTeamMembersResponse.successful == false) {                
                 return {
                     successful: false
                 }
@@ -203,7 +209,7 @@ export class GitHubClientCache implements IInstalledClient {
 
         await this.cacheClient.set(eTagCacheKey, newETag, { EX: fourteenDaysInSeconds });
 
-        if (teamMembers === undefined) {
+        if (teamMembers === undefined) {            
             return {
                 successful: false
             }

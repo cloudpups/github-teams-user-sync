@@ -5,10 +5,10 @@
   "main": "app.ts",
   "module": "es2015",
   "scripts": {
-    "test:unit": "jest test/unit --coverage --reporters=jest-junit",
+    "test:unit": "jest test/unit",
     "test:int": "jest test/integration",
     "test:all": "jest --coverage --reporters=jest-junit",
-    "test": "npm run test:unit",
+    "test": "jest test/unit",
     "dev": "nodemon",
     "start": "node ./out/app.js",
     "build": "tsc && shx cp ./src/openapi.yaml ./out/openapi.yaml",
