@@ -15,4 +15,9 @@ GitHubApp__AppId={number}
 Tests__InstallationId={number}
 Tests__OrgName={string}
 GitHubApp__PrivateKey={multi-line-string}
+
+Tests_ToMake_Team1_Name={string}
+Tests_ToMake_Team1_Member={string}
+Tests_ToMake_Team2_Name={string}
+Tests_ToMake_Team2_Member={string}
 ```

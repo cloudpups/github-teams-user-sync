@@ -96,8 +96,6 @@ export type RemoveMemberFailed = {
     message: string
 }
 
-
-
 export type GenericSucceededResponse<T> = {
     successful: true,
     data: T

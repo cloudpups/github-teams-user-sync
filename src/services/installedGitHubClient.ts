@@ -1,9 +1,10 @@
-import { Octokit } from "octokit";
+import { Octokit, PageInfoForward } from "octokit";
 import { AddMemberResponse, CopilotAddResponse, GitHubClient, GitHubId, GitHubTeamId, InstalledClient, Org, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
 import yaml from "js-yaml";
 import { AsyncReturnType, MakeTeamNameSafeAndApiFriendly } from "../utility";
 import { Log, LogError } from "../logging";
 import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig";
+import gql from 'graphql-tag';
 
 export class InstalledGitHubClient implements InstalledClient {
     gitHubClient: Octokit;
@@ -36,7 +37,7 @@ export class InstalledGitHubClient implements InstalledClient {
                         'X-GitHub-Api-Version': '2022-11-28'
                     }
                 });
-        
+
                 if (response.status < 200 || response.status > 299) {
                     responses.push({
                         successful: false,
@@ -51,7 +52,7 @@ export class InstalledGitHubClient implements InstalledClient {
                 });
             }
             catch (e) {
-                console.log(e);                                
+                console.log(e);
                 responses.push({
                     successful: false,
                     team: team,
@@ -59,7 +60,7 @@ export class InstalledGitHubClient implements InstalledClient {
                 });
             }
         }
-        
+
         return {
             successful: true,
             data: responses
@@ -166,18 +167,18 @@ export class InstalledGitHubClient implements InstalledClient {
                 org: this.orgName,
                 username: id
             })
-    
+
             if (response.status != 200) {
                 return {
                     successful: false
                 }
             }
-    
+
             return {
                 successful: false
             }
         }
-        catch (e) {            
+        catch (e) {
             LogError(`Error adding Org Member ${id}: ${JSON.stringify(e)}`)
 
             return {
@@ -314,19 +315,18 @@ export class InstalledGitHubClient implements InstalledClient {
         const safeTeam = MakeTeamNameSafeAndApiFriendly(team);
 
         try {
-            const response = await this.gitHubClient.paginate(this.gitHubClient.rest.teams.listMembersInOrg, {
-                org: this.orgName,
-                team_slug: safeTeam,
-            })
-
+            const response = await this.gitHubClient.graphql.paginate<MembersResponseType>(membersQuery, {
+                org: this.GetCurrentOrgName(),
+                team: safeTeam
+            });
+            
             return {
                 successful: true,
-                data: response.map(i => {
-                    return i.login
-                })
+                data: response.organization.team.members.nodes.map(i => i.login)
             }
         }
-        catch {
+        catch (e) {
+            console.log(e);
             return {
                 successful: false
             }
@@ -425,7 +425,7 @@ export class InstalledGitHubClient implements InstalledClient {
         catch {
             return {
                 successful: false,
-                state: "NoConfig"            
+                state: "NoConfig"
             }
         }
 
@@ -434,7 +434,7 @@ export class InstalledGitHubClient implements InstalledClient {
         if (!Array.isArray(potentialFiles)) {
             return {
                 successful: false,
-                state: "NoConfig"                
+                state: "NoConfig"
             }
         }
 
@@ -450,7 +450,7 @@ export class InstalledGitHubClient implements InstalledClient {
             }
         }
 
-        if(onlyConfigFiles.length < 1) {
+        if (onlyConfigFiles.length < 1) {
             return {
                 successful: false,
                 state: "NoConfig",
@@ -470,7 +470,7 @@ export class InstalledGitHubClient implements InstalledClient {
         if (Array.isArray(contentData) || contentData.type != "file") {
             return {
                 successful: false,
-                state: "BadConfig"                
+                state: "BadConfig"
             }
         }
 
@@ -480,7 +480,7 @@ export class InstalledGitHubClient implements InstalledClient {
                 successful: true,
                 data: new OrgConfig(configuration)
             }
-        }     
+        }
         catch {
             return {
                 successful: false,
@@ -490,3 +490,35 @@ export class InstalledGitHubClient implements InstalledClient {
         }
     }
 }
+
+const membersQuerySource = gql`query($org:String!, $team:String!, $cursor:String) {
+    organization(login:$org) {
+        team(slug:$team) {
+            members(first:100, membership:IMMEDIATE, after:$cursor) {
+                nodes{          
+                    login                
+                },
+                pageInfo {
+                    endCursor          
+                    hasNextPage          
+                }
+            }
+        }
+    }
+}`;
+const membersQuery = membersQuerySource.loc!.source.body!
+
+type Member = {
+    login: string;
+};
+
+type MembersResponseType = {
+    organization: {
+        team: {
+            members: {
+                nodes: Member[];
+                pageInfo: PageInfoForward;
+            };
+        };
+    };
+};
