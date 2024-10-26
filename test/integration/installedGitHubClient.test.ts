@@ -107,25 +107,7 @@ describe('InstalledGitHubClient Class', () => {
       console.log(e);
       throw e;
     }
-  })
-
-  afterAll(async () => {
-    try {
-      await client.rest.teams.deleteInOrg({
-        org: testConfig.orgName,
-        team_slug: testConfig.team2.name
-      });
-
-      await client.rest.teams.deleteInOrg({
-        org: testConfig.orgName,
-        team_slug: testConfig.team1.name
-      });      
-    }
-    catch (e) {
-      console.log(e);
-      throw e;
-    }
-  })
+  });
 
   test('ListCurrentMembersOfGitHubTeam returns expected team members', async () => {
     // Arrange         
