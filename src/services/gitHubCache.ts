@@ -1,6 +1,6 @@
 import { CacheClient } from "../app";
 import { ILogger } from "../logging";
-import { AddMemberResponse, CopilotAddResponse, GitHubTeamId, InstalledClient, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
+import { AddMemberResponse, CopilotAddResponse, GitHubTeamId, IInstalledClient as IInstalledClient, IRawInstalledGitHubClient, OrgConfigResponse, OrgInvite, OrgRoles, RemoveMemberResponse, Response } from "./gitHubTypes";
 
 /**
  * This class decorates the InstalledClient with additional caching logic. In general, 
@@ -15,12 +15,12 @@ import { AddMemberResponse, CopilotAddResponse, GitHubTeamId, InstalledClient, O
     * if cache has nothing, call client, cache value, then return
  * if there are changes, check client, cache changes and etag, return
  */
-export class GitHubClientCache implements InstalledClient {
-    client: InstalledClient;
+export class GitHubClientCache implements IInstalledClient {
+    client: IInstalledClient;
     cacheClient: CacheClient;
     logger:ILogger;
 
-    constructor(client: InstalledClient, cacheClient: CacheClient, logger:ILogger) {
+    constructor(client: IInstalledClient & IRawInstalledGitHubClient, cacheClient: CacheClient, logger:ILogger) {
         this.client = client;
         this.cacheClient = cacheClient;
         this.logger = logger;

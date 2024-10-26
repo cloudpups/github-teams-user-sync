@@ -1,7 +1,7 @@
 import { Octokit } from "octokit";
 import { createAppAuth } from "@octokit/auth-app";
 import { Config } from "../config";
-import { GitHubClient, InstalledClient, Org } from "./gitHubTypes";
+import { GitHubClient, IInstalledClient, Org } from "./gitHubTypes";
 import { AppConfig } from "./appConfig";
 import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
@@ -12,7 +12,7 @@ import { InstalledGitHubClient } from "./installedGitHubClient";
 
 const config = Config();
 
-async function GetOrgClient(installationId: number): Promise<InstalledClient> {
+async function GetOrgClient(installationId: number): Promise<IInstalledClient> {
     // TODO: look further into this... it seems like it would be best if 
     // installation client was generated from the original client, and not
     // created fresh.    

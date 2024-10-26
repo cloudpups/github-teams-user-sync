@@ -8,7 +8,7 @@ export interface Org {
 
 export interface GitHubClient {
     GetInstallations(): Promise<Org[]>
-    GetOrgClient(installationId: number): Promise<InstalledClient>
+    GetOrgClient(installationId: number): Promise<IInstalledClient>
     GetAppConfig(): Promise<AppConfig>
 }
 
@@ -36,7 +36,7 @@ export interface IRawInstalledGitHubClient {
     ListMembersOfTeamEtagCheck(team: string, eTag: string): EtagResponse
 }
 
-export interface InstalledClient {
+export interface IInstalledClient {
     GetCurrentOrgName(): string
     GetCurrentRateLimit(): Promise<{ remaining: number }>
     AddOrgMember(id: GitHubId): Response
