@@ -56,55 +56,45 @@ beforeAll(async () => {
   });
 
   // Setup test org
-  try {
-    const team1 = await client.rest.teams.create({
-      name: testConfig.team1.name,
-      org: testConfig.orgName,
-      privacy: "closed"
-    });
+  const team1 = await client.rest.teams.create({
+    name: testConfig.team1.name,
+    org: testConfig.orgName,
+    privacy: "closed"
+  });
 
-    await client.rest.teams.addOrUpdateMembershipForUserInOrg({
-      org: testConfig.orgName,
-      team_slug: testConfig.team1.name,
-      username: testConfig.team1.member
-    });
+  await client.rest.teams.addOrUpdateMembershipForUserInOrg({
+    org: testConfig.orgName,
+    team_slug: testConfig.team1.name,
+    username: testConfig.team1.member
+  });
 
-    await client.rest.teams.create({
-      name: testConfig.team2.name,
-      org: testConfig.orgName,
-      parent_team_id: team1.data.id,
-      privacy: "closed"
-    });
+  await client.rest.teams.create({
+    name: testConfig.team2.name,
+    org: testConfig.orgName,
+    parent_team_id: team1.data.id,
+    privacy: "closed"
+  });
 
-    await client.rest.teams.addOrUpdateMembershipForUserInOrg({
-      org: testConfig.orgName,
-      team_slug: testConfig.team2.name,
-      username: testConfig.team2.member
-    });
-  }
-  catch (e) {    
-    throw e;
-  }
+  await client.rest.teams.addOrUpdateMembershipForUserInOrg({
+    org: testConfig.orgName,
+    team_slug: testConfig.team2.name,
+    username: testConfig.team2.member
+  });
 
   const timeOutToAllowGitHubCacheToUpdateInMillis = 2000;
   await new Promise((r) => setTimeout(r, timeOutToAllowGitHubCacheToUpdateInMillis));
 }, 10000);
 
 afterAll(async () => {
-  try {
-    await client.rest.teams.deleteInOrg({
-      org: testConfig.orgName,
-      team_slug: testConfig.team2.name
-    });
+  await client.rest.teams.deleteInOrg({
+    org: testConfig.orgName,
+    team_slug: testConfig.team2.name
+  });
 
-    await client.rest.teams.deleteInOrg({
-      org: testConfig.orgName,
-      team_slug: testConfig.team1.name
-    });
-  }
-  catch (e) {    
-    throw e;
-  }
+  await client.rest.teams.deleteInOrg({
+    org: testConfig.orgName,
+    team_slug: testConfig.team1.name
+  });
 });
 
 describe('InstalledGitHubClient Class', () => {
