@@ -81,6 +81,12 @@ beforeAll(async () => {
     username: testConfig.team2.member
   });
 
+  await client.rest.teams.addOrUpdateMembershipForUserInOrg({
+    org: testConfig.orgName,
+    team_slug: testConfig.team2.name,
+    username: testConfig.team1.member
+  });
+
   const timeOutToAllowGitHubCacheToUpdateInMillis = 2000;
   await new Promise((r) => setTimeout(r, timeOutToAllowGitHubCacheToUpdateInMillis));
 }, 10000);
@@ -123,8 +129,9 @@ describe('InstalledGitHubClient Class', () => {
     expect(actualMembers[0]).toEqual(expectedUser1);
 
     expect(response2.successful).toBeTruthy();
-    expect(actualMembers2).toHaveLength(1);
-    expect(actualMembers2[0]).toEqual(expectedUser2);
+    expect(actualMembers2).toHaveLength(2);
+    expect(actualMembers2).toContain(expectedUser1);
+    expect(actualMembers2).toContain(expectedUser2);
   });
 
   test('ListMembersOfTeamEtagCheck returns expected eTag results', async () => {
@@ -156,5 +163,31 @@ describe('InstalledGitHubClient Class', () => {
     const actualResponse2Etag = response2.successful == "no_changes" ? response2.eTag : "asdf";
     expect(response2.successful).toStrictEqual("no_changes");
     expect(actualResponse2Etag).toStrictEqual(eTag);
+  });
+
+  test('ListCurrentMembersOfGitHubTeam returns expected amount of team members with smallest page size', async () => {
+    // This test acts as a quick sanity check so we can ensure the paging library works with GraphQL.
+    // Since team 2 has 2 members, and we set the page size to 1, and this returns 2 members, we can be confident
+    // in that the paging works.
+
+    // Arrange         
+    const installedGitHubClient = new InstalledGitHubClient(client, testConfig.orgName, {
+      PageSize: 1
+    });
+    
+    const expectedUser1 = testConfig.team1.member;
+    const expectedTeam2 = testConfig.team2.name;
+    const expectedUser2 = testConfig.team2.member;
+
+    // Act    
+    const response = await installedGitHubClient.ListCurrentMembersOfGitHubTeam(expectedTeam2);
+    
+    const actualMembers = response.successful ? response.data : [];
+
+    // Assert     
+    expect(response.successful).toBeTruthy();
+    expect(actualMembers).toHaveLength(2);
+    expect(actualMembers).toContain(expectedUser1);
+    expect(actualMembers).toContain(expectedUser2);
   });
 });

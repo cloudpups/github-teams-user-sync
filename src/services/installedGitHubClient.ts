@@ -6,14 +6,17 @@ import { Log, LogError } from "../logging";
 import { GitHubTeamName, OrgConfig, OrgConfigurationOptions } from "./orgConfig";
 import gql from 'graphql-tag';
 
-export class InstalledGitHubClient implements IRawInstalledGitHubClient {
-    gitHubClient: Octokit;
-    orgName: string;
+export type InstalledGitHubClientOptions = {
+    PageSize: number
+}
 
-    constructor(gitHubClient: Octokit, orgName: string) {
-        this.gitHubClient = gitHubClient;
-        this.orgName = orgName;
-    }
+export const InstalledGitHubClientDefaultOptions : InstalledGitHubClientOptions = {
+    PageSize: 100
+}
+
+export class InstalledGitHubClient implements IRawInstalledGitHubClient {
+
+    constructor(private gitHubClient: Octokit, private orgName: string, private options:InstalledGitHubClientOptions = InstalledGitHubClientDefaultOptions) {}
 
     async AddTeamsToCopilotSubscription(teamNames: string[]): Response<CopilotAddResponse[]> {
         // Such logic should not generally go in a facade, though the convenience
@@ -317,7 +320,8 @@ export class InstalledGitHubClient implements IRawInstalledGitHubClient {
         try {
             const response = await this.gitHubClient.graphql.paginate<MembersResponseType>(membersQuery, {
                 org: this.GetCurrentOrgName(),
-                team: safeTeam
+                team: safeTeam,
+                pageSize: this.options.PageSize
             });
             
             return {
@@ -538,10 +542,10 @@ export class InstalledGitHubClient implements IRawInstalledGitHubClient {
     }
 }
 
-const membersQuerySource = gql`query($org:String!, $team:String!, $cursor:String) {
+const membersQuerySource = gql`query($org:String!, $team:String!, $cursor:String, $pageSize:Int) {
     organization(login:$org) {
         team(slug:$team) {
-            members(first:100, membership:IMMEDIATE, after:$cursor) {
+            members(first:$pageSize, membership:IMMEDIATE, after:$cursor) {
                 nodes{          
                     login                
                 },
