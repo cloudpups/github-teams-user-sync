@@ -2,7 +2,7 @@ import { CacheClient } from "../app";
 import { ICacheClient } from "../services/CacheClient";
 
 export class RedisCacheClient implements ICacheClient {
-    constructor(private cacheClient: CacheClient){};
+    constructor(private cacheClient: CacheClient){}
 
     async set(cacheKey: string, object: string, options: { EX: number; }): Promise<undefined> {
         await this.cacheClient.set(cacheKey, object, {
