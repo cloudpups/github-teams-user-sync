@@ -162,6 +162,13 @@ export class GitHubClientCache implements IInstalledClient {
             }
         }        
 
+        this.ReportCacheHit({
+            operation: "eTag-TeamMembers",
+            team: team,
+            value: cachedEtag,
+            cacheKey: eTagCacheKey
+        })
+
         let newETag = "";
         let teamMembers: string[] | undefined = undefined;        
 
@@ -172,6 +179,12 @@ export class GitHubClientCache implements IInstalledClient {
             
             if (cachedTeamMembers) {                
                 teamMembers = JSON.parse(cachedTeamMembers);
+                this.ReportCacheHit({
+                    operation: "TeamMembers",
+                    team: team,
+                    value: cachedTeamMembers,
+                    cacheKey: teamCacheKey
+                })
             }
             else {                
                 const newTeamMembersResponse = await this.client.ListCurrentMembersOfGitHubTeam(team);
