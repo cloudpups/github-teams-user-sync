@@ -163,23 +163,17 @@ export class GitHubClientCache implements IInstalledClient {
         }        
 
         let newETag = "";
-        let teamMembers: string[] | undefined = undefined;
-
-        console.log("HELLO");
+        let teamMembers: string[] | undefined = undefined;        
 
         if (eTagResponse.successful == "no_changes") {
-            newETag = eTagResponse.eTag;
-
-            console.log("NO CHANGES");
+            newETag = eTagResponse.eTag;            
 
             const cachedTeamMembers = await this.cacheClient.get(teamCacheKey);            
             
-            if (cachedTeamMembers) {
-                console.log("Found cached team members");
+            if (cachedTeamMembers) {                
                 teamMembers = JSON.parse(cachedTeamMembers);
             }
-            else {
-                console.log("Did not find cached team members");
+            else {                
                 const newTeamMembersResponse = await this.client.ListCurrentMembersOfGitHubTeam(team);
 
                 if (newTeamMembersResponse.successful == false) {                    
