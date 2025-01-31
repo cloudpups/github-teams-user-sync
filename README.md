@@ -4,7 +4,7 @@
 
 <img src="https://github.com/cloudpups/github-teams-user-sync/assets/4266541/f7a72671-0d41-498b-8efb-a0e63ac2b25d" alt="Billiam the Octocat helping folks get into teams." width="300" />
 
-Groups (currently Azure Active Directory Only) to GitHub Teams sync
+Groups (e.g., Entra ID, Cognito, etc.) to GitHub Teams, sync
 
 [![CodeQL](https://github.com/cloudpups/github-teams-user-sync/actions/workflows/codeql.yml/badge.svg)](https://github.com/cloudpups/github-teams-user-sync/actions/workflows/codeql.yml) [![Docker Pulls](https://img.shields.io/docker/pulls/trfc/github-teams-user-sync)](https://hub.docker.com/r/trfc/github-teams-user-sync) [![CodeFactor](https://www.codefactor.io/repository/github/cloudpups/github-teams-user-sync/badge)](https://www.codefactor.io/repository/github/cloudpups/github-teams-user-sync) [![codecov](https://codecov.io/gh/cloudpups/github-teams-user-sync/graph/badge.svg?token=CS2EM7ZITZ)](https://codecov.io/gh/cloudpups/github-teams-user-sync)
 
