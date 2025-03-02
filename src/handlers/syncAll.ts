@@ -1,7 +1,7 @@
 import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
 import { GetClient } from "../services/gitHub";
-import { SyncOrg } from "../services/githubSync";
+import { GitHubSyncer } from "../services/githubSync";
 import { GitHubClient } from "../services/gitHubTypes";
 import axios from 'axios';
 import { Log } from "../logging";
@@ -14,7 +14,9 @@ async function syncOrgLocal(installationId: number, client: GitHubClient) {
 
     const invitationsClient = GetInvitationsClient(orgClient);
 
-    return await SyncOrg(orgClient, appConfig, invitationsClient, CacheClientService);
+    const syncer = new GitHubSyncer(orgClient, appConfig, invitationsClient, CacheClientService);
+
+    return await syncer.SyncOrg(orgClient, appConfig, invitationsClient, CacheClientService);
 }
 
 export async function syncAllHandler(

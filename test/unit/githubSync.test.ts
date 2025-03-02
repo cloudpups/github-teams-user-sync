@@ -1,13 +1,13 @@
 import { describe, expect, test } from '@jest/globals';
 import { IRawInstalledGitHubClient, OrgInvite } from '../../src/services/gitHubTypes';
 import { anyString, instance, mock, when, verify, anything } from 'ts-mockito';
-import { SyncOrg } from '../../src/services/githubSync';
+import { GitHubSyncer } from '../../src/services/githubSync';
 import { IGitHubInvitations } from '../../src/services/githubInvitations';
 import { AppConfig } from '../../src/services/appConfig';
 import { InMemoryCacheClient } from '../cacheClientMock';
 import { OrgConfig } from '../../src/services/orgConfig';
 
-describe('githubSync -- SyncOrg', () => {
+describe('GitHubSyncer -- SyncOrg', () => {
     test('Should execute syncronize steps in expected order', async () => {
         // Arrange
         const orgName = "some_org";
@@ -50,8 +50,10 @@ describe('githubSync -- SyncOrg', () => {
             TeamsToIgnore: []
         };
 
+        const syncer = new GitHubSyncer(instance(installedClientMock), appConfig, instance(invitationsClientMock), inMemoryCacheClient);
+
         // Act  
-        const response = SyncOrg(instance(installedClientMock), appConfig, instance(invitationsClientMock), inMemoryCacheClient);
+        const response = syncer.SyncOrg(instance(installedClientMock), appConfig, instance(invitationsClientMock), inMemoryCacheClient);
 
         // Assert   
         verify(installedClientMock.GetCurrentOrgName()).calledBefore(invitationsClientMock.ListInvites());

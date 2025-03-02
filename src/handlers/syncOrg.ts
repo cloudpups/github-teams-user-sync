@@ -1,7 +1,7 @@
 import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
 import { GetClient } from "../services/gitHub";
-import { SyncOrg } from "../services/githubSync";
+import { GitHubSyncer, ReturnTypeOfSyncOrg } from "../services/githubSync";
 import { AsyncReturnType } from "../utility";
 import axios from 'axios';
 import { Log } from "../logging";
@@ -45,14 +45,16 @@ export async function syncOrgHandler(
 
     const client = GetClient(CacheClientService);
 
-    const syncOrgResponses : AsyncReturnType<typeof SyncOrg>[] = [];
+    const syncOrgResponses : ReturnTypeOfSyncOrg[] = [];
 
     for (const i of distinctIds) {
         const orgClient = await client.GetOrgClient(i);
         const appConfig = await client.GetAppConfig();
         const invitationsClient = GetInvitationsClient(orgClient);
 
-        syncOrgResponses.push(await SyncOrg(orgClient, appConfig, invitationsClient, CacheClientService));
+        const syncer = new GitHubSyncer(orgClient, appConfig, invitationsClient, CacheClientService);
+
+        syncOrgResponses.push(await syncer.SyncOrg(orgClient, appConfig, invitationsClient, CacheClientService));
     }
 
     return res.status(200).json(syncOrgResponses);

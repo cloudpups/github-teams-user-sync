@@ -1,7 +1,7 @@
 import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
 import { GetClient } from "../services/gitHub";
-import { SyncTeam } from "../services/githubSync";
+import { GitHubSyncer } from "../services/githubSync";
 import axios from 'axios';
 import { Log } from "../logging";
 import { GetInvitationsClient } from "../services/githubInvitations";
@@ -56,7 +56,9 @@ export async function syncSpecificTeamHandler(
 
     const sourceTeamMap = orgConfig.data.DisplayNameToSourceMap;
 
-    const response = await SyncTeam(teamName, orgClient, appConfig, invites, sourceTeamMap, CacheClientService, dryRun);
+    const syncer = new GitHubSyncer(orgClient, appConfig, invitationsClient, CacheClientService);
+
+    const response = await syncer.SyncTeam(teamName, orgClient, appConfig, invites, sourceTeamMap, CacheClientService, dryRun);
 
     return res.status(200).json(response);
 }

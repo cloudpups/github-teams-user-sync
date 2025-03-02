@@ -14,6 +14,7 @@ import {Request} from "openapi-backend";
 import { SetupLogging } from "./integrations/appInsightsLogging";
 import { SetLoggerToUse } from "./logging";
 import { RedisCacheClient } from "./integrations/redisCacheClient";
+import { GitHubSyncer } from "./services/githubSync";
 
 const redisClient = createClient({
   url: `redis://${process.env.APP_OPTIONS_RedisHost}`
@@ -66,7 +67,7 @@ async function Do() {
     ForwardingGitHubRequestsTo: process.env.GITHUB_PROXY ?? "Not forwarding",
     ForwardingGroupRequestsTo: process.env.SOURCE_PROXY ?? "Not forwarding",
     RedisCacheHost: process.env.APP_OPTIONS_RedisHost ?? "No cache"
-  })
+  });  
 
   app.listen(port);
 }
