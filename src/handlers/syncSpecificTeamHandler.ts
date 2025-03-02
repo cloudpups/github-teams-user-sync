@@ -3,9 +3,10 @@ import type { Request, Response } from "express";
 import { GetClient } from "../services/gitHub";
 import { GitHubSyncer } from "../services/githubSync";
 import axios from 'axios';
-import { Log } from "../logging";
+import { Log, LoggerToUse } from "../logging";
 import { GetInvitationsClient } from "../services/githubInvitations";
 import { CacheClientService } from "../app";
+import { SourceOfTruthClient } from "../services/teamSourceOfTruthClient";
 
 async function forwardToProxy(installationId: number) {    
     Log(`Forwarding request to '${process.env.GITHUB_PROXY}'`);
@@ -54,9 +55,11 @@ export async function syncSpecificTeamHandler(
         })
     }
 
-    const sourceTeamMap = orgConfig.data.DisplayNameToSourceMap;
+    const sourceTeamMap = orgConfig.data.DisplayNameToSourceMap;    
 
-    const syncer = new GitHubSyncer(orgClient, appConfig, invitationsClient, CacheClientService);
+    const sourceOfTruthClient = new SourceOfTruthClient(CacheClientService);
+
+    const syncer = new GitHubSyncer(orgClient, appConfig, invitationsClient, sourceOfTruthClient, LoggerToUse());
 
     const response = await syncer.SyncTeam(teamName, invites, sourceTeamMap, dryRun);
 

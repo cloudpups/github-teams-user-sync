@@ -2,11 +2,12 @@ import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
 import { GetClient } from "../services/gitHub";
 import { GitHubSyncer, ReturnTypeOfSyncOrg } from "../services/githubSync";
-import { AsyncReturnType } from "../utility";
 import axios from 'axios';
-import { Log } from "../logging";
+import { Log, LoggerToUse } from "../logging";
 import { GetInvitationsClient } from "../services/githubInvitations";
 import { CacheClientService } from "../app";
+import { SourceOfTruthClient } from "../services/teamSourceOfTruthClient";
+import { GihubSyncOrchestrator } from "../services/gihubSyncOrchestrator";
 
 async function forwardToProxy(installationId: number) {    
     Log(`Forwarding request to '${process.env.GITHUB_PROXY}'`);
@@ -47,14 +48,18 @@ export async function syncOrgHandler(
 
     const syncOrgResponses : ReturnTypeOfSyncOrg[] = [];
 
+    const sourceOfTruthClient = new SourceOfTruthClient(CacheClientService);
+
     for (const i of distinctIds) {
         const orgClient = await client.GetOrgClient(i);
         const appConfig = await client.GetAppConfig();
         const invitationsClient = GetInvitationsClient(orgClient);
 
-        const syncer = new GitHubSyncer(orgClient, appConfig, invitationsClient, CacheClientService);
+        const syncer = new GitHubSyncer(orgClient, appConfig, invitationsClient, sourceOfTruthClient, LoggerToUse());
 
-        syncOrgResponses.push(await syncer.SyncOrg());
+        const orchestrator = new GihubSyncOrchestrator(syncer);        
+
+        syncOrgResponses.push(await orchestrator.SyncOrg());
     }
 
     return res.status(200).json(syncOrgResponses);

@@ -4,9 +4,11 @@ import { GetClient } from "../services/gitHub";
 import { GitHubSyncer } from "../services/githubSync";
 import { GitHubClient } from "../services/gitHubTypes";
 import axios from 'axios';
-import { Log } from "../logging";
+import { Log, LoggerToUse } from "../logging";
 import { GetInvitationsClient } from "../services/githubInvitations";
 import { CacheClientService } from "../app";
+import { SourceOfTruthClient } from "../services/teamSourceOfTruthClient";
+import { GihubSyncOrchestrator } from "../services/gihubSyncOrchestrator";
 
 async function syncOrgLocal(installationId: number, client: GitHubClient) {
     const orgClient = await client.GetOrgClient(installationId);
@@ -14,9 +16,13 @@ async function syncOrgLocal(installationId: number, client: GitHubClient) {
 
     const invitationsClient = GetInvitationsClient(orgClient);
 
-    const syncer = new GitHubSyncer(orgClient, appConfig, invitationsClient, CacheClientService);
+    const sourceOfTruthClient = new SourceOfTruthClient(CacheClientService)
 
-    return await syncer.SyncOrg();
+    const syncer = new GitHubSyncer(orgClient, appConfig, invitationsClient, sourceOfTruthClient, LoggerToUse());
+
+    const orchestrator = new GihubSyncOrchestrator(syncer);
+
+    return await orchestrator.SyncOrg();
 }
 
 export async function syncAllHandler(

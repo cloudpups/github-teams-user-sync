@@ -22,41 +22,50 @@ export type SearchAllSucceeded = {
 
 export type SearchAllResponse = Promise<SearchAllFailed | SearchAllSucceeded>
 
-export async function SearchAllAsync(groupName: string, cacheClient: ICacheClient): SearchAllResponse {
-    const cacheKey = `sot-group:${groupName}`;
+export interface ISourceOfTruthClient {
+    SearchAllAsync: (groupName: string) => SearchAllResponse
+}
 
-    const result = await cacheClient.get(cacheKey);
+export class SourceOfTruthClient implements ISourceOfTruthClient {    
+    constructor(private cacheClient: ICacheClient) {        
+    }
 
-    if (result) {
-        LoggerToUse().ReportEvent({
-            Name: "CacheHit",
-            properties: {
-                "Data": groupName,
-                "Operation": "SearchAllAsync",
-                "Group": "Ldap"
+    async SearchAllAsync(groupName: string): SearchAllResponse {
+        const cacheKey = `sot-group:${groupName}`;
+    
+        const result = await this.cacheClient.get(cacheKey);
+    
+        if (result) {
+            LoggerToUse().ReportEvent({
+                Name: "CacheHit",
+                properties: {
+                    "Data": groupName,
+                    "Operation": "SearchAllAsync",
+                    "Group": "Ldap"
+                }
+            })
+            return JSON.parse(result) as SearchAllResponse
+        }
+    
+        // Make API call here
+        // TODO-TEST: abstract this out so that we can mock this in tests
+        // instead of dealing with http calls...
+        const actualResult = await ForwardSearch(groupName);
+    
+        // Slightly complex for caching logic, but we don't want to cache useless results
+        if (actualResult.Succeeded && actualResult.entries.length > 0) {
+            try {
+                await this.cacheClient.set(cacheKey, JSON.stringify(actualResult), {
+                    EX: 600 // Expire after 10 minutes
+                });
             }
-        })
-        return JSON.parse(result) as SearchAllResponse
-    }
-
-    // Make API call here
-    // TODO-TEST: abstract this out so that we can mock this in tests
-    // instead of dealing with http calls...
-    const actualResult = await ForwardSearch(groupName);
-
-    // Slightly complex for caching logic, but we don't want to cache useless results
-    if (actualResult.Succeeded && actualResult.entries.length > 0) {
-        try {
-            await cacheClient.set(cacheKey, JSON.stringify(actualResult), {
-                EX: 600 // Expire after 10 minutes
-            });
+            catch(e) {
+                Log(`Error when caching results for ${groupName}: ${JSON.stringify(e)}`);
+            }
         }
-        catch(e) {
-            Log(`Error when caching results for ${groupName}: ${JSON.stringify(e)}`);
-        }
+    
+        return actualResult;
     }
-
-    return actualResult;
 }
 
 // TODO: do not directly use axios.create from within a function like this
