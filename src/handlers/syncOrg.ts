@@ -6,6 +6,7 @@ import { AsyncReturnType } from "../utility";
 import axios from 'axios';
 import { Log } from "../logging";
 import { GetInvitationsClient } from "../services/githubInvitations";
+import { CacheClientService } from "../app";
 
 async function forwardToProxy(installationId: number) {    
     Log(`Forwarding request to '${process.env.GITHUB_PROXY}'`);
@@ -42,7 +43,7 @@ export async function syncOrgHandler(
         return res.status(200).json(results);
     }
 
-    const client = GetClient();
+    const client = GetClient(CacheClientService);
 
     const syncOrgResponses : AsyncReturnType<typeof SyncOrg>[] = [];
 
@@ -51,7 +52,7 @@ export async function syncOrgHandler(
         const appConfig = await client.GetAppConfig();
         const invitationsClient = GetInvitationsClient(orgClient);
 
-        syncOrgResponses.push(await SyncOrg(orgClient, appConfig, invitationsClient));
+        syncOrgResponses.push(await SyncOrg(orgClient, appConfig, invitationsClient, CacheClientService));
     }
 
     return res.status(200).json(syncOrgResponses);

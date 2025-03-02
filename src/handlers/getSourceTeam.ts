@@ -1,7 +1,8 @@
 import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
-import { SearchAllAsync } from "../services/ldapClient";
+import { SearchAllAsync } from "../services/teamSourceOfTruthClient";
 import { Log } from "../logging";
+import { CacheClientService } from "../app";
 
 export async function getSourceTeamHandler(
     c: Context,
@@ -12,7 +13,7 @@ export async function getSourceTeamHandler(
 
     Log(`Searching SoT for ${teamName}`)
 
-    const result = await SearchAllAsync(teamName)
+    const result = await SearchAllAsync(teamName, CacheClientService)
 
     if (result.Succeeded) {
         Log(`Found in SoT:  ${JSON.stringify(result)}`)

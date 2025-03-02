@@ -2,6 +2,7 @@ import { Context } from "openapi-backend";
 import type { Request, Response } from "express";
 import { Limits } from "../types/sync-models";
 import { GetClient } from "../services/gitHub";
+import { CacheClientService } from "../app";
 
 export async function getCurrentRateLimitHandler(
     c: Context,
@@ -10,7 +11,7 @@ export async function getCurrentRateLimitHandler(
 ) {                
     const installationId = c.request.params.installationId as unknown as number;    
 
-    const client = GetClient();    
+    const client = GetClient(CacheClientService);    
     const orgClient = await client.GetOrgClient(installationId);    
     const limits = await orgClient.GetCurrentRateLimit();
 

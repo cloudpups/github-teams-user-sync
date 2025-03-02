@@ -5,6 +5,7 @@ import { SyncTeam } from "../services/githubSync";
 import axios from 'axios';
 import { Log } from "../logging";
 import { GetInvitationsClient } from "../services/githubInvitations";
+import { CacheClientService } from "../app";
 
 async function forwardToProxy(installationId: number) {    
     Log(`Forwarding request to '${process.env.GITHUB_PROXY}'`);
@@ -31,7 +32,7 @@ export async function syncSpecificTeamHandler(
     const teamName = c.request.query.teamName! as unknown as string;
     const dryRun = c.request.query.dryRun as unknown as boolean ?? true;
 
-    const client = GetClient();
+    const client = GetClient(CacheClientService);
     const orgClient = await client.GetOrgClient(orgId);
     const appConfig = await client.GetAppConfig();
 
@@ -55,7 +56,7 @@ export async function syncSpecificTeamHandler(
 
     const sourceTeamMap = orgConfig.data.DisplayNameToSourceMap;
 
-    const response = await SyncTeam(teamName, orgClient, appConfig, invites, sourceTeamMap, dryRun);
+    const response = await SyncTeam(teamName, orgClient, appConfig, invites, sourceTeamMap, CacheClientService, dryRun);
 
     return res.status(200).json(response);
 }

@@ -7,13 +7,12 @@ import yaml from "js-yaml";
 import { throttling } from "@octokit/plugin-throttling";
 import { Log, LoggerToUse } from "../logging";
 import { GitHubClientCache } from "./gitHubCache";
-import { redisClient } from "../app";
 import { InstalledGitHubClient } from "./installedGitHubClient";
-import { RedisCacheClient } from "../integrations/redisCacheClient";
+import { ICacheClient } from "./CacheClient";
 
 const config = Config();
 
-async function GetOrgClient(installationId: number): Promise<IInstalledClient> {
+async function GetOrgClient(installationId: number, cacheClient: ICacheClient): Promise<IInstalledClient> {
     // TODO: look further into this... it seems like it would be best if 
     // installation client was generated from the original client, and not
     // created fresh.    
@@ -65,11 +64,10 @@ async function GetOrgClient(installationId: number): Promise<IInstalledClient> {
     }
 
     // HACK: gross typing nonsense
-    const baseClient = new InstalledGitHubClient(installedOctokit, (orgName.data.account as thisShouldNotBeNeeded).login);
-    const redisCacheClient = new RedisCacheClient(redisClient);
+    const baseClient = new InstalledGitHubClient(installedOctokit, (orgName.data.account as thisShouldNotBeNeeded).login);    
 
     if (Config().AppOptions.RedisHost) {
-        const cachedClient = new GitHubClientCache(baseClient, redisCacheClient, LoggerToUse());
+        const cachedClient = new GitHubClientCache(baseClient, cacheClient, LoggerToUse());
         return cachedClient;
     }
 
@@ -193,11 +191,11 @@ async function GetAppConfig(client: Octokit): Promise<AppConfig> {
 }
 
 
-export function GetClient(): GitHubClient {
+export function GetClient(cacheClient:ICacheClient): GitHubClient {
     const client = authenticatedClient();
     return {
         GetInstallations: () => GetInstallations(client),
-        GetOrgClient: (installationId: number) => GetOrgClient(installationId),
+        GetOrgClient: (installationId: number) => GetOrgClient(installationId, cacheClient),
         GetAppConfig: () => GetAppConfig(client)
     }
 }

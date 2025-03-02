@@ -6,6 +6,7 @@ import { GitHubClient } from "../services/gitHubTypes";
 import axios from 'axios';
 import { Log } from "../logging";
 import { GetInvitationsClient } from "../services/githubInvitations";
+import { CacheClientService } from "../app";
 
 async function syncOrgLocal(installationId: number, client: GitHubClient) {
     const orgClient = await client.GetOrgClient(installationId);
@@ -13,7 +14,7 @@ async function syncOrgLocal(installationId: number, client: GitHubClient) {
 
     const invitationsClient = GetInvitationsClient(orgClient);
 
-    return await SyncOrg(orgClient, appConfig, invitationsClient)
+    return await SyncOrg(orgClient, appConfig, invitationsClient, CacheClientService);
 }
 
 export async function syncAllHandler(
@@ -23,7 +24,7 @@ export async function syncAllHandler(
 ) {
     const start = Date.now();
 
-    const client = GetClient();
+    const client = GetClient(CacheClientService);
     const installations = await client.GetInstallations();
 
     Log(`Syncing the following orgs: ${JSON.stringify(installations)}`)

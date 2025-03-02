@@ -2,7 +2,7 @@ import { Config } from "../config";
 import axios, { AxiosError } from "axios";
 import axiosRetry from "axios-retry";
 import { Log, LoggerToUse } from "../logging";
-import { redisClient } from "../app";
+import { ICacheClient } from "./CacheClient";
 
 const config = Config()
 export interface Entry {
@@ -22,10 +22,10 @@ export type SearchAllSucceeded = {
 
 export type SearchAllResponse = Promise<SearchAllFailed | SearchAllSucceeded>
 
-export async function SearchAllAsync(groupName: string): SearchAllResponse {
+export async function SearchAllAsync(groupName: string, cacheClient: ICacheClient): SearchAllResponse {
     const cacheKey = `sot-group:${groupName}`;
 
-    const result = await redisClient.get(cacheKey);
+    const result = await cacheClient.get(cacheKey);
 
     if (result) {
         LoggerToUse().ReportEvent({
@@ -40,12 +40,14 @@ export async function SearchAllAsync(groupName: string): SearchAllResponse {
     }
 
     // Make API call here
+    // TODO: abstract this out so that we can mock this in tests
+    // instead of dealing with http calls...
     const actualResult = await ForwardSearch(groupName);
 
     // Slightly complex for caching logic, but we don't want to cache useless results
     if (actualResult.Succeeded && actualResult.entries.length > 0) {
         try {
-            await redisClient.set(cacheKey, JSON.stringify(actualResult), {
+            await cacheClient.set(cacheKey, JSON.stringify(actualResult), {
                 EX: 600 // Expire after 10 minutes
             });
         }

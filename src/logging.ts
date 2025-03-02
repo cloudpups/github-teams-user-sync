@@ -1,8 +1,4 @@
-const appInsights = require("applicationinsights");
-import {KnownSeverityLevel, TelemetryClient} from "applicationinsights";
-
-
-type LogEvent = {
+export type LogEvent = {
     Name: string,
     properties?: {
         [name: string]: string;
@@ -15,33 +11,8 @@ export interface ILogger {
     ReportEvent(event: LogEvent): void
 }
 
-class AiLogger implements ILogger {
-    client: TelemetryClient;
 
-    constructor(client: TelemetryClient) {
-        this.client = client;
-    }
-
-    ReportEvent(event: LogEvent): void {
-        this.client.trackEvent({
-            name: event.Name,
-            properties: event.properties
-        })
-    }
-    Log(s: string): void {
-        this.client.trackTrace({
-            message: s
-        });
-    }
-    LogError(ex: string): void {
-        this.client.trackTrace({
-            message: ex,
-            severity: KnownSeverityLevel.Error
-        });
-    }
-}
-
-class StdLogger implements ILogger {
+export class StdLogger implements ILogger {
     ReportEvent(event: LogEvent): void {
         console.log(`Event ${event.Name}: ${JSON.stringify(event)}`);
     }
@@ -62,6 +33,9 @@ let logger: ILogger = new StdLogger();
 export function LoggerToUse(): ILogger {
     return logger;
 }
+export function SetLoggerToUse(l: ILogger) {
+    logger = l;
+}
 
 export function Log(s: string) {
     logger.Log(s);
@@ -71,7 +45,7 @@ export function LogError(ex: string) {
     logger.LogError(ex);
 }
 
-class LoggerComposite implements ILogger {
+export class LoggerComposite implements ILogger {
     loggers: ILogger[]
 
     constructor(loggers: ILogger[]) {
@@ -90,18 +64,3 @@ class LoggerComposite implements ILogger {
 
 }
 
-export function SetupLogging() {
-    const loggers: ILogger[] = [];
-    loggers.push(new StdLogger());
-
-    if (process.env.APPLICATIONINSIGHTS_CONNECTION_STRING) {
-        console.log("Using AppInsights Logger")
-        appInsights.setup(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING).start();
-
-        const telemetryClient = appInsights.defaultClient;
-
-        loggers.push(new AiLogger(telemetryClient));
-    }
-
-    logger = new LoggerComposite(loggers);
-}

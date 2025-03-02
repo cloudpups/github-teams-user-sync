@@ -5,16 +5,21 @@ import fs from "fs";
 import path from "node:path";
 import swaggerUi from "swagger-ui-express";
 import { routes } from "./routes";
-import { SetupLogging } from "./logging";
+ 
 import nocache from "nocache";
 import { createClient } from 'redis';
 import { Config } from "./config";
 
 import {Request} from "openapi-backend";
+import { SetupLogging } from "./integrations/appInsightsLogging";
+import { SetLoggerToUse } from "./logging";
+import { RedisCacheClient } from "./integrations/redisCacheClient";
 
-export const redisClient = createClient({
+const redisClient = createClient({
   url: `redis://${process.env.APP_OPTIONS_RedisHost}`
 }).on('error', err => console.log('Redis Client Error: ', err));
+
+export const CacheClientService = new RedisCacheClient(redisClient);
 
 export type CacheClient = typeof redisClient;
 Do();
@@ -24,7 +29,7 @@ async function Do() {
     await redisClient.connect();
   }
 
-  SetupLogging();
+  SetLoggerToUse(SetupLogging());
 
   const app = express();
   app.use(nocache());
