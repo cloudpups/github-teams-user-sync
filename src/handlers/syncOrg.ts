@@ -54,7 +54,7 @@ export async function syncOrgHandler(
 
         const syncer = new GitHubSyncer(orgClient, appConfig, invitationsClient, CacheClientService);
 
-        syncOrgResponses.push(await syncer.SyncOrg(orgClient, appConfig, invitationsClient, CacheClientService));
+        syncOrgResponses.push(await syncer.SyncOrg());
     }
 
     return res.status(200).json(syncOrgResponses);

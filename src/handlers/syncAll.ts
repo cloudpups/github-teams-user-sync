@@ -16,7 +16,7 @@ async function syncOrgLocal(installationId: number, client: GitHubClient) {
 
     const syncer = new GitHubSyncer(orgClient, appConfig, invitationsClient, CacheClientService);
 
-    return await syncer.SyncOrg(orgClient, appConfig, invitationsClient, CacheClientService);
+    return await syncer.SyncOrg();
 }
 
 export async function syncAllHandler(

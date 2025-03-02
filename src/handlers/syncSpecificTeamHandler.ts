@@ -58,7 +58,7 @@ export async function syncSpecificTeamHandler(
 
     const syncer = new GitHubSyncer(orgClient, appConfig, invitationsClient, CacheClientService);
 
-    const response = await syncer.SyncTeam(teamName, orgClient, appConfig, invites, sourceTeamMap, CacheClientService, dryRun);
+    const response = await syncer.SyncTeam(teamName, invites, sourceTeamMap, dryRun);
 
     return res.status(200).json(response);
 }

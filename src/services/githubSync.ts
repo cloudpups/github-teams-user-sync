@@ -27,36 +27,6 @@ type GitHubIdsSucceeded = {
     Ids: string[]
 }
 
-async function GetGitHubIds(teamName: string, config: AppConfig, cacheClient:ICacheClient): Promise<GitHubIdsFailed | GitHubIdsSucceeded> {
-    Log(`Searching for group '${teamName}'`)
-    const membersFromSourceOfTruth = await SearchAllAsync(teamName, cacheClient);
-
-    if (membersFromSourceOfTruth.Succeeded == false) {
-        if(membersFromSourceOfTruth.Reason == "team_not_found") {
-            return {
-                Succeeded: false,
-                Reason: "team_not_found"
-            }
-        }
-        
-        return {
-            Succeeded: false,
-            Reason: "unknown"
-        }
-    }
-
-    Log(`Found the following members '${JSON.stringify(membersFromSourceOfTruth)}'`)
-
-    return {
-        Succeeded: true,
-        Ids: membersFromSourceOfTruth.entries.map(e => {
-            const replace1 = replaceAll(e.cn, '_', '-');
-            const replace2 = replace1.replaceAll(".", "-");
-            return replace2 + config.GitHubIdAppend;
-        })
-    }
-}
-
 type SyncMembersFailed = {
     Succeeded: false
     Reason: "unknown" | "team_not_found"
@@ -72,10 +42,72 @@ type SyncMembersResponse = Promise<SyncMembersFailed | SyncMembersSucceeded>
 export class GitHubSyncer {
     constructor(private installedGitHubClient: IInstalledClient, private config: AppConfig, private invitationsClient: IGitHubInvitations, private cacheClient:ICacheClient) { }
 
-    async SynchronizeOrgMembers(installedGitHubClient: IInstalledClient, teamName: string, config: AppConfig, sourceTeamMap: Map<string, string>, cacheClient:ICacheClient): SyncMembersResponse {
+    async GetGitHubIds(teamName: string): Promise<GitHubIdsFailed | GitHubIdsSucceeded> {
+        Log(`Searching for group '${teamName}'`)
+        const membersFromSourceOfTruth = await SearchAllAsync(teamName, this.cacheClient);
+    
+        if (membersFromSourceOfTruth.Succeeded == false) {
+            if(membersFromSourceOfTruth.Reason == "team_not_found") {
+                return {
+                    Succeeded: false,
+                    Reason: "team_not_found"
+                }
+            }
+            
+            return {
+                Succeeded: false,
+                Reason: "unknown"
+            }
+        }
+    
+        Log(`Found the following members '${JSON.stringify(membersFromSourceOfTruth)}'`)
+    
+        return {
+            Succeeded: true,
+            Ids: membersFromSourceOfTruth.entries.map(e => {
+                const replace1 = replaceAll(e.cn, '_', '-');
+                const replace2 = replace1.replaceAll(".", "-");
+                return replace2 + this.config.GitHubIdAppend;
+            })
+        }
+    }
+
+    async addOrgMember(gitHubId: GitHubId) {
+        const isUserReal = await this.installedGitHubClient.DoesUserExist(gitHubId);
+    
+        if (!isUserReal.successful || !isUserReal.data) {
+            return {
+                successful: false,
+                user: gitHubId,
+                message: `User '${gitHubId}' does not exist in GitHub.`
+            }
+        }
+    
+        const isUserMemberAsync = await this.installedGitHubClient.IsUserMember(gitHubId)
+    
+        if (!isUserMemberAsync.successful) {
+            throw new Error("What");
+        }
+    
+        if (isUserMemberAsync.data) {
+            return {
+                successful: true,
+                user: gitHubId
+            }
+        }
+    
+        await this.installedGitHubClient.AddOrgMember(gitHubId)
+    
+        return {
+            successful: true,
+            user: gitHubId
+        }
+    }
+
+    async SynchronizeOrgMembers(teamName: string, sourceTeamMap: Map<string, string>): SyncMembersResponse {
         const actualTeamName = sourceTeamMap.get(teamName) ?? teamName;
             
-        const gitHubIdsResponse = await GetGitHubIds(actualTeamName, config, cacheClient);
+        const gitHubIdsResponse = await this.GetGitHubIds(actualTeamName);
     
         if (gitHubIdsResponse.Succeeded == false) {
             if(gitHubIdsResponse.Reason == "team_not_found") {
@@ -93,10 +125,10 @@ export class GitHubSyncer {
     
         const gitHubIds = gitHubIdsResponse.Ids!;
     
-        const orgName = installedGitHubClient.GetCurrentOrgName();
+        const orgName = this.installedGitHubClient.GetCurrentOrgName();
     
         Log("Adding Org Members to " + orgName + " via " + actualTeamName + ": Started");
-        const orgMemberPromises = gitHubIds.map(g => addOrgMember(g, installedGitHubClient));
+        const orgMemberPromises = gitHubIds.map(g => this.addOrgMember(g));
         const responses = await Promise.all(orgMemberPromises);
         Log("Adding Org Members to " + orgName + " via " + actualTeamName + ": Completed");
     
@@ -113,14 +145,14 @@ export class GitHubSyncer {
         };
     }
     
-    async SynchronizeGitHubTeam(installedGitHubClient: IInstalledClient, teamName: string, config: AppConfig, existingInvites: OrgInvite[], sourceTeamMap: Map<string, string>, cacheClient:ICacheClient, checkOrgMembers: boolean = true, dryRun: boolean = false) {
+    async SynchronizeGitHubTeam(teamName: string, existingInvites: OrgInvite[], sourceTeamMap: Map<string, string>, checkOrgMembers: boolean = true, dryRun: boolean = false) {
         function GetSourceOrReturn(teamName: string) {
             return sourceTeamMap.get(teamName) ?? teamName;
         }
     
-        await installedGitHubClient.UpdateTeamDetails(teamName, teamDescription(config.Description.ShortLink, GetSourceOrReturn(teamName)));
+        await this.installedGitHubClient.UpdateTeamDetails(teamName, teamDescription(this.config.Description.ShortLink, GetSourceOrReturn(teamName)));
     
-        const trueMembersListResponse = await GetGitHubIds(GetSourceOrReturn(teamName), config, cacheClient);
+        const trueMembersListResponse = await this.GetGitHubIds(GetSourceOrReturn(teamName));
     
         const idsWithInvites = new Set(existingInvites.map(i => i.GitHubUser));
     
@@ -135,10 +167,10 @@ export class GitHubSyncer {
             return;
         }
     
-        const orgName = installedGitHubClient.GetCurrentOrgName();
+        const orgName = this.installedGitHubClient.GetCurrentOrgName();
     
         const memberCheckFunc = async (id:GitHubId) => {
-            const response = await installedGitHubClient.IsUserMember(id);
+            const response = await this.installedGitHubClient.IsUserMember(id);
     
             return response.successful && response.data;
         }
@@ -148,13 +180,13 @@ export class GitHubSyncer {
             checkOrgMembers: checkOrgMembers,
             isExistingMember: memberCheckFunc,
             idsWithInvites: idsWithInvites,
-            installedGitHubClient: installedGitHubClient,
+            installedGitHubClient: this.installedGitHubClient,
             orgName: orgName
         })));
     
         const trueValidTeamMembersList: string[] = validMemberCheckResults.filter(r => r.successful).map(r => r.gitHubId);
     
-        const listMembersResponse = await installedGitHubClient.ListCurrentMembersOfGitHubTeam(teamName);
+        const listMembersResponse = await this.installedGitHubClient.ListCurrentMembersOfGitHubTeam(teamName);
     
         if (!listMembersResponse.successful) {
             throw new Error("");
@@ -179,8 +211,8 @@ export class GitHubSyncer {
             return teamSyncNotes;
         }
     
-        const deleteResponses = await Promise.all(teamMembersToRemove.map(mtr => installedGitHubClient.RemoveTeamMemberAsync(teamName, mtr)));
-        const addResponses = await Promise.all(teamMembersToAdd.map(mta => installedGitHubClient.AddTeamMember(teamName, mta)));
+        const deleteResponses = await Promise.all(teamMembersToRemove.map(mtr => this.installedGitHubClient.RemoveTeamMemberAsync(teamName, mtr)));
+        const addResponses = await Promise.all(teamMembersToAdd.map(mta => this.installedGitHubClient.AddTeamMember(teamName, mta)));
     
         const teamSyncCompleteNotes = {
             operation: "TeamSync:Completed",
@@ -199,26 +231,23 @@ export class GitHubSyncer {
     async SyncSecurityManagers(opts: {
         securityManagerTeams: string[]
         setOfExistingTeams: Set<string>
-        shortLink: string
-        client: IInstalledClient
-        appConfig: AppConfig
+        shortLink: string                
         currentInvites: OrgInvite[],
-        displayNameToSourceMap: Map<string,string>,
-        cacheClient: ICacheClient
+        displayNameToSourceMap: Map<string,string>,        
     }): Promise<SuccessSync | FailedSecSync> {
-        const { securityManagerTeams, setOfExistingTeams, shortLink, client: installedGitHubClient, appConfig, currentInvites, displayNameToSourceMap } = opts;
+        const { securityManagerTeams, setOfExistingTeams, shortLink, currentInvites, displayNameToSourceMap } = opts;
     
-        const orgName = installedGitHubClient.GetCurrentOrgName();
+        const orgName = this.installedGitHubClient.GetCurrentOrgName();
     
         for (const t of securityManagerTeams) {        
             if (!setOfExistingTeams.has(t.toUpperCase())) {
                 Log(`Creating team '${orgName}/${t}'`)
-                await installedGitHubClient.CreateTeam(t, teamDescription(shortLink, t));
+                await this.installedGitHubClient.CreateTeam(t, teamDescription(shortLink, t));
                 setOfExistingTeams.add(t);
             }
     
-            Log(`Syncing Security Managers for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
-            const orgMembers = await this.SynchronizeOrgMembers(installedGitHubClient, t, appConfig, displayNameToSourceMap, opts.cacheClient);
+            Log(`Syncing Security Managers for ${this.installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+            const orgMembers = await this.SynchronizeOrgMembers(t, displayNameToSourceMap);
     
             if (orgMembers.Succeeded == false) {
                 return {
@@ -228,12 +257,12 @@ export class GitHubSyncer {
             }
     
     
-            await this.SynchronizeGitHubTeam(installedGitHubClient, t, appConfig, currentInvites, displayNameToSourceMap, opts.cacheClient);
+            await this.SynchronizeGitHubTeam(t, currentInvites, displayNameToSourceMap);
     
-            Log(`Add Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
-            const addResult = await installedGitHubClient.AddSecurityManagerTeam(t);
+            Log(`Add Security Manager Team for ${this.installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+            const addResult = await this.installedGitHubClient.AddSecurityManagerTeam(t);
             if (addResult) {
-                Log(`Added Security Manager Team for ${installedGitHubClient.GetCurrentOrgName()}: ${t}`)
+                Log(`Added Security Manager Team for ${this.installedGitHubClient.GetCurrentOrgName()}: ${t}`)
             }
         }
     
@@ -246,16 +275,16 @@ export class GitHubSyncer {
     async syncOrgMembersByTeam(teamName: string, sourceTeamMap: Map<string, string>) {
         const sourceTeamName = sourceTeamMap.get(teamName) ?? teamName;
         Log(`Adding Org Members via ${sourceTeamName} membership in ${this.installedGitHubClient.GetCurrentOrgName()}`);
-        await this.SynchronizeOrgMembers(this.installedGitHubClient, sourceTeamName, this.config, sourceTeamMap, this.cacheClient);
+        await this.SynchronizeOrgMembers(sourceTeamName, sourceTeamMap);
     }
 
     async syncTeam(teamName: string, orgConfig: OrgConfig, currentInvites: OrgInvite[]) {
         Log(`Syncing Team Members for ${teamName} in ${this.installedGitHubClient.GetCurrentOrgName()}`)
-        await this.SynchronizeGitHubTeam(this.installedGitHubClient, teamName, this.config, currentInvites, orgConfig.DisplayNameToSourceMap, this.cacheClient);
+        await this.SynchronizeGitHubTeam(teamName, currentInvites, orgConfig.DisplayNameToSourceMap);
     }
 
-    async syncOrg(installedGitHubClient: IInstalledClient, appConfig: AppConfig, invitationsClient: IGitHubInvitations, log:(message: string, operation:string, status:string)=>void, cacheClient:ICacheClient): Promise<ReturnTypeOfSyncOrg> {
-        const orgName = installedGitHubClient.GetCurrentOrgName();
+    async syncOrg(log:(message: string, operation:string, status:string)=>void): Promise<ReturnTypeOfSyncOrg> {
+        const orgName = this.installedGitHubClient.GetCurrentOrgName();
     
         let response: ReturnTypeOfSyncOrg = {
             orgName: orgName,
@@ -270,7 +299,7 @@ export class GitHubSyncer {
         // and function...
         // await CancelPendingOrgInvites(installedGitHubClient);
     
-        const currentInvitesResponse = await invitationsClient.ListInvites();
+        const currentInvitesResponse = await this.invitationsClient.ListInvites();
     
         if (!currentInvitesResponse.successful) {
             throw new Error("Unable to list invites");
@@ -278,7 +307,7 @@ export class GitHubSyncer {
     
         const currentInvites = currentInvitesResponse.data;
     
-        const existingTeamsResponse = await installedGitHubClient.GetAllTeams();
+        const existingTeamsResponse = await this.installedGitHubClient.GetAllTeams();
         if (!existingTeamsResponse.successful) {
             throw new Error("Unable to get existing teams");
         }
@@ -286,28 +315,25 @@ export class GitHubSyncer {
         const setOfExistingTeams = new Set(existingTeamsResponse.data.map(t => t.Name.toUpperCase()));
     
         log("", "GetConfiguration", "Started");
-        const orgConfigResponse = await installedGitHubClient.GetConfigurationForInstallation();    
+        const orgConfigResponse = await this.installedGitHubClient.GetConfigurationForInstallation();    
     
         const securityManagersFromOrgConfig = orgConfigResponse.successful ? orgConfigResponse.data.AdditionalSecurityManagerGroups : [];
         const securityManagersDisplayNameSourceMap = orgConfigResponse.successful ? orgConfigResponse.data.DisplayNameToSourceMap : new Map<string,string>();
     
         const securityManagerTeams = [
-            ...appConfig.SecurityManagerTeams,
+            ...this.config.SecurityManagerTeams,
             ...securityManagersFromOrgConfig
         ];        
         log("", "GetConfiguration", "Completed");
         
         if (securityManagerTeams.length > 0) {
             log("", "SyncSecurityManagers", "Started");
-            const syncManagersResponse = await this.SyncSecurityManagers({
-                appConfig,
-                client: installedGitHubClient,
+            const syncManagersResponse = await this.SyncSecurityManagers({                                
                 currentInvites,
                 securityManagerTeams,            
                 setOfExistingTeams,            
-                shortLink: appConfig.Description.ShortLink,
-                displayNameToSourceMap: securityManagersDisplayNameSourceMap,
-                cacheClient
+                shortLink: this.config.Description.ShortLink,
+                displayNameToSourceMap: securityManagersDisplayNameSourceMap                
             });
     
             if (!syncManagersResponse.Success) {
@@ -353,7 +379,7 @@ export class GitHubSyncer {
     
         const ownerGroupName = orgConfig.OrgOwnersGroupName;
         const membersGroupName = orgConfig.OrgMembersGroupName;
-        const { teamsToManage: gitHubTeams, ignoredTeams } = RemoveTeamsToIgnore(orgConfig.TeamsToManage, appConfig);
+        const { teamsToManage: gitHubTeams, ignoredTeams } = RemoveTeamsToIgnore(orgConfig.TeamsToManage, this.config);
     
         response.ignoredTeams = ignoredTeams;
     
@@ -370,7 +396,7 @@ export class GitHubSyncer {
             log("", "CreateTeams", "Started");
             for (const t of teamsToCreate) {
                 Log(`Creating team '${orgName}/${t}'`)
-                await installedGitHubClient.CreateTeam(t, teamDescription(appConfig.Description.ShortLink, t));
+                await this.installedGitHubClient.CreateTeam(t, teamDescription(this.config.Description.ShortLink, t));
             }
             log("", "CreateTeams", "Completed");
         }            
@@ -378,7 +404,7 @@ export class GitHubSyncer {
         if (orgConfig.AssumeMembershipViaTeams) {
             // TODO: this method is getting very busy, and most likely could benefit from a larger refactor.
             // Benefits most likely include performance gains.
-            Log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()} by individual teams.`);
+            Log(`Syncing Members for ${this.installedGitHubClient.GetCurrentOrgName()} by individual teams.`);
             log("", "MembershipSync_ByTeam", "Started");
             const orgMembershipPromises = gitHubTeams.map(t => this.syncOrgMembersByTeam(t, orgConfig.DisplayNameToSourceMap));
             await Promise.all(orgMembershipPromises);
@@ -387,10 +413,10 @@ export class GitHubSyncer {
     
         let currentMembers: GitHubId[] = [];    
         // TODO: add log message to explain group being skipped if it is included in TeamsToIgnore
-        if (membersGroupName != undefined && membersGroupName != null && !appConfig.TeamsToIgnore.includes(membersGroupName)) {
-            Log(`Syncing Members for ${installedGitHubClient.GetCurrentOrgName()}: ${membersGroupName}`)
+        if (membersGroupName != undefined && membersGroupName != null && !this.config.TeamsToIgnore.includes(membersGroupName)) {
+            Log(`Syncing Members for ${this.installedGitHubClient.GetCurrentOrgName()}: ${membersGroupName}`)
             log("", "MembershipSync_ByOrgMembersGroup", "Started");
-            const currentMembersResponse = await this.SynchronizeOrgMembers(installedGitHubClient, membersGroupName, appConfig, orgConfig.DisplayNameToSourceMap, cacheClient)
+            const currentMembersResponse = await this.SynchronizeOrgMembers(membersGroupName,orgConfig.DisplayNameToSourceMap)
     
             if (currentMembersResponse.Succeeded == false) {
                 Log("Failed to sync members");
@@ -411,7 +437,7 @@ export class GitHubSyncer {
     
             currentMembers = currentMembersResponse.OrgMembers;
     
-            await this.SynchronizeGitHubTeam(installedGitHubClient, membersGroupName, appConfig, currentInvites, orgConfig.DisplayNameToSourceMap, cacheClient);
+            await this.SynchronizeGitHubTeam(membersGroupName, currentInvites, orgConfig.DisplayNameToSourceMap);
             log("", "MembershipSync_ByOrgMembersGroup", "Completed");
         }
     
@@ -428,7 +454,7 @@ export class GitHubSyncer {
     
         if (ownerGroupName) {
             log("", "OrgOwnerSync", "Started");
-            const teamMembers = await installedGitHubClient.ListCurrentMembersOfGitHubTeam(ownerGroupName);
+            const teamMembers = await this.installedGitHubClient.ListCurrentMembersOfGitHubTeam(ownerGroupName);
     
             if (!teamMembers.successful) {
                 return {
@@ -440,10 +466,10 @@ export class GitHubSyncer {
             for (const id of teamMembers.data) {
                 Log(JSON.stringify({
                     message: `Adding Org Owner`,
-                    org: installedGitHubClient.GetCurrentOrgName(),
+                    org: this.installedGitHubClient.GetCurrentOrgName(),
                     gitHubUser: id
                 }))
-                await installedGitHubClient.SetOrgRole(id, "admin");
+                await this.installedGitHubClient.SetOrgRole(id, "admin");
     
                 response = {
                     ...response,
@@ -454,7 +480,7 @@ export class GitHubSyncer {
         }
     
         log("", "AddCopilotSubscriptions", "Started");
-        const copilotResult = await installedGitHubClient.AddTeamsToCopilotSubscription(orgConfig.CopilotTeams);
+        const copilotResult = await this.installedGitHubClient.AddTeamsToCopilotSubscription(orgConfig.CopilotTeams);
         log("", "AddCopilotSubscriptions", "Completed");
     
         return {
@@ -465,14 +491,14 @@ export class GitHubSyncer {
     }
     
     
-    public async SyncTeam(teamName: string, client: IInstalledClient, config: AppConfig, invites: OrgInvite[], sourceTeamMap: Map<string, string>, cacheClient:ICacheClient, dryRun: boolean = false) {
-        const response = await this.SynchronizeGitHubTeam(client, teamName, config, invites, sourceTeamMap, cacheClient, true, dryRun);
+    public async SyncTeam(teamName: string, invites: OrgInvite[], sourceTeamMap: Map<string, string>, dryRun: boolean = false) {
+        const response = await this.SynchronizeGitHubTeam(teamName, invites, sourceTeamMap, true, dryRun);
     
         return response;
     }
     
-    public async SyncOrg(installedGitHubClient: IInstalledClient, config: AppConfig, invitationsClient: IGitHubInvitations, cacheClient:ICacheClient): Promise<ReturnTypeOfSyncOrg> {
-        const orgName = installedGitHubClient.GetCurrentOrgName();
+    public async SyncOrg(): Promise<ReturnTypeOfSyncOrg> {
+        const orgName = this.installedGitHubClient.GetCurrentOrgName();
     
         // For more context since this repo doesn't fully 
         // follow OpenTelemetry, yet: https://opentelemetry.io/docs/concepts/signals/traces/
@@ -500,7 +526,7 @@ export class GitHubSyncer {
                 ));            
             };
     
-            const response = await this.syncOrg(installedGitHubClient, config, invitationsClient, log, cacheClient);
+            const response = await this.syncOrg(log);
     
             Log(JSON.stringify(
                 {
@@ -568,8 +594,6 @@ type SuccessSync = {
     SyncedSecurityManagerTeams: string[]
 }
 
-
-
 function RemoveTeamsToIgnore(TeamsToManage: string[], appConfig: AppConfig) {
     const teamsToIgnore = new Set(appConfig.TeamsToIgnore.map(tti => tti.toLowerCase()) ?? []);
 
@@ -577,38 +601,6 @@ function RemoveTeamsToIgnore(TeamsToManage: string[], appConfig: AppConfig) {
         teamsToManage: TeamsToManage.filter(t => !teamsToIgnore.has(t.toLowerCase())),
         ignoredTeams: TeamsToManage.filter(t => teamsToIgnore.has(t.toLowerCase()))
     };
-}
-
-async function addOrgMember(gitHubId: GitHubId, installedGitHubClient: IInstalledClient) {
-    const isUserReal = await installedGitHubClient.DoesUserExist(gitHubId);
-
-    if (!isUserReal.successful || !isUserReal.data) {
-        return {
-            successful: false,
-            user: gitHubId,
-            message: `User '${gitHubId}' does not exist in GitHub.`
-        }
-    }
-
-    const isUserMemberAsync = await installedGitHubClient.IsUserMember(gitHubId)
-
-    if (!isUserMemberAsync.successful) {
-        throw new Error("What");
-    }
-
-    if (isUserMemberAsync.data) {
-        return {
-            successful: true,
-            user: gitHubId
-        }
-    }
-
-    await installedGitHubClient.AddOrgMember(gitHubId)
-
-    return {
-        successful: true,
-        user: gitHubId
-    }
 }
 
 async function checkValidOrgMember(opts: {

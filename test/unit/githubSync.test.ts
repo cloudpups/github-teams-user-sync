@@ -53,7 +53,7 @@ describe('GitHubSyncer -- SyncOrg', () => {
         const syncer = new GitHubSyncer(instance(installedClientMock), appConfig, instance(invitationsClientMock), inMemoryCacheClient);
 
         // Act  
-        const response = syncer.SyncOrg(instance(installedClientMock), appConfig, instance(invitationsClientMock), inMemoryCacheClient);
+        const response = syncer.SyncOrg();
 
         // Assert   
         verify(installedClientMock.GetCurrentOrgName()).calledBefore(invitationsClientMock.ListInvites());
